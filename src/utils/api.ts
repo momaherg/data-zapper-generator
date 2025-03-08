@@ -1,6 +1,7 @@
 
 // Base URL for API requests
 const API_BASE_URL = 'http://localhost:5000';
+const WS_BASE_URL = 'ws://localhost:5000';
 
 // Interface definitions
 export interface DataSource {
@@ -38,11 +39,136 @@ export interface TestCaseGenerationRequest {
   notes: string;
 }
 
+export interface ChatMessage {
+  id?: string;
+  type?: string;
+  content: string;
+  source?: string;
+  timestamp?: Date;
+}
+
 // Helper function to add session_id parameter to URLs
 const withSession = (url: string, sessionId: string) => {
   const separator = url.includes('?') ? '&' : '?';
   return `${url}${separator}session_id=${sessionId}`;
 };
+
+// WebSocket Chat connection
+export class ChatWebSocket {
+  private ws: WebSocket | null = null;
+  private sessionId: string;
+  private testCaseId: string;
+  private messageHandlers: ((message: ChatMessage) => void)[] = [];
+  private connectionHandlers: ((connected: boolean) => void)[] = [];
+  private reconnectAttempts = 0;
+  private maxReconnectAttempts = 5;
+  private reconnectTimeout: NodeJS.Timeout | null = null;
+
+  constructor(sessionId: string, testCaseId: string) {
+    this.sessionId = sessionId;
+    this.testCaseId = testCaseId;
+  }
+
+  connect(): void {
+    if (this.ws) {
+      this.ws.close();
+    }
+
+    this.ws = new WebSocket(`${WS_BASE_URL}/ws/chat`);
+    
+    this.ws.onopen = () => {
+      console.log('WebSocket connection established');
+      this.reconnectAttempts = 0;
+      this.notifyConnectionHandlers(true);
+    };
+
+    this.ws.onmessage = (event) => {
+      try {
+        const message = JSON.parse(event.data) as ChatMessage;
+        this.notifyMessageHandlers(message);
+      } catch (error) {
+        console.error('Failed to parse WebSocket message:', error);
+      }
+    };
+
+    this.ws.onclose = () => {
+      console.log('WebSocket connection closed');
+      this.notifyConnectionHandlers(false);
+      this.attemptReconnect();
+    };
+
+    this.ws.onerror = (error) => {
+      console.error('WebSocket error:', error);
+      this.ws?.close();
+    };
+  }
+
+  disconnect(): void {
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
+    if (this.ws) {
+      this.ws.close();
+      this.ws = null;
+    }
+  }
+
+  sendMessage(content: string): void {
+    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
+      console.error('WebSocket is not connected');
+      return;
+    }
+
+    const message = {
+      session_id: this.sessionId,
+      id: this.testCaseId,
+      content,
+      type: 'text',
+      source: 'user'
+    };
+
+    this.ws.send(JSON.stringify(message));
+  }
+
+  onMessage(handler: (message: ChatMessage) => void): () => void {
+    this.messageHandlers.push(handler);
+    return () => {
+      this.messageHandlers = this.messageHandlers.filter(h => h !== handler);
+    };
+  }
+
+  onConnectionChange(handler: (connected: boolean) => void): () => void {
+    this.connectionHandlers.push(handler);
+    return () => {
+      this.connectionHandlers = this.connectionHandlers.filter(h => h !== handler);
+    };
+  }
+
+  private notifyMessageHandlers(message: ChatMessage): void {
+    this.messageHandlers.forEach(handler => handler(message));
+  }
+
+  private notifyConnectionHandlers(connected: boolean): void {
+    this.connectionHandlers.forEach(handler => handler(connected));
+  }
+
+  private attemptReconnect(): void {
+    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+      console.log('Maximum reconnect attempts reached');
+      return;
+    }
+
+    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
+    console.log(`Attempting to reconnect in ${delay}ms`);
+    
+    this.reconnectAttempts++;
+    this.reconnectTimeout = setTimeout(() => {
+      console.log(`Reconnect attempt ${this.reconnectAttempts}`);
+      this.connect();
+    }, delay);
+  }
+}
 
 // API client functions
 export const api = {

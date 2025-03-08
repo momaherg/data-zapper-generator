@@ -1,33 +1,95 @@
 
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { Send, ThumbsUp, ThumbsDown, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { TestCaseEvent } from '@/utils/api';
+import { TestCaseEvent, ChatMessage, ChatWebSocket } from '@/utils/api';
 
-interface ChatMessage {
+interface Message {
   id: string;
   content: string;
   isUser: boolean;
+  type?: string;
+  source?: string;
   timestamp: Date;
 }
 
 interface ChatInterfaceProps {
   events: TestCaseEvent[];
-  onSendMessage?: (message: string) => void;
+  sessionId: string;
+  testCaseId: string;
 }
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
   events,
-  onSendMessage,
+  sessionId,
+  testCaseId,
 }) => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
+  const [isConnected, setIsConnected] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const webSocketRef = useRef<ChatWebSocket | null>(null);
+
+  // Initialize WebSocket connection
+  useEffect(() => {
+    if (!sessionId || !testCaseId) return;
+    
+    const chatWs = new ChatWebSocket(sessionId, testCaseId);
+    webSocketRef.current = chatWs;
+    
+    // Add message event handler
+    const messageCleanup = chatWs.onMessage((message) => {
+      console.log('Received message:', message);
+      
+      // Create a new message from the websocket response
+      const newMessage: Message = {
+        id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        content: message.content,
+        isUser: message.source === 'user',
+        type: message.type,
+        source: message.source,
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, newMessage]);
+      setIsLoading(false);
+
+      if (message.type === 'error') {
+        toast.error('Error from server: ' + message.content);
+      }
+    });
+    
+    // Add connection event handler
+    const connectionCleanup = chatWs.onConnectionChange((connected) => {
+      setIsConnected(connected);
+      if (connected) {
+        toast.success('Connected to chat server');
+      } else {
+        toast.error('Disconnected from chat server');
+      }
+    });
+    
+    // Connect to WebSocket server
+    chatWs.connect();
+    
+    // Cleanup function
+    return () => {
+      messageCleanup();
+      connectionCleanup();
+      if (webSocketRef.current) {
+        webSocketRef.current.disconnect();
+        webSocketRef.current = null;
+      }
+    };
+  }, [sessionId, testCaseId]);
 
   // Convert events to messages for initial display
   useEffect(() => {
@@ -35,6 +97,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       id: `event-${index}`,
       content: `${event.type}: ${event.description}`,
       isUser: false,
+      source: 'system',
+      type: 'event',
       timestamp: new Date(),
     }));
     
@@ -53,23 +117,38 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   const handleSendMessage = () => {
     if (inputValue.trim()) {
-      const newMessage: ChatMessage = {
+      // Create new message object
+      const newMessage: Message = {
         id: `msg-${Date.now()}`,
         content: inputValue,
         isUser: true,
+        source: 'user',
+        type: 'text',
         timestamp: new Date(),
       };
       
       setMessages(prev => [...prev, newMessage]);
       setInputValue('');
+      setIsLoading(true);
       
-      if (onSendMessage) {
-        onSendMessage(inputValue);
+      // Send message via WebSocket
+      if (webSocketRef.current && isConnected) {
+        webSocketRef.current.sendMessage(inputValue);
+      } else {
+        toast.error('Not connected to chat server');
+        setIsLoading(false);
       }
       
       if (textareaRef.current) {
         textareaRef.current.focus();
       }
+    }
+  };
+
+  const handleReconnect = () => {
+    if (webSocketRef.current) {
+      webSocketRef.current.connect();
+      toast.info('Attempting to reconnect...');
     }
   };
 
@@ -80,10 +159,72 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
+  // Format the message based on source
+  const formatMessage = (message: Message) => {
+    switch (message.source) {
+      case 'yoda':
+        return (
+          <div className="font-serif italic">
+            {message.content}
+          </div>
+        );
+      case 'system':
+        return (
+          <div className="text-amber-600 dark:text-amber-400">
+            {message.content}
+          </div>
+        );
+      case 'assistant':
+      case 'user':
+      default:
+        return message.content;
+    }
+  };
+
+  // Determine background color based on message source
+  const getMessageStyle = (message: Message) => {
+    if (message.isUser) {
+      return "bg-primary text-primary-foreground";
+    }
+    
+    switch (message.source) {
+      case 'system':
+        return "bg-muted/80 border border-muted";
+      case 'yoda':
+        return "bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-200";
+      case 'assistant':
+      default:
+        return "bg-muted";
+    }
+  };
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <div className="px-4 py-3 border-b">
-        <h3 className="font-medium">AI Assistant</h3>
+        <div className="flex items-center justify-between">
+          <h3 className="font-medium">AI Assistant</h3>
+          {isConnected ? (
+            <div className="flex items-center text-xs text-green-600 dark:text-green-400">
+              <span className="relative flex h-2 w-2 mr-1">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+              </span>
+              Connected
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-red-600 dark:text-red-400">Disconnected</span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="h-6 text-xs" 
+                onClick={handleReconnect}
+              >
+                Reconnect
+              </Button>
+            </div>
+          )}
+        </div>
         <p className="text-xs text-muted-foreground">
           Ask questions or request changes to the test case
         </p>
@@ -102,13 +243,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               <Card
                 className={cn(
                   "px-3 py-2 text-sm",
-                  message.isUser
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted"
+                  getMessageStyle(message)
                 )}
               >
                 <div className="space-y-1">
-                  <div>{message.content}</div>
+                  <div>{formatMessage(message)}</div>
                   <div className="text-[10px] opacity-70 text-right">
                     {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </div>
@@ -116,8 +255,28 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
               </Card>
             </div>
           ))}
+          
+          {isLoading && (
+            <div className="flex max-w-[80%] mr-auto animate-fade-up">
+              <Card className="px-3 py-2 text-sm bg-muted">
+                <div className="flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                  <span className="text-muted-foreground">Thinking...</span>
+                </div>
+              </Card>
+            </div>
+          )}
         </div>
       </ScrollArea>
+      
+      {!isConnected && (
+        <Alert variant="destructive" className="mx-4 my-2 py-2">
+          <AlertTitle>Connection Lost</AlertTitle>
+          <AlertDescription>
+            You're currently disconnected from the chat server. Please click the reconnect button above.
+          </AlertDescription>
+        </Alert>
+      )}
       
       <div className="px-4 py-3 border-t">
         <div className="flex gap-2">
@@ -129,12 +288,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             placeholder="Type a message..."
             className="resize-none min-h-[40px] max-h-[120px]"
             rows={1}
+            disabled={!isConnected || isLoading}
           />
           <Button
             type="button"
             size="icon"
             onClick={handleSendMessage}
-            disabled={!inputValue.trim()}
+            disabled={!inputValue.trim() || !isConnected || isLoading}
           >
             <Send className="h-4 w-4" />
           </Button>

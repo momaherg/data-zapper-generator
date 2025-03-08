@@ -73,12 +73,6 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
     }).format(date);
   };
 
-  const handleSendMessage = (message: string) => {
-    // In a real implementation, we would send the message to the API
-    console.log('Message sent:', message);
-    toast.info('Chat functionality is not implemented in this demo');
-  };
-
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -206,7 +200,8 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
       <div className="w-80 border-l border-border flex flex-col animate-slide-in-right">
         <ChatInterface 
           events={testCase.events}
-          onSendMessage={handleSendMessage}
+          sessionId={sessionId}
+          testCaseId={testCase.id}
         />
       </div>
     </div>
