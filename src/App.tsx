@@ -28,7 +28,7 @@ const App = () => (
             <Route path="upload" element={<UploadData />} />
             <Route path="tools" element={<Tools />} />
             <Route path="specs" element={<TestSpecifications />} />
-            <Route path="test/:id" element={<TestCaseDetail />} />
+            <Route path="test-case/:id" element={<TestCaseDetail />} />
           </Route>
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

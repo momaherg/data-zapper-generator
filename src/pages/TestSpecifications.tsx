@@ -60,7 +60,8 @@ const TestSpecifications: React.FC<TestSpecificationsProps> = () => {
         
         // In a real implementation, we would fetch the test cases here
         // For this demo, we're using mock data
-        setTestCases(mockTestCases);
+        const testCases = await api.getTestCases(sessionId)
+        setTestCases(testCases.testCases);
       } catch (error) {
         console.error('Failed to fetch data:', error);
         toast.error('Failed to load data');
@@ -117,6 +118,8 @@ const TestSpecifications: React.FC<TestSpecificationsProps> = () => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength) + '...';
   };
+
+  console.log(testCases)
 
   return (
     <div className="container py-8 animate-fade-up">

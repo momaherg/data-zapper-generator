@@ -28,70 +28,8 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
       setIsLoading(true);
       
       try {
-        // In a real implementation, we would fetch the test case here
-        // For this demo, we're using mock data
-        const mockTestCase: TestCase = {
-          id,
-          requirement: 'As a user, I want to reset my password so that I can regain access to my account if I forget it.',
-          format: 'Use Gherkin BDD style with Scenario and Scenario Outline formats.',
-          notes: 'This requirement is critical for user security. Consider edge cases.',
-          selected_data_sources: ['ds1', 'ds2'],
-          test_case_text: `Feature: Password Reset
-
-Scenario: User successfully resets password via email
-  Given the user is on the login page
-  When they click "Forgot Password"
-  Then they should be directed to the password reset page
-  When they enter their registered email address
-  And they submit the form
-  Then a password reset email should be sent to their email
-  When they click the reset link in the email
-  Then they should be directed to a page to create a new password
-  When they enter a new valid password and confirm it
-  And they submit the form
-  Then their password should be updated
-  And they should be redirected to the login page
-  And they should be able to login with the new password
-
-Scenario: User attempts to reset password with unregistered email
-  Given the user is on the password reset page
-  When they enter an email that is not registered in the system
-  And they submit the form
-  Then they should see an error message indicating the email is not registered
-
-Scenario Outline: User attempts to set invalid password during reset
-  Given the user is on the new password page after clicking reset link
-  When they enter "<password>" as new password
-  And they enter "<password>" as confirmation
-  And they submit the form
-  Then they should see an error message about password requirements
-
-  Examples:
-    | password  | issue                     |
-    | pass      | too short                 |
-    | password  | no special characters     |
-    | Password1 | no special characters     |
-    | pass@word | no numbers                |
-    | PASS@123  | no lowercase              |
-
-Scenario: Reset link expires
-  Given a user has requested a password reset
-  And the reset link has expired
-  When they click on the expired reset link
-  Then they should see an error message indicating the link has expired
-  And they should be provided with an option to request a new reset link`,
-          events: [
-            { type: 'Thought', description: 'Analyzing requirement: Password reset functionality involves several key flows' },
-            { type: 'Thought', description: 'Must consider security aspects like link expiration and handling invalid inputs' },
-            { type: 'Thought', description: 'Extracting possible test cases based on typical password reset flows and edge cases' },
-            { type: 'DataSourceAccess', dataSourceId: 'ds1', description: 'Examining security requirements document for password policy details' },
-            { type: 'Thought', description: 'Applying Gherkin format as requested with multiple scenarios and scenario outlines' },
-            { type: 'DataSourceAccess', dataSourceId: 'ds2', description: 'Checking test data for examples of invalid passwords' },
-          ],
-          created_at: new Date().toISOString(),
-        };
-        
-        setTestCase(mockTestCase);
+        const testCases = await api.getTestCase(sessionId, id)
+        setTestCase(testCases);
       } catch (error) {
         console.error('Failed to fetch test case:', error);
         toast.error('Failed to load test case');

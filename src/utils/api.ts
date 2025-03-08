@@ -90,7 +90,19 @@ export const api = {
     
     return response.json();
   },
-  
+
+  // get all test cases for a  session
+  async getTestCases(sessionId: string): Promise<{ testCases: TestCase[] }> {
+
+    const response = await fetch(withSession(`${API_BASE_URL}/api/test-cases`, sessionId));
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch test cases: ${response.statusText}`);
+    }
+
+    return response.json();
+  },
+
   // Generate a test case
   async generateTestCase(sessionId: string, request: TestCaseGenerationRequest): Promise<{ id: string; testCase: string; events: TestCaseEvent[] }> {
     const response = await fetch(withSession(`${API_BASE_URL}/api/test-cases/generate`, sessionId), {
