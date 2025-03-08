@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Home, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";

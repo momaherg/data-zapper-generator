@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Upload, Tool, FileText, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Upload, Settings, FileText, LogOut, ChevronLeft, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -29,7 +29,7 @@ const Navigation: React.FC<NavigationProps> = ({
     {
       name: 'Tools',
       path: '/tools',
-      icon: Tool
+      icon: Settings
     },
     {
       name: 'Test Specifications',
