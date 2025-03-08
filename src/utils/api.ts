@@ -63,6 +63,7 @@ export class ChatWebSocket {
   private reconnectAttempts = 0;
   private maxReconnectAttempts = 5;
   private reconnectTimeout: NodeJS.Timeout | null = null;
+  private intentionalDisconnect = false;
 
   constructor(sessionId: string, testCaseId: string) {
     this.sessionId = sessionId;
@@ -70,11 +71,20 @@ export class ChatWebSocket {
   }
 
   connect(): void {
-    if (this.ws) {
-      this.ws.close();
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      console.log('WebSocket already connected');
+      return;
     }
 
-    this.ws = new WebSocket(`${WS_BASE_URL}/ws/chat`);
+    this.intentionalDisconnect = false;
+    
+    // Build URL with query parameters
+    const url = new URL(`${WS_BASE_URL}/ws/chat`);
+    url.searchParams.append('session_id', this.sessionId);
+    url.searchParams.append('test_case_id', this.testCaseId);
+    
+    console.log(`Connecting to WebSocket at ${url.toString()}`);
+    this.ws = new WebSocket(url.toString());
     
     this.ws.onopen = () => {
       console.log('WebSocket connection established');
@@ -91,25 +101,34 @@ export class ChatWebSocket {
       }
     };
 
-    this.ws.onclose = () => {
-      console.log('WebSocket connection closed');
+    this.ws.onclose = (event) => {
+      console.log(`WebSocket connection closed with code ${event.code} and reason: ${event.reason}`);
       this.notifyConnectionHandlers(false);
-      this.attemptReconnect();
+      
+      // Only attempt to reconnect if it wasn't an intentional disconnect
+      if (!this.intentionalDisconnect) {
+        this.attemptReconnect();
+      }
     };
 
     this.ws.onerror = (error) => {
       console.error('WebSocket error:', error);
-      this.ws?.close();
+      // Let the onclose handler handle reconnection
     };
   }
 
   disconnect(): void {
+    this.intentionalDisconnect = true;
+    
     if (this.reconnectTimeout) {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
     }
+    
     if (this.ws) {
-      this.ws.close();
+      if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
+        this.ws.close(1000, "Intentional disconnect");
+      }
       this.ws = null;
     }
   }
@@ -117,6 +136,8 @@ export class ChatWebSocket {
   sendMessage(content: string): void {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       console.error('WebSocket is not connected');
+      this.connect(); // Try to reconnect
+      setTimeout(() => this.sendMessage(content), 1000); // Retry after 1 second
       return;
     }
 
@@ -154,13 +175,18 @@ export class ChatWebSocket {
   }
 
   private attemptReconnect(): void {
+    if (this.intentionalDisconnect) {
+      console.log('Not reconnecting due to intentional disconnect');
+      return;
+    }
+    
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
       console.log('Maximum reconnect attempts reached');
       return;
     }
 
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
-    console.log(`Attempting to reconnect in ${delay}ms`);
+    console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
     
     this.reconnectAttempts++;
     this.reconnectTimeout = setTimeout(() => {

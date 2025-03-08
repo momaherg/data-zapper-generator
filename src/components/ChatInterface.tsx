@@ -34,6 +34,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [inputValue, setInputValue] = useState('');
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [reconnectCount, setReconnectCount] = useState(0);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const webSocketRef = useRef<ChatWebSocket | null>(null);
@@ -42,6 +43,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   useEffect(() => {
     if (!sessionId || !testCaseId) return;
     
+    console.log(`Initializing chat for session ${sessionId} and test case ${testCaseId}`);
     const chatWs = new ChatWebSocket(sessionId, testCaseId);
     webSocketRef.current = chatWs;
     
@@ -69,11 +71,15 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     
     // Add connection event handler
     const connectionCleanup = chatWs.onConnectionChange((connected) => {
+      console.log(`Connection state changed to: ${connected}`);
       setIsConnected(connected);
       if (connected) {
         toast.success('Connected to chat server');
       } else {
-        toast.error('Disconnected from chat server');
+        // Only show disconnect toast if we were previously connected
+        if (isConnected) {
+          toast.error('Disconnected from chat server');
+        }
       }
     });
     
@@ -89,18 +95,22 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         webSocketRef.current = null;
       }
     };
-  }, [sessionId, testCaseId]);
+  }, [sessionId, testCaseId, reconnectCount]);
 
   // Convert events to messages for initial display
   useEffect(() => {
-    const initialMessages = events.map((event, index) => ({
-      id: `event-${index}`,
-      content: `${event.type}: ${event.description}`,
-      isUser: false,
-      source: 'system',
-      type: 'event',
-      timestamp: new Date(),
-    }));
+    if (!events || events.length === 0) return;
+    
+    const initialMessages = events
+      .filter(event => event.type && event.description) // Filter out invalid events
+      .map((event, index) => ({
+        id: `event-${index}`,
+        content: `${event.type}: ${event.description}`,
+        isUser: false,
+        source: 'system',
+        type: 'event',
+        timestamp: new Date(),
+      }));
     
     setMessages(initialMessages);
   }, [events]);
@@ -116,40 +126,38 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   }, [messages]);
 
   const handleSendMessage = () => {
-    if (inputValue.trim()) {
-      // Create new message object
-      const newMessage: Message = {
-        id: `msg-${Date.now()}`,
-        content: inputValue,
-        isUser: true,
-        source: 'user',
-        type: 'text',
-        timestamp: new Date(),
-      };
-      
-      setMessages(prev => [...prev, newMessage]);
-      setInputValue('');
-      setIsLoading(true);
-      
-      // Send message via WebSocket
-      if (webSocketRef.current && isConnected) {
-        webSocketRef.current.sendMessage(inputValue);
-      } else {
-        toast.error('Not connected to chat server');
-        setIsLoading(false);
-      }
-      
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-      }
+    if (!inputValue.trim()) return;
+    
+    // Create new message object
+    const newMessage: Message = {
+      id: `msg-${Date.now()}`,
+      content: inputValue,
+      isUser: true,
+      source: 'user',
+      type: 'text',
+      timestamp: new Date(),
+    };
+    
+    setMessages(prev => [...prev, newMessage]);
+    setInputValue('');
+    setIsLoading(true);
+    
+    // Send message via WebSocket
+    if (webSocketRef.current && isConnected) {
+      webSocketRef.current.sendMessage(inputValue);
+    } else {
+      toast.error('Not connected to chat server');
+      setIsLoading(false);
+    }
+    
+    if (textareaRef.current) {
+      textareaRef.current.focus();
     }
   };
 
   const handleReconnect = () => {
-    if (webSocketRef.current) {
-      webSocketRef.current.connect();
-      toast.info('Attempting to reconnect...');
-    }
+    setReconnectCount(prev => prev + 1);
+    toast.info('Attempting to reconnect...');
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
