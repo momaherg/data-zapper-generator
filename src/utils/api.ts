@@ -1,4 +1,3 @@
-
 // Base URL for API requests
 const API_BASE_URL = 'http://localhost:5000';
 const WS_BASE_URL = 'ws://localhost:5000';
@@ -64,6 +63,7 @@ export class ChatWebSocket {
   private maxReconnectAttempts = 5;
   private reconnectTimeout: NodeJS.Timeout | null = null;
   private intentionalDisconnect = false;
+  private pingInterval: NodeJS.Timeout | null = null;
 
   constructor(sessionId: string, testCaseId: string) {
     this.sessionId = sessionId;
@@ -71,12 +71,18 @@ export class ChatWebSocket {
   }
 
   connect(): void {
-    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-      console.log('WebSocket already connected');
+    if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
+      console.log('WebSocket already connected or connecting');
       return;
     }
 
     this.intentionalDisconnect = false;
+    
+    // Clean up any existing reconnect timeout
+    if (this.reconnectTimeout) {
+      clearTimeout(this.reconnectTimeout);
+      this.reconnectTimeout = null;
+    }
     
     // Build URL with query parameters
     const url = new URL(`${WS_BASE_URL}/ws/chat`);
@@ -90,11 +96,15 @@ export class ChatWebSocket {
       console.log('WebSocket connection established');
       this.reconnectAttempts = 0;
       this.notifyConnectionHandlers(true);
+      
+      // Set up ping interval to keep connection alive
+      this.setupPingInterval();
     };
 
     this.ws.onmessage = (event) => {
       try {
         const message = JSON.parse(event.data) as ChatMessage;
+        console.log('Received message:', message);
         this.notifyMessageHandlers(message);
       } catch (error) {
         console.error('Failed to parse WebSocket message:', error);
@@ -103,6 +113,13 @@ export class ChatWebSocket {
 
     this.ws.onclose = (event) => {
       console.log(`WebSocket connection closed with code ${event.code} and reason: ${event.reason}`);
+      
+      // Clear ping interval
+      if (this.pingInterval) {
+        clearInterval(this.pingInterval);
+        this.pingInterval = null;
+      }
+      
       this.notifyConnectionHandlers(false);
       
       // Only attempt to reconnect if it wasn't an intentional disconnect
@@ -125,6 +142,11 @@ export class ChatWebSocket {
       this.reconnectTimeout = null;
     }
     
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+      this.pingInterval = null;
+    }
+    
     if (this.ws) {
       if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
         this.ws.close(1000, "Intentional disconnect");
@@ -136,8 +158,15 @@ export class ChatWebSocket {
   sendMessage(content: string): void {
     if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
       console.error('WebSocket is not connected');
-      this.connect(); // Try to reconnect
-      setTimeout(() => this.sendMessage(content), 1000); // Retry after 1 second
+      
+      // If we're intentionally disconnected, don't try to reconnect
+      if (this.intentionalDisconnect) {
+        return;
+      }
+      
+      // Otherwise try to reconnect and queue the message
+      this.connect();
+      setTimeout(() => this.sendMessage(content), 1000);
       return;
     }
 
@@ -149,7 +178,29 @@ export class ChatWebSocket {
       source: 'user'
     };
 
+    console.log('Sending message:', message);
     this.ws.send(JSON.stringify(message));
+  }
+
+  // Setup ping interval to keep the connection alive
+  private setupPingInterval(): void {
+    // Clear any existing interval
+    if (this.pingInterval) {
+      clearInterval(this.pingInterval);
+    }
+    
+    // Send a ping every 30 seconds to keep the connection alive
+    this.pingInterval = setInterval(() => {
+      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+        // Send an empty ping frame
+        this.ws.send(JSON.stringify({ 
+          type: 'ping',
+          session_id: this.sessionId,
+          id: this.testCaseId
+        }));
+        console.log('Ping sent to keep connection alive');
+      }
+    }, 30000); // 30 seconds
   }
 
   onMessage(handler: (message: ChatMessage) => void): () => void {

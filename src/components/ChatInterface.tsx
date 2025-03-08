@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, ThumbsUp, ThumbsDown, Loader2 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -35,69 +34,11 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [reconnectCount, setReconnectCount] = useState(0);
+  const [connectionAttempts, setConnectionAttempts] = useState(0);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const webSocketRef = useRef<ChatWebSocket | null>(null);
-
-  // Initialize WebSocket connection
-  useEffect(() => {
-    if (!sessionId || !testCaseId) return;
-    
-    console.log(`Initializing chat for session ${sessionId} and test case ${testCaseId}`);
-    const chatWs = new ChatWebSocket(sessionId, testCaseId);
-    webSocketRef.current = chatWs;
-    
-    // Add message event handler
-    const messageCleanup = chatWs.onMessage((message) => {
-      console.log('Received message:', message);
-      
-      // Create a new message from the websocket response
-      const newMessage: Message = {
-        id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        content: message.content,
-        isUser: message.source === 'user',
-        type: message.type,
-        source: message.source,
-        timestamp: new Date(),
-      };
-      
-      setMessages(prev => [...prev, newMessage]);
-      setIsLoading(false);
-
-      if (message.type === 'error') {
-        toast.error('Error from server: ' + message.content);
-      }
-    });
-    
-    // Add connection event handler
-    const connectionCleanup = chatWs.onConnectionChange((connected) => {
-      console.log(`Connection state changed to: ${connected}`);
-      setIsConnected(connected);
-      if (connected) {
-        toast.success('Connected to chat server');
-      } else {
-        // Only show disconnect toast if we were previously connected
-        if (isConnected) {
-          toast.error('Disconnected from chat server');
-        }
-      }
-    });
-    
-    // Connect to WebSocket server
-    chatWs.connect();
-    
-    // Cleanup function
-    return () => {
-      messageCleanup();
-      connectionCleanup();
-      if (webSocketRef.current) {
-        webSocketRef.current.disconnect();
-        webSocketRef.current = null;
-      }
-    };
-  }, [sessionId, testCaseId, reconnectCount]);
-
-  // Convert events to messages for initial display
+  
   useEffect(() => {
     if (!events || events.length === 0) return;
     
@@ -115,7 +56,72 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setMessages(initialMessages);
   }, [events]);
 
-  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    if (!sessionId || !testCaseId) {
+      console.log('Missing sessionId or testCaseId');
+      return;
+    }
+    
+    console.log(`Initializing chat for session ${sessionId} and test case ${testCaseId}`);
+    
+    if (webSocketRef.current) {
+      webSocketRef.current.disconnect();
+    }
+    
+    const chatWs = new ChatWebSocket(sessionId, testCaseId);
+    webSocketRef.current = chatWs;
+    
+    const messageCleanup = chatWs.onMessage((message) => {
+      console.log('Received message:', message);
+      
+      const newMessage: Message = {
+        id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        content: message.content,
+        isUser: message.source === 'user',
+        type: message.type,
+        source: message.source,
+        timestamp: new Date(),
+      };
+      
+      setMessages(prev => [...prev, newMessage]);
+      setIsLoading(false);
+
+      if (message.type === 'error') {
+        toast.error('Error from server: ' + message.content);
+      }
+    });
+    
+    const connectionCleanup = chatWs.onConnectionChange((connected) => {
+      console.log(`Connection state changed to: ${connected}`);
+      setIsConnected(connected);
+      
+      if (connected) {
+        if (!isConnected) {
+          toast.success('Connected to chat server');
+        }
+      } else {
+        if (isConnected) {
+          toast.error('Disconnected from chat server');
+          setConnectionAttempts(prev => prev + 1);
+        }
+      }
+    });
+    
+    const connectTimeout = setTimeout(() => {
+      chatWs.connect();
+    }, 300);
+    
+    return () => {
+      clearTimeout(connectTimeout);
+      messageCleanup();
+      connectionCleanup();
+      if (webSocketRef.current) {
+        webSocketRef.current.disconnect();
+        webSocketRef.current = null;
+      }
+    };
+  }, [sessionId, testCaseId, reconnectCount]);
+
   useEffect(() => {
     if (scrollAreaRef.current) {
       const scrollContainer = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
@@ -128,7 +134,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
     
-    // Create new message object
     const newMessage: Message = {
       id: `msg-${Date.now()}`,
       content: inputValue,
@@ -142,12 +147,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     setInputValue('');
     setIsLoading(true);
     
-    // Send message via WebSocket
     if (webSocketRef.current && isConnected) {
       webSocketRef.current.sendMessage(inputValue);
     } else {
       toast.error('Not connected to chat server');
       setIsLoading(false);
+      
+      handleReconnect();
     }
     
     if (textareaRef.current) {
@@ -167,7 +173,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
-  // Format the message based on source
   const formatMessage = (message: Message) => {
     switch (message.source) {
       case 'yoda':
@@ -189,7 +194,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
-  // Determine background color based on message source
   const getMessageStyle = (message: Message) => {
     if (message.isUser) {
       return "bg-primary text-primary-foreground";
