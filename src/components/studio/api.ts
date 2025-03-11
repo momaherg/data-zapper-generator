@@ -1,5 +1,5 @@
 
-import { Team, Component, ComponentConfig } from "../studio/datamodel";
+import { Team, Component, ComponentConfig } from "./datamodel";
 import { getServerUrl } from "./utils";
 
 export interface ValidationError {
@@ -16,7 +16,7 @@ export interface ValidationResponse {
 
 export class TeamAPI {
   private getBaseUrl(): string {
-    return "http://localhost:5000";
+    return getServerUrl();
   }
 
   private getHeaders(): HeadersInit {

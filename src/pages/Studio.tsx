@@ -72,7 +72,7 @@ const StudioPage = () => {
 
   return (
     <main className="h-full w-full p-4">
-      <TeamBuilder team={team} onChange={handleTeamUpdate} />
+      {team && <TeamBuilder team={team} onChange={handleTeamUpdate} />}
     </main>
   );
 };
