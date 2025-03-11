@@ -25,6 +25,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     console.log('Processing initial events:', events);
     
     const processedMessages: Message[] = [];
+    const seenContentMap = new Map<string, boolean>();
     
     // Process the events array which contains the full chat history
     events.forEach((event, index) => {
@@ -33,12 +34,26 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         const enrichedEvent = event as any;
         let content = enrichedEvent.content;
         
+        // Skip empty content
+        if (typeof content === 'string' && content.trim() === '') {
+          return;
+        }
+        
         // Skip message types we want to hide
         if (enrichedEvent.type === 'ToolCallExecutionEvent' ||
             enrichedEvent.type === 'ToolCallSummaryMessage' ||
             enrichedEvent.type === 'HandoffMessage') {
           return;
         }
+        
+        // Create a key for deduplication
+        const dedupKey = `${enrichedEvent.source}-${JSON.stringify(content)}`;
+        
+        // Skip duplicates
+        if (seenContentMap.has(dedupKey)) {
+          return;
+        }
+        seenContentMap.set(dedupKey, true);
         
         processedMessages.push({
           id: `event-${index}-${Date.now()}`,
@@ -51,6 +66,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         });
       } else {
         // Handle the simple event format
+        const dedupKey = `system-${event.type}-${event.description}`;
+        
+        // Skip duplicates
+        if (seenContentMap.has(dedupKey)) {
+          return;
+        }
+        seenContentMap.set(dedupKey, true);
+        
         processedMessages.push({
           id: `event-${index}-${Date.now()}`,
           content: `${event.type}: ${event.description}`,

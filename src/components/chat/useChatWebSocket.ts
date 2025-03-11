@@ -21,6 +21,7 @@ export const useChatWebSocket = ({
   const [reconnectCount, setReconnectCount] = useState(0);
   const [connectionAttempts, setConnectionAttempts] = useState(0);
   const webSocketRef = useRef<ChatWebSocket | null>(null);
+  const lastMessageRef = useRef<{content: string, source: string, timestamp: number} | null>(null);
 
   useEffect(() => {
     if (!sessionId || !testCaseId) {
@@ -39,6 +40,30 @@ export const useChatWebSocket = ({
     
     const messageCleanup = chatWs.onMessage((message) => {
       console.log('Received message:', message);
+      
+      // Skip empty messages
+      if (typeof message.content === 'string' && message.content.trim() === '') {
+        return;
+      }
+      
+      // Check for duplicate messages (same content and close timing)
+      const now = Date.now();
+      const lastMsg = lastMessageRef.current;
+      
+      if (lastMsg && 
+          lastMsg.content === message.content && 
+          lastMsg.source === message.source &&
+          now - lastMsg.timestamp < 2000) { // Within 2 seconds
+        console.log('Skipping duplicate message:', message);
+        return;
+      }
+      
+      // Update last message reference
+      lastMessageRef.current = {
+        content: message.content,
+        source: message.source || '',
+        timestamp: now
+      };
       
       const newMessage: Message = {
         id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
@@ -92,6 +117,7 @@ export const useChatWebSocket = ({
   const sendMessage = (inputValue: string) => {
     if (!inputValue.trim()) return;
     
+    // Create user message
     const newMessage: Message = {
       id: `msg-${Date.now()}`,
       content: inputValue,
@@ -99,6 +125,13 @@ export const useChatWebSocket = ({
       source: 'user',
       type: 'text',
       timestamp: new Date(),
+    };
+    
+    // Update last message reference to avoid duplication
+    lastMessageRef.current = {
+      content: inputValue,
+      source: 'user',
+      timestamp: Date.now()
     };
     
     setMessages(prev => [...prev, newMessage]);
