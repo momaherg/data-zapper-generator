@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, ThumbsUp, ThumbsDown, Loader2, AlertCircle, AlertTriangle, ChevronDown, ChevronUp, Wrench } from 'lucide-react';
 import { Card } from '@/components/ui/card';
@@ -9,6 +10,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { TestCaseEvent, ChatMessage, ChatWebSocket } from '@/utils/api';
+import ReactMarkdown from 'react-markdown';
 
 interface Message {
   id: string;
@@ -64,6 +66,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       if ('source' in event) {
         const enrichedEvent = event as any;
         let content = enrichedEvent.content;
+        
+        // Skip message types we want to hide
+        if (enrichedEvent.type === 'ToolCallExecutionEvent' ||
+            enrichedEvent.type === 'ToolCallSummaryMessage' ||
+            enrichedEvent.type === 'HandoffMessage') {
+          return;
+        }
         
         initialMessages.push({
           id: `event-${index}-${Date.now()}`,
@@ -264,7 +273,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           <CollapsibleContent className="p-3 bg-blue-50/50 dark:bg-blue-950/50 text-sm">
             <div className="whitespace-pre-wrap">
               {typeof message.content === 'string' 
-                ? message.content 
+                ? <ReactMarkdown>{message.content}</ReactMarkdown>
                 : JSON.stringify(message.content, null, 2)}
             </div>
           </CollapsibleContent>
@@ -273,31 +282,19 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
     
     // For tool call events, display a simple indicator
-    if (message.type === 'ToolCallRequestEvent' || message.type === 'ToolCallExecutionEvent' || message.type === 'ToolCallSummaryMessage') {
+    if (message.type === 'ToolCallRequestEvent') {
       const toolCalls = hasToolCalls(message.content) ? getToolNames(message.content) : [];
       
       return (
         <div className="flex items-center text-yellow-700 dark:text-yellow-300 text-sm">
           <Wrench className="h-4 w-4 mr-2" />
           <span>
-            {message.type === 'ToolCallRequestEvent' && 'Requesting tools: '}
-            {message.type === 'ToolCallExecutionEvent' && 'Executing tools: '}
-            {message.type === 'ToolCallSummaryMessage' && 'Tool execution summary: '}
-            {toolCalls.length > 0 
+            Requesting tools: {toolCalls.length > 0 
               ? toolCalls.join(', ')
               : typeof message.content === 'string'
                 ? message.content
                 : JSON.stringify(message.content)}
           </span>
-        </div>
-      );
-    }
-    
-    // For handoff messages
-    if (message.type === 'HandoffMessage') {
-      return (
-        <div className="text-purple-700 dark:text-purple-300 text-sm">
-          {typeof message.content === 'string' ? message.content : JSON.stringify(message.content, null, 2)}
         </div>
       );
     }
@@ -328,13 +325,13 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       case 'yoda':
         return (
           <div className="font-serif italic text-sm">
-            {message.content}
+            <ReactMarkdown>{message.content}</ReactMarkdown>
           </div>
         );
       case 'system':
         return (
           <div className="text-amber-600 dark:text-amber-400 text-sm">
-            {message.content}
+            <ReactMarkdown>{message.content}</ReactMarkdown>
           </div>
         );
       case 'error':
@@ -342,7 +339,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       default:
         return (
           <div className="text-sm">
-            {message.content}
+            <ReactMarkdown>{message.content}</ReactMarkdown>
           </div>
         );
     }
@@ -369,6 +366,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
     
     return null;
+  };
+
+  const shouldShowMessage = (message: Message): boolean => {
+    // Filter out the message types we want to hide
+    if (message.type === 'ToolCallExecutionEvent' || 
+        message.type === 'ToolCallSummaryMessage' || 
+        message.type === 'HandoffMessage') {
+      return false;
+    }
+    return true;
   };
 
   return (
@@ -405,7 +412,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       
       <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
         <div className="space-y-4">
-          {messages.map(message => (
+          {messages.filter(shouldShowMessage).map(message => (
             <div
               key={message.id}
               className={cn(
