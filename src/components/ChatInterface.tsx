@@ -1,11 +1,11 @@
-
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, ThumbsUp, ThumbsDown, Loader2, AlertCircle, AlertTriangle } from 'lucide-react';
+import { Send, ThumbsUp, ThumbsDown, Loader2, AlertCircle, AlertTriangle, ChevronDown, ChevronUp, Wrench } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { TestCaseEvent, ChatMessage, ChatWebSocket } from '@/utils/api';
@@ -41,6 +41,16 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const webSocketRef = useRef<ChatWebSocket | null>(null);
   
+  // Store collapsed state for thought events with tool calls
+  const [collapsedStates, setCollapsedStates] = useState<Record<string, boolean>>({});
+
+  const toggleCollapse = (messageId: string) => {
+    setCollapsedStates(prev => ({
+      ...prev,
+      [messageId]: !prev[messageId]
+    }));
+  };
+  
   useEffect(() => {
     if (!events || events.length === 0) return;
     
@@ -54,11 +64,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       if ('source' in event) {
         const enrichedEvent = event as any;
         let content = enrichedEvent.content;
-        
-        // Handle content that's an array of tool calls
-        if (Array.isArray(content) && content.length > 0 && 'id' in content[0] && 'name' in content[0]) {
-          content = `Tool calls: ${content.map(call => call.name).join(', ')}`;
-        }
         
         initialMessages.push({
           id: `event-${index}-${Date.now()}`,
@@ -204,29 +209,94 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
+  // Helper to detect if a message has tool calls
+  const hasToolCalls = (content: any): boolean => {
+    if (!content) return false;
+    
+    if (Array.isArray(content)) {
+      return content.some(item => item.name && typeof item.name === 'string');
+    }
+    
+    return false;
+  };
+
+  // Extract tool names from content
+  const getToolNames = (content: any): string[] => {
+    if (!content || !Array.isArray(content)) return [];
+    
+    return content
+      .filter(item => item.name && typeof item.name === 'string')
+      .map(item => item.name);
+  };
+
   const formatMessage = (message: Message) => {
-    // Handle different message types
+    // For ThoughtEvent with tool calls, create a collapsible section
     if (message.type === 'ThoughtEvent') {
+      const isCollapsed = collapsedStates[message.id] !== false; // Default to collapsed
+      const toolCalls = hasToolCalls(message.content) ? getToolNames(message.content) : [];
+      
       return (
-        <div className="text-blue-700 dark:text-blue-300 italic">
-          <div className="font-semibold mb-1">Thought Process:</div>
-          {typeof message.content === 'string' ? message.content : JSON.stringify(message.content, null, 2)}
-        </div>
+        <Collapsible 
+          open={!isCollapsed} 
+          className="w-full border border-blue-200 dark:border-blue-800 rounded-md overflow-hidden"
+        >
+          <CollapsibleTrigger 
+            onClick={() => toggleCollapse(message.id)}
+            className="w-full flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900"
+          >
+            <div className="flex items-center gap-2 text-sm font-medium text-blue-700 dark:text-blue-300">
+              <AlertTriangle className="h-4 w-4" />
+              <span>Thought Process</span>
+              
+              {toolCalls.length > 0 && (
+                <div className="flex items-center ml-2 text-yellow-600 dark:text-yellow-400 text-xs">
+                  <Wrench className="h-3 w-3 mr-1" />
+                  <span>Tools: {toolCalls.join(', ')}</span>
+                </div>
+              )}
+            </div>
+            
+            <div>
+              {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+            </div>
+          </CollapsibleTrigger>
+          
+          <CollapsibleContent className="p-3 bg-blue-50/50 dark:bg-blue-950/50 text-sm">
+            <div className="whitespace-pre-wrap">
+              {typeof message.content === 'string' 
+                ? message.content 
+                : JSON.stringify(message.content, null, 2)}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       );
     }
     
+    // For tool call events, display a simple indicator
     if (message.type === 'ToolCallRequestEvent' || message.type === 'ToolCallExecutionEvent' || message.type === 'ToolCallSummaryMessage') {
+      const toolCalls = hasToolCalls(message.content) ? getToolNames(message.content) : [];
+      
       return (
-        <div className="text-yellow-700 dark:text-yellow-300">
-          <div className="font-semibold mb-1">Tool Activity:</div>
-          {typeof message.content === 'string' ? message.content : JSON.stringify(message.content, null, 2)}
+        <div className="flex items-center text-yellow-700 dark:text-yellow-300 text-sm">
+          <Wrench className="h-4 w-4 mr-2" />
+          <span>
+            {message.type === 'ToolCallRequestEvent' && 'Requesting tools: '}
+            {message.type === 'ToolCallExecutionEvent' && 'Executing tools: '}
+            {message.type === 'ToolCallSummaryMessage' && 'Tool execution summary: '}
+            {toolCalls.length > 0 
+              ? toolCalls.join(', ')
+              : typeof message.content === 'string'
+                ? message.content
+                : JSON.stringify(message.content)}
+          </span>
         </div>
       );
     }
     
+    // For handoff messages
     if (message.type === 'HandoffMessage') {
       return (
-        <div className="text-purple-700 dark:text-purple-300 font-medium">
+        <div className="text-purple-700 dark:text-purple-300 text-sm">
           {typeof message.content === 'string' ? message.content : JSON.stringify(message.content, null, 2)}
         </div>
       );
@@ -237,7 +307,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       // Handle JSON or array content
       if (Array.isArray(message.content)) {
         return (
-          <div className="space-y-2">
+          <div className="space-y-2 text-sm">
             {message.content.map((item, idx) => (
               <div key={idx} className="text-xs bg-muted/30 p-2 rounded">
                 {JSON.stringify(item, null, 2)}
@@ -257,59 +327,45 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     switch (message.source) {
       case 'yoda':
         return (
-          <div className="font-serif italic">
+          <div className="font-serif italic text-sm">
             {message.content}
           </div>
         );
       case 'system':
         return (
-          <div className="text-amber-600 dark:text-amber-400">
+          <div className="text-amber-600 dark:text-amber-400 text-sm">
             {message.content}
           </div>
         );
+      case 'error':
+      case 'assistant':
       default:
-        return message.content;
+        return (
+          <div className="text-sm">
+            {message.content}
+          </div>
+        );
     }
   };
 
   const getMessageStyle = (message: Message) => {
+    // Only user messages get the bubble style
     if (message.isUser) {
-      return "bg-primary text-primary-foreground";
+      return "bg-primary text-primary-foreground py-2 px-3 rounded-lg";
     }
     
-    // Style based on message type
-    switch (message.type) {
-      case 'error':
-        return "bg-destructive/20 border border-destructive text-destructive";
-      case 'ThoughtEvent':
-        return "bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200";
-      case 'ToolCallRequestEvent':
-      case 'ToolCallExecutionEvent':
-      case 'ToolCallSummaryMessage':
-        return "bg-yellow-100 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-200";
-      case 'HandoffMessage':
-        return "bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-200";
+    // Error messages get a special style
+    if (message.type === 'error') {
+      return "text-destructive";
     }
     
-    // Style based on message source
-    switch (message.source) {
-      case 'system':
-        return "bg-muted/80 border border-muted";
-      case 'yoda':
-        return "bg-green-100 dark:bg-green-950 text-green-800 dark:text-green-200";
-      case 'assistant':
-      default:
-        return "bg-muted";
-    }
+    // All other messages get a minimal style
+    return "";
   };
 
   const getMessageIcon = (message: Message) => {
     if (message.type === 'error') {
       return <AlertCircle className="h-4 w-4 text-destructive" />;
-    }
-    
-    if (message.type === 'ThoughtEvent') {
-      return <AlertTriangle className="h-4 w-4 text-blue-500" />;
     }
     
     return null;
@@ -353,45 +409,41 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             <div
               key={message.id}
               className={cn(
-                "flex max-w-[95%] animate-fade-up",
-                message.isUser ? "ml-auto" : "mr-auto"
+                "animate-fade-up",
+                message.isUser ? "flex justify-end" : "flex"
               )}
             >
-              <Card
+              <div
                 className={cn(
-                  "px-3 py-2 text-sm",
+                  "max-w-[90%]",
                   getMessageStyle(message)
                 )}
               >
-                <div className="space-y-1">
-                  {message.type && message.type !== 'text' && !message.isUser && (
-                    <div className="text-[10px] font-medium uppercase tracking-wider mb-1 flex items-center gap-1">
-                      {getMessageIcon(message)}
-                      {message.type}
-                    </div>
-                  )}
-                  <div>{formatMessage(message)}</div>
-                  <div className="text-[10px] opacity-70 text-right flex justify-between items-center">
-                    {message.source && (
-                      <span className="font-medium">{message.source}</span>
-                    )}
-                    <span>
-                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </span>
+                {message.type && message.type !== 'text' && !message.isUser && message.type !== 'ThoughtEvent' && (
+                  <div className="text-[10px] font-medium uppercase tracking-wider mb-1 flex items-center gap-1">
+                    {getMessageIcon(message)}
+                    {message.type}
                   </div>
+                )}
+                <div>{formatMessage(message)}</div>
+                <div className="text-[10px] opacity-70 mt-1 flex justify-between items-center">
+                  {message.source && (
+                    <span className="font-medium">{message.source}</span>
+                  )}
+                  <span>
+                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  </span>
                 </div>
-              </Card>
+              </div>
             </div>
           ))}
           
           {isLoading && (
-            <div className="flex max-w-[80%] mr-auto animate-fade-up">
-              <Card className="px-3 py-2 text-sm bg-muted">
-                <div className="flex items-center gap-2">
-                  <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
-                  <span className="text-muted-foreground">Thinking...</span>
-                </div>
-              </Card>
+            <div className="flex animate-fade-up">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>Thinking...</span>
+              </div>
             </div>
           )}
         </div>
