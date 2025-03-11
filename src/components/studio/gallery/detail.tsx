@@ -15,12 +15,7 @@ import {
 } from "lucide-react";
 import { ComponentEditor } from "../teambuilder/builder/component-editor/component-editor";
 import { TruncatableText } from "../atoms";
-import {
-  Component,
-  ComponentConfig,
-  ComponentTypes,
-  Gallery,
-} from "../../types/datamodel";
+import { Component, ComponentConfig, ComponentTypes } from "../datamodel";
 
 type CategoryKey = `${ComponentTypes}s`;
 

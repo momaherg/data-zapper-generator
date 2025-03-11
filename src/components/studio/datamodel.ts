@@ -401,5 +401,6 @@ export interface GalleryConfig {
 }
 
 export interface Gallery extends DBModel {
+  name: string;
   config: GalleryConfig;
 }

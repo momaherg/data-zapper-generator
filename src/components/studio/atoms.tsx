@@ -1,4 +1,3 @@
-
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -44,23 +43,26 @@ export const Paragraph = React.forwardRef<
 Paragraph.displayName = "Paragraph";
 
 export interface TruncatableTextProps {
-  text: string;
+  text?: string | null;
+  content?: string | null;
   maxLength?: number;
   showFullscreen?: boolean;
   textThreshold?: number;
 }
 
 export const TruncatableText: React.FC<TruncatableTextProps> = ({ 
-  text, 
+  text,
+  content,
   maxLength = 50,
   showFullscreen = false,
   textThreshold = 100 
 }) => {
-  if (!text) return <span>-</span>;
-  if (text.length <= maxLength) return <span>{text}</span>;
+  const displayText = text || content || '';
+  if (!displayText) return <span>-</span>;
+  if (displayText.length <= maxLength) return <span>{displayText}</span>;
   return (
-    <span title={text}>
-      {text.substring(0, maxLength)}...
+    <span title={displayText}>
+      {displayText.substring(0, maxLength)}...
     </span>
   );
 };

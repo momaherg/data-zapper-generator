@@ -1,19 +1,4 @@
 
-import { Team, Component, ComponentConfig } from "./datamodel";
-import { getServerUrl } from "./utils";
-
-interface ValidationError {
-  field: string;
-  error: string;
-  suggestion?: string;
-}
-
-export interface ValidationResponse {
-  is_valid: boolean;
-  errors: ValidationError[];
-  warnings: ValidationError[];
-}
-
 export class TeamAPI {
   private getBaseUrl(): string {
     return "http://localhost:5000";
@@ -25,12 +10,34 @@ export class TeamAPI {
     };
   }
 
+  async listTeams(): Promise<Team[]> {
+    const response = await fetch(`${this.getBaseUrl()}/teams`, {
+      headers: this.getHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to fetch teams");
+    }
+    return response.json();
+  }
+
   async getTeam(): Promise<Team> {
     const response = await fetch(`${this.getBaseUrl()}/team`, {
       headers: this.getHeaders(),
     });
     if (!response.ok) {
       throw new Error("Failed to fetch team");
+    }
+    return response.json();
+  }
+
+  async createTeam(team: Partial<Team>): Promise<Team> {
+    const response = await fetch(`${this.getBaseUrl()}/team`, {
+      method: "POST", 
+      headers: this.getHeaders(),
+      body: JSON.stringify(team),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to create team");
     }
     return response.json();
   }
