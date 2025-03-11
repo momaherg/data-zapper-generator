@@ -5,7 +5,7 @@ import {
   isAssistantAgent,
   isUserProxyAgent,
   isWebSurferAgent,
-} from "../../../../../types/guards";
+} from "../../../guards";
 import { NestedComponentButton } from "./fields";
 import { NodeEditorFieldsProps } from "./fields";
 

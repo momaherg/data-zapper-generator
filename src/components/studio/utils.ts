@@ -1,6 +1,8 @@
 // import { IStatus } from "./types/app";
 
-
+export const getServerUrl = () => {
+  return "http://localhost:5000";
+};
 
 export function setLocalStorage(
   name: string,

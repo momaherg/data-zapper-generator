@@ -1,8 +1,8 @@
 import React, { useRef, useState } from "react";
 import { Form, Input, Switch, Select, Button, Space } from "antd";
 import { PlusCircle, MinusCircle } from "lucide-react";
-import { Import } from "../../../../../types/datamodel";
-import { isFunctionTool } from "../../../../../types/guards";
+import { Import } from "../../../datamodel";
+import { isFunctionTool } from "../../../guards";
 import { MonacoEditor } from "../../../../monaco";
 import { NodeEditorFieldsProps } from "./fields";
 

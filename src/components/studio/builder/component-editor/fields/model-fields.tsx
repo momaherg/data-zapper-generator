@@ -5,12 +5,12 @@ import {
   Component,
   ComponentConfig,
   ModelConfig,
-} from "../../../../../types/datamodel";
+} from "../../../datamodel";
 import {
   isOpenAIModel,
   isAzureOpenAIModel,
   isAnthropicModel,
-} from "../../../../../types/guards";
+} from "../../../guards";
 import DetailGroup from "../detailgroup";
 import TextArea from "antd/es/input/TextArea";
 

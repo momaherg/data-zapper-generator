@@ -4,12 +4,12 @@ import {
   Component,
   ComponentConfig,
   AgentConfig,
-} from "../../../types/datamodel";
+} from "../datamodel";
 import {
   isAssistantAgent,
   isUserProxyAgent,
   isWebSurferAgent,
-} from "../../../types/guards";
+} from "../guards";
 import { CustomNode, CustomEdge } from "./types";
 
 interface Position {

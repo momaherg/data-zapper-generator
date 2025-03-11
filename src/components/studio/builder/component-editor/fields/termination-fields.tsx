@@ -5,13 +5,13 @@ import {
   Component,
   ComponentConfig,
   TerminationConfig,
-} from "../../../../../types/datamodel";
+} from "../../../datamodel";
 import {
   isOrTermination,
   isMaxMessageTermination,
   isTextMentionTermination,
-} from "../../../../../types/guards";
-import { PROVIDERS } from "../../../../../types/guards";
+} from "../../../guards";
+import { PROVIDERS } from "../../../guards";
 import DetailGroup from "../detailgroup";
 
 interface TerminationFieldsProps {

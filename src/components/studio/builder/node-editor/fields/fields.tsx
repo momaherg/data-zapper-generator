@@ -5,14 +5,14 @@ import {
   Component,
   ComponentConfig,
   FunctionToolConfig,
-} from "../../../../../types/datamodel";
+} from "../../../datamodel";
 import {
   isTeamComponent,
   isAgentComponent,
   isModelComponent,
   isToolComponent,
   isTerminationComponent,
-} from "../../../../../types/guards";
+} from "../../../guards";
 import DetailGroup from "../detailgroup";
 import { TeamFields } from "./team-fields";
 import { AgentFields } from "./agent-fields";

@@ -1,6 +1,6 @@
 import React from "react";
 import { Form, Input, InputNumber, Switch } from "antd";
-import { isSelectorTeam, isRoundRobinTeam } from "../../../../../types/guards";
+import { isSelectorTeam, isRoundRobinTeam } from "../../../guards";
 import { NestedComponentButton, NodeEditorFieldsProps } from "./fields";
 const { TextArea } = Input;
 

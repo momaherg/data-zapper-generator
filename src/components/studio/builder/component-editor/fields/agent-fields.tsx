@@ -6,12 +6,12 @@ import {
   ComponentConfig,
   AgentConfig,
   FunctionToolConfig,
-} from "../../../../../types/datamodel";
+} from "../../../datamodel";
 import {
   isAssistantAgent,
   isUserProxyAgent,
   isWebSurferAgent,
-} from "../../../../../types/guards";
+} from "../../../guards";
 import DetailGroup from "../detailgroup";
 
 const { TextArea } = Input;

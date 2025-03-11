@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useState } from "react";
 
 import { Drawer, Button, message, Checkbox } from "antd";
-import { Team, Session } from "../../../types/datamodel";
+import { Team, Session } from "../datamodel";
 import ChatView from "../../playground/chat/chat";
 import { appContext } from "../../../../hooks/provider";
 import { sessionAPI } from "../../playground/api";

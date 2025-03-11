@@ -5,9 +5,9 @@ import {
   Component,
   ComponentConfig,
   Import,
-} from "../../../../../types/datamodel";
-import { isFunctionTool } from "../../../../../types/guards";
-import { MonacoEditor } from "../../../../monaco";
+} from "../../../datamodel";
+import { isFunctionTool } from "../../../guards";
+import { MonacoEditor } from "../../monaco";
 import DetailGroup from "../detailgroup";
 
 const { TextArea } = Input;

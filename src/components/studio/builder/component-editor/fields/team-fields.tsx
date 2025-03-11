@@ -7,8 +7,8 @@ import {
   ComponentConfig,
   RoundRobinGroupChatConfig,
   SelectorGroupChatConfig,
-} from "../../../../../types/datamodel";
-import { isSelectorTeam, isRoundRobinTeam } from "../../../../../types/guards";
+} from "../../../datamodel";
+import { isSelectorTeam, isRoundRobinTeam } from "../../../guards";
 import DetailGroup from "../detailgroup";
 
 const { TextArea } = Input;

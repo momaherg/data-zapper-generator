@@ -1,21 +1,21 @@
 import React, { useState, useCallback, useRef } from "react";
 import { Button, Breadcrumb } from "antd";
 import { ChevronLeft, Code, FormInput } from "lucide-react";
-import { Component, ComponentConfig } from "../../../../types/datamodel";
+import { Component, ComponentConfig } from "../../datamodel";
 import {
   isTeamComponent,
   isAgentComponent,
   isModelComponent,
   isToolComponent,
   isTerminationComponent,
-} from "../../../../types/guards";
+} from "../../guards";
 import { AgentFields } from "./fields/agent-fields";
 import { ModelFields } from "./fields/model-fields";
 import { TeamFields } from "./fields/team-fields";
 import { ToolFields } from "./fields/tool-fields";
 import { TerminationFields } from "./fields/termination-fields";
 import debounce from "lodash.debounce";
-import { MonacoEditor } from "../../../monaco";
+import { MonacoEditor } from "../monaco";
 
 export interface EditPath {
   componentType: string;

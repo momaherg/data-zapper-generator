@@ -1,8 +1,8 @@
 // fields/model-fields.tsx
 import React from "react";
 import { Form, Input, InputNumber, Select } from "antd";
-import { Component, ComponentConfig } from "../../../../../types/datamodel";
-import { isOpenAIModel, isAzureOpenAIModel } from "../../../../../types/guards";
+import { Component, ComponentConfig } from "../../../datamodel";
+import { isOpenAIModel, isAzureOpenAIModel } from "../../../guards";
 
 interface ModelFieldsProps {
   component: Component<ComponentConfig>;

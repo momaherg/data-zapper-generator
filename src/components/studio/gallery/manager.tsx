@@ -6,7 +6,7 @@ import { galleryAPI } from "./api";
 import { GallerySidebar } from "./sidebar";
 import { GalleryDetail } from "./detail";
 import { GalleryCreateModal } from "./create-modal";
-import type { Gallery } from "../../types/datamodel";
+import type { Gallery } from "../datamodel";
 
 export const GalleryManager: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);

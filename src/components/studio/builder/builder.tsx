@@ -33,16 +33,16 @@ import {
 } from "lucide-react";
 import { useTeamBuilderStore } from "./store";
 import { ComponentLibrary } from "./library";
-import { ComponentTypes, Team } from "../../../types/datamodel";
+import { ComponentTypes, Team } from "../datamodel";
 import { CustomNode, CustomEdge, DragItem } from "./types";
 import { edgeTypes, nodeTypes } from "./nodes";
 
 // import builder css
 import "./builder.css";
 import TeamBuilderToolbar from "./toolbar";
-import { MonacoEditor } from "../../monaco";
+import { MonacoEditor } from "./monaco";
 import debounce from "lodash.debounce";
-import TestDrawer from "./testdrawer";
+// import TestDrawer from "./testdrawer";
 import { validationAPI, ValidationResponse } from "../api";
 import { ValidationErrors } from "./validationerrors";
 import ComponentEditor from "./component-editor/component-editor";
@@ -576,13 +576,13 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
         </DragOverlay>
       </DndContext>
 
-      {testDrawerVisible && (
+      {/* {testDrawerVisible && (
         <TestDrawer
           isVisble={testDrawerVisible}
           team={team}
           onClose={() => handleTestDrawerClose()}
         />
-      )}
+      )} */}
     </div>
   );
 };

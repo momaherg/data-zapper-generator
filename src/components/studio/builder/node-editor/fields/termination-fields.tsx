@@ -1,12 +1,12 @@
 // fields/termination-fields.tsx
 import React from "react";
 import { Form, Input, InputNumber } from "antd";
-import { Component, ComponentConfig } from "../../../../../types/datamodel";
+import { Component, ComponentConfig } from "../../../datamodel";
 import {
   isOrTermination,
   isMaxMessageTermination,
   isTextMentionTermination,
-} from "../../../../../types/guards";
+} from "../../../guards";
 import { NestedComponentButton } from "./fields";
 
 interface TerminationFieldsProps {
