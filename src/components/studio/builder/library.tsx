@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Input, Collapse, type CollapseProps } from "antd";
 import { useDraggable } from "@dnd-kit/core";
@@ -78,7 +77,7 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [isMinimized, setIsMinimized] = React.useState(false);
   const defaultGallery = useGalleryStore((state) => state.getSelectedGallery());
-  const galleryLoading = useGalleryStore((state) => state.loading);
+  const galleryLoading = useGalleryStore((state) => state.isLoading);
 
   console.log("Gallery data:", defaultGallery); // Debug - to check if gallery data is loaded
 

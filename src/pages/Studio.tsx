@@ -1,8 +1,8 @@
 
 import * as React from "react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { TeamBuilder } from "../components/studio/builder/builder";
-import { Loader2 } from "lucide-react";
+import { Loader2, Users } from "lucide-react";
 import { Team } from "../components/studio/datamodel";
 import { useGalleryStore } from "../components/studio/gallery/store";
 import { teamAPI } from "../components/studio/api";
@@ -25,15 +25,32 @@ const StudioPage = () => {
       setTeam(data);
     } catch (error) {
       console.error("Error fetching team:", error);
-      toast.error("Failed to load team");
+      toast.error("Failed to load team, using default configuration");
       
-      // Create a default empty team if we couldn't fetch one
+      // Create a default empty team with initial components if we couldn't fetch one
       setTeam({
         component: {
           provider: "selector",
           component_type: "team",
           config: {
-            participants: [],
+            participants: [
+              {
+                provider: "anthropic",
+                component_type: "agent",
+                config: {
+                  name: "Research Agent",
+                  system_prompt: "You are a helpful research assistant."
+                }
+              },
+              {
+                provider: "openai",
+                component_type: "agent",
+                config: {
+                  name: "Writing Agent",
+                  system_prompt: "You are a creative writing assistant."
+                }
+              }
+            ],
             model_client: {
               provider: "openai",
               component_type: "model",
@@ -65,13 +82,20 @@ const StudioPage = () => {
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-gray-500">Loading Agents Studio...</p>
+        </div>
       </div>
     );
   }
 
   return (
     <main className="h-full w-full p-4 bg-gray-50">
+      <div className="mb-4 flex items-center gap-2">
+        <Users className="h-5 w-5 text-blue-500" />
+        <h1 className="text-xl font-semibold">Agents Studio</h1>
+      </div>
       {team && <TeamBuilder team={team} onChange={handleTeamUpdate} />}
     </main>
   );

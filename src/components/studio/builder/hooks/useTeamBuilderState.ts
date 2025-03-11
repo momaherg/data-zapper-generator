@@ -1,13 +1,11 @@
-
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNodesState, useEdgesState, Connection, addEdge } from "@xyflow/react";
-import { ValidationResponse } from "../../api";
+import { ValidationResponse, validationAPI } from "../../api";
 import { useTeamBuilderStore } from "../store";
 import { CustomNode, CustomEdge } from "../types";
 import { Component, Team } from "../../datamodel";
 import debounce from "lodash.debounce";
 import { message } from "antd";
-import { validationAPI } from "../../api";
 
 export function useTeamBuilderState(
   team: Team,

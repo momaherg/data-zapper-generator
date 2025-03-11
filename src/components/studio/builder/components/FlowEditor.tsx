@@ -4,10 +4,7 @@ import {
   ReactFlow,
   Background,
   MiniMap,
-  useNodesState,
-  useEdgesState,
   Connection,
-  addEdge,
 } from "@xyflow/react";
 import { CustomNode, CustomEdge } from "../types";
 import { MonacoEditor } from "../monaco";
@@ -60,7 +57,7 @@ export const FlowEditor: React.FC<FlowEditorProps> = ({
           editorRef={editorRef}
           language="json"
           minimap={false}
-          height="100%"
+          className="h-full"
         />
       ) : (
         <ReactFlow
