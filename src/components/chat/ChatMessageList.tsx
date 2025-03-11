@@ -20,20 +20,44 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
   onToggleCollapse,
   scrollAreaRef
 }) => {
-  // Filter out the message types we want to hide
-  const shouldShowMessage = (message: Message): boolean => {
+  // Filter out the message types we want to hide and deduplicate messages
+  const dedupedMessages = messages.reduce<Message[]>((acc, message, index) => {
+    // Skip certain message types
     if (message.type === 'ToolCallExecutionEvent' || 
         message.type === 'ToolCallSummaryMessage' || 
         message.type === 'HandoffMessage') {
-      return false;
+      return acc;
     }
-    return true;
-  };
+    
+    // Skip empty messages
+    if (typeof message.content === 'string' && message.content.trim() === '') {
+      return acc;
+    }
+    
+    // Check for duplicates (same content, source and close timestamp)
+    const isDuplicate = acc.some(existingMsg => {
+      // If message content, source and user flag match
+      if (existingMsg.content === message.content && 
+          existingMsg.source === message.source &&
+          existingMsg.isUser === message.isUser) {
+        // Check if timestamps are close (within 2 seconds)
+        const timeDiff = Math.abs(existingMsg.timestamp.getTime() - message.timestamp.getTime());
+        return timeDiff < 2000; // 2 seconds threshold
+      }
+      return false;
+    });
+    
+    if (!isDuplicate) {
+      acc.push(message);
+    }
+    
+    return acc;
+  }, []);
 
   return (
     <ScrollArea ref={scrollAreaRef} className="flex-1 p-4">
       <div className="space-y-4">
-        {messages.filter(shouldShowMessage).map(message => (
+        {dedupedMessages.map(message => (
           <ChatMessage
             key={message.id}
             message={message}
