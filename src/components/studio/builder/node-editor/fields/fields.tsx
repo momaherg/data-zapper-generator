@@ -1,11 +1,54 @@
+import React from "react";
+import { 
+  Component, 
+  ComponentConfig, 
+  FunctionToolConfig,
+  TeamConfig,
+  AgentConfig,
+  ModelConfig,
+  ToolConfig,
+  TerminationConfig 
+} from "../../../../../types/datamodel";
+import { TeamFields } from "./team-fields";
+import { AgentFields } from "./agent-fields";
+import { ModelFields } from "./model-fields";
+import { ToolFields } from "./tool-fields";
+import { TerminationFields } from "./termination-fields";
 
-import React from 'react';
-import { Component, ComponentConfig } from '../../../datamodel';
-import { AgentFields } from './agent-fields';
-import { ModelFields } from './model-fields';
-import { TeamFields } from './team-fields';
-import { ToolFields } from './tool-fields';
-import { TerminationFields } from './termination-fields';
+import { 
+  isTeamComponent, 
+  isAgentComponent, 
+  isModelComponent, 
+  isToolComponent, 
+  isTerminationComponent 
+} from "../../../../studio/guards";
+import { NodeEditorFieldsProps } from "../../node-editor";
+
+export const renderFields = (props: NodeEditorFieldsProps) => {
+  const { component } = props;
+
+  if (isModelComponent(component)) {
+    return <ModelFields {...props} component={component} />;
+  }
+
+  if (isToolComponent(component)) {
+    return <ToolFields {...props} component={component} />;
+  }
+
+  if (isTeamComponent(component)) {
+    return <TeamFields {...props} component={component} />;
+  }
+
+  if (isAgentComponent(component)) {
+    return <AgentFields {...props} component={component} />;
+  }
+
+  if (isTerminationComponent(component)) {
+    return <TerminationFields {...props} component={component} />;
+  }
+
+  return <div>Unknown component type: {component.component_type}</div>;
+};
 
 export interface FieldsProps {
   component: Component<ComponentConfig>;

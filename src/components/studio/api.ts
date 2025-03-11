@@ -1,4 +1,19 @@
 
+import { Team, Component, ComponentConfig } from "../studio/datamodel";
+import { getServerUrl } from "./utils";
+
+export interface ValidationError {
+  field: string;
+  error: string;
+  suggestion?: string;
+}
+
+export interface ValidationResponse {
+  is_valid: boolean;
+  errors: ValidationError[];
+  warnings: ValidationError[];
+}
+
 export class TeamAPI {
   private getBaseUrl(): string {
     return "http://localhost:5000";

@@ -1,26 +1,16 @@
 
+// Re-export the full datamodel from studio
+export * from "../components/studio/datamodel";
+
+// Define a Gallery type compatible with both implementations
 export interface Gallery {
-  id: string;
+  id: number | string;
   name: string;
   description?: string;
-  items?: GalleryItem[];
+  user_id?: string;
   created_at?: string;
   updated_at?: string;
-}
-
-export interface GalleryItem {
-  id: string;
-  name: string;
-  description?: string;
-  type: string;
-  data?: any;
-  gallery_id: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface GalleryConfig {
-  name: string;
-  description?: string;
-  items?: GalleryItem[];
+  version?: number;
+  config?: any;
+  items?: any[];
 }

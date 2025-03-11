@@ -1,73 +1,20 @@
-import React, { useState } from "react";
-import {
-  eraseCookie,
-  getLocalStorage,
-  setLocalStorage,
-} from "../components/studio/utils";
-import { message } from "antd";
 
-export interface IUser {
-  name: string;
-  email?: string;
-  username?: string;
-  avatar_url?: string;
-  metadata?: any;
+import React, { createContext, useContext, useState } from "react";
+
+interface UserContextType {
+  user: any | null;
 }
 
-export interface AppContextType {
-  user: IUser | null;
-  setUser: any;
-  logout: any;
-  cookie_name: string;
-  darkMode: string;
-  setDarkMode: any;
-}
+const UserContext = createContext<UserContextType>({ user: null });
 
-const cookie_name = "coral_app_cookie_";
+export const useUserContext = () => useContext(UserContext);
 
-export const appContext = React.createContext<AppContextType>(
-  {} as AppContextType
-);
-const Provider = ({ children }: any) => {
-  const storedValue = getLocalStorage("darkmode", false);
-  const [darkMode, setDarkMode] = useState(
-    storedValue === null ? "light" : storedValue === "dark" ? "dark" : "light"
-  );
-
-  const logout = () => {
-    // setUser(null);
-    // eraseCookie(cookie_name);
-    console.log("Please implement your own logout logic");
-    message.info("Please implement your own logout logic");
-  };
-
-  const updateDarkMode = (darkMode: string) => {
-    setDarkMode(darkMode);
-    setLocalStorage("darkmode", darkMode, false);
-  };
-
-  // Modify logic here to add your own authentication
-  const initUser = {
-    name: "Guest User",
-    email: "guestuser@gmail.com",
-    username: "guestuser",
-  };
-  const [user, setUser] = useState<IUser | null>(initUser);
+export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [user] = useState<any | null>(null);
 
   return (
-    <appContext.Provider
-      value={{
-        user,
-        setUser,
-        logout,
-        cookie_name,
-        darkMode,
-        setDarkMode: updateDarkMode,
-      }}
-    >
+    <UserContext.Provider value={{ user }}>
       {children}
-    </appContext.Provider>
+    </UserContext.Provider>
   );
 };
-
-export default ({ element }: any) => <Provider>{element}</Provider>;

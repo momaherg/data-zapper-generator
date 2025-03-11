@@ -1,77 +1,59 @@
 import React from "react";
-import { Form, Input, InputNumber, Switch } from "antd";
-import { isSelectorTeam, isRoundRobinTeam } from "../../../guards";
-import { NestedComponentButton, NodeEditorFieldsProps } from "./fields";
-const { TextArea } = Input;
+import { Form, Input, Select } from "antd";
+import { Component, TeamConfig, ComponentConfig } from "../../../../../types/datamodel";
+import { NestedComponentButton, NodeEditorFieldsProps } from "../../node-editor";
 
-export const TeamFields: React.FC<NodeEditorFieldsProps> = ({
-  component,
-  onNavigate,
-  workingCopy,
-  setWorkingCopy,
-  editPath,
-  updateComponentAtPath,
-  getCurrentComponent,
-}) => {
-  if (!component) return null;
+export interface TeamFieldsProps extends NodeEditorFieldsProps {
+  component: Component<TeamConfig>;
+}
 
-  if (isSelectorTeam(component)) {
-    return (
-      <>
-        <Form.Item
-          label="Selector Prompt"
-          name={["config", "selector_prompt"]}
-          rules={[{ required: true }]}
-        >
-          <TextArea rows={4} />
-        </Form.Item>
-        <Form.Item label="Max Turns" name={["config", "max_turns"]}>
-          <InputNumber min={1} />
-        </Form.Item>
-        <Form.Item
-          label="Allow Repeated Speaker"
-          name={["config", "allow_repeated_speaker"]}
-          valuePropName="checked"
-        >
-          <Switch />
-        </Form.Item>
-        {component.config.model_client && (
-          <NestedComponentButton
-            label="Model Client"
-            component={component.config.model_client}
-            parentField="model_client"
-            onNavigate={onNavigate}
+export const TeamFields: React.FC<TeamFieldsProps> = ({ component, onChange, onNavigate }) => {
+  const { config } = component;
+
+  const handleFieldChange = (field: string, value: any) => {
+    onChange({ config: { ...config, [field]: value } });
+  };
+
+  return (
+    <div>
+      <Form layout="vertical">
+        <Form.Item label="Selector Prompt">
+          <Input
+            value={config.selector_prompt}
+            onChange={(e) => handleFieldChange("selector_prompt", e.target.value)}
           />
-        )}
-        {component.config.termination_condition && (
-          <NestedComponentButton
-            label="Termination Condition"
-            component={component.config.termination_condition}
-            parentField="termination_condition"
-            onNavigate={onNavigate}
-          />
-        )}
-      </>
-    );
-  }
-
-  if (isRoundRobinTeam(component)) {
-    return (
-      <>
-        <Form.Item label="Max Turns" name={["config", "max_turns"]}>
-          <InputNumber min={1} />
         </Form.Item>
-        {component.config.termination_condition && (
-          <NestedComponentButton
-            label="Termination Condition"
-            component={component.config.termination_condition}
-            parentField="termination_condition"
-            onNavigate={onNavigate}
-          />
-        )}
-      </>
-    );
-  }
 
-  return null;
+        <Form.Item label="Allow Repeated Speaker">
+          <Select
+            value={config.allow_repeated_speaker}
+            onChange={(value) => handleFieldChange("allow_repeated_speaker", value)}
+          >
+            <Select.Option value={true}>True</Select.Option>
+            <Select.Option value={false}>False</Select.Option>
+          </Select>
+        </Form.Item>
+
+        {/* Nested Component Buttons */}
+        {onNavigate && (
+          <>
+            <NestedComponentButton
+              label="Model Client"
+              description={config.model_client?.config?.model}
+              onClick={() => onNavigate("model", config.model_client?.label || "Model Client", "model_client")}
+            />
+
+            {config.participants?.map((participant, index) => (
+              <NestedComponentButton
+                key={index}
+                label={participant.label || `Participant ${index + 1}`}
+                description={participant.config.name}
+                onClick={() => onNavigate("agent", participant.label || `Participant ${index + 1}`, "participants")}
+              />
+            ))}
+          </>
+        )}
+      </Form>
+    </div>
+  );
 };
