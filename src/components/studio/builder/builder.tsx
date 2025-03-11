@@ -1,59 +1,22 @@
-//team/builder/builder.tsx
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import {
-  DndContext,
-  useSensor,
-  useSensors,
-  PointerSensor,
-  DragEndEvent,
-  DragOverEvent,
-  DragOverlay,
-  DragStartEvent,
-} from "@dnd-kit/core";
-import {
-  ReactFlow,
-  useNodesState,
-  useEdgesState,
-  addEdge,
-  Connection,
-  Background,
-  MiniMap,
-} from "@xyflow/react";
+
+import React, { useCallback } from "react";
+import { DndContext, useSensor, useSensors, PointerSensor, DragOverlay } from "@dnd-kit/core";
+import { Layout, Drawer } from "antd";
 import "@xyflow/react/dist/style.css";
-import { Button, Drawer, Layout, message, Switch, Tooltip } from "antd";
-import {
-  Cable,
-  CheckCircle,
-  CircleX,
-  Code2,
-  Download,
-  ListCheck,
-  PlayCircle,
-  Save,
-} from "lucide-react";
 import { useTeamBuilderStore } from "./store";
 import { ComponentLibrary } from "./library";
-import { ComponentTypes, Team } from "../datamodel";
-import { CustomNode, CustomEdge, DragItem } from "./types";
+import { Team } from "../datamodel";
 import { edgeTypes, nodeTypes } from "./nodes";
-
-// import builder css
 import "./builder.css";
 import TeamBuilderToolbar from "./toolbar";
-import { MonacoEditor } from "./monaco";
-import debounce from "lodash.debounce";
-import { ValidationResponse } from "../api";
-import { ValidationErrors } from "./validationerrors";
 import ComponentEditor from "./component-editor/component-editor";
+import { TeamBuilderHeader } from "./components/TeamBuilderHeader";
+import { FlowEditor } from "./components/FlowEditor";
+import { DragOverlayContent } from "./components/DragOverlayContent";
+import { useTeamBuilderDnd } from "./hooks/useTeamBuilderDnd";
+import { useTeamBuilderState } from "./hooks/useTeamBuilderState";
 
 const { Sider, Content } = Layout;
-
-interface DragItemData {
-  type: ComponentTypes;
-  config: any;
-  label: string;
-  icon: React.ReactNode;
-}
 
 interface TeamBuilderProps {
   team: Team;
@@ -66,37 +29,47 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
   onChange,
   onDirtyStateChange,
 }) => {
-  // Replace store state with React Flow hooks
-  const [nodes, setNodes, onNodesChange] = useNodesState<CustomNode>([]);
-  const [edges, setEdges, onEdgesChange] = useEdgesState<CustomEdge>([]);
-  const [isJsonMode, setIsJsonMode] = useState(false);
-  const [isFullscreen, setIsFullscreen] = useState(false);
-  const [showGrid, setShowGrid] = useState(true);
-  const [showMiniMap, setShowMiniMap] = useState(true);
-  const [activeDragItem, setActiveDragItem] = useState<DragItemData | null>(
-    null
-  );
-  const [validationResults, setValidationResults] =
-    useState<ValidationResponse | null>(null);
+  // Use our custom hooks to manage state and drag-and-drop
+  const {
+    nodes,
+    edges,
+    isJsonMode,
+    setIsJsonMode,
+    isFullscreen,
+    showGrid,
+    showMiniMap,
+    setShowMiniMap,
+    validationResults,
+    validationLoading,
+    testDrawerVisible,
+    setTestDrawerVisible,
+    editorRef,
+    isDirty,
+    canUndo,
+    canRedo,
+    onNodesChange,
+    onEdgesChange,
+    onConnect,
+    handleJsonChange,
+    handleValidate,
+    handleSave,
+    handleExport,
+    handleToggleFullscreen,
+    undo,
+    redo,
+    layoutNodes,
+    selectedNodeId,
+    setSelectedNode,
+    updateNode,
+    syncToJson,
+  } = useTeamBuilderState(team, onChange, onDirtyStateChange);
 
-  const [validationLoading, setValidationLoading] = useState(false);
-  const [testDrawerVisible, setTestDrawerVisible] = useState(false);
-  const editorRef = useRef(null);
-
-  const currentHistoryIndex = useTeamBuilderStore(
-    (state) => state.currentHistoryIndex
-  );
-
-  const isDirty = currentHistoryIndex > 0;
-
-  const canUndo = currentHistoryIndex > 0;
-  const canRedo = currentHistoryIndex < history.length - 1;
-
-  const onConnect = useCallback(
-    (params: Connection) =>
-      setEdges((eds: CustomEdge[]) => addEdge(params, eds)),
-    [setEdges]
-  );
+  const {
+    activeDragItem,
+    handleDragStart,
+    handleDragOver,
+    handleDragEnd,
+  } = useTeamBuilderDnd(nodes);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -106,371 +79,60 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
     })
   );
 
-  React.useEffect(() => {
-    onDirtyStateChange?.(isDirty);
-  }, [isDirty, onDirtyStateChange]);
-
-  React.useEffect(() => {
-    if (isDirty) {
-      const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-        e.preventDefault();
-        e.returnValue = "";
-      };
-      window.addEventListener("beforeunload", handleBeforeUnload);
-      return () =>
-        window.removeEventListener("beforeunload", handleBeforeUnload);
-    }
-  }, [isDirty]);
-
-  React.useEffect(() => {
-    if (team?.component) {
-      const { nodes: initialNodes, edges: initialEdges } = loadFromJson(
-        team.component
-      );
-      setNodes(initialNodes);
-      setEdges(initialEdges);
-    }
-    handleValidate();
-
-    return () => {
-      setValidationResults(null);
-    };
-  }, [team, setNodes, setEdges]);
-
-  const handleJsonChange = useCallback(
-    debounce((value: string) => {
-      try {
-        const config = JSON.parse(value);
-        loadFromJson(config, false);
-        useTeamBuilderStore.getState().addToHistory();
-      } catch (error) {
-        console.error("Invalid JSON:", error);
-      }
-    }, 1000),
-    [loadFromJson]
-  );
-
-  useEffect(() => {
-    return () => {
-      handleJsonChange.cancel();
-      setValidationResults(null);
-    };
-  }, [handleJsonChange]);
-
-  const handleValidate = useCallback(async () => {
-    const component = syncToJson();
-    if (!component) {
-      throw new Error("Unable to generate valid configuration");
-    }
-
-    try {
-      setValidationLoading(true);
-      const validationResult = await validationAPI.validateComponent(component);
-
-      setValidationResults(validationResult);
-    } catch (error) {
-      console.error("Validation error:", error);
-      message.error("Validation failed");
-    } finally {
-      setValidationLoading(false);
-    }
-  }, [syncToJson]);
-
-  const handleSave = useCallback(async () => {
-    try {
-      const component = syncToJson();
-      if (!component) {
-        throw new Error("Unable to generate valid configuration");
-      }
-
-      if (onChange) {
-        const teamData: Partial<Team> = team
-          ? {
-              ...team,
-              component,
-              created_at: undefined,
-              updated_at: undefined,
-            }
-          : { component };
-        await onChange(teamData);
-        resetHistory();
-      }
-    } catch (error) {
-      message.error(
-        error instanceof Error
-          ? error.message
-          : "Failed to save team configuration"
-      );
-    }
-  }, [syncToJson, onChange, resetHistory]);
-
-  const handleToggleFullscreen = useCallback(() => {
-    setIsFullscreen((prev) => !prev);
-  }, []);
-
-  React.useEffect(() => {
-    if (!isFullscreen) return;
-    const handleEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") {
-        setIsFullscreen(false);
-      }
-    };
-    document.addEventListener("keydown", handleEscape);
-    return () => document.removeEventListener("keydown", handleEscape);
-  }, [isFullscreen]);
-
-  React.useEffect(() => {
-    const unsubscribe = useTeamBuilderStore.subscribe((state) => {
-      setNodes(state.nodes);
-      setEdges(state.edges);
-    });
-    return unsubscribe;
-  }, [setNodes, setEdges]);
-
-  const validateDropTarget = (
-    draggedType: ComponentTypes,
-    targetType: ComponentTypes
-  ): boolean => {
-    const validTargets: Record<ComponentTypes, ComponentTypes[]> = {
-      model: ["team", "agent"],
-      tool: ["agent"],
-      agent: ["team"],
-      team: [],
-      termination: ["team"],
-    };
-    return validTargets[draggedType]?.includes(targetType) || false;
-  };
-
-  const handleDragOver = (event: DragOverEvent) => {
-    const { active, over } = event;
-    if (!over?.id || !active.data.current) return;
-
-    const draggedType = active.data.current.type;
-    const targetNode = nodes.find((node) => node.id === over.id);
-    if (!targetNode) return;
-
-    const isValid = validateDropTarget(
-      draggedType,
-      targetNode.data.component.component_type
-    );
-    if (isValid) {
-      targetNode.className = "drop-target-valid";
-    } else {
-      targetNode.className = "drop-target-invalid";
-    }
-  };
-
-  const handleDragEnd = (event: DragEndEvent) => {
-    const { active, over } = event;
-    if (!over || !active.data?.current?.current) return;
-
-    const draggedItem = active.data.current.current;
-    const dropZoneId = over.id as string;
-
-    const [nodeId] = dropZoneId.split("@@@");
-    const targetNode = nodes.find((node) => node.id === nodeId);
-    if (!targetNode) return;
-
-    const isValid = validateDropTarget(
-      draggedItem.type,
-      targetNode.data.component.component_type
-    );
-    if (!isValid) return;
-
-    const position = {
-      x: event.delta.x,
-      y: event.delta.y,
-    };
-
-    addNode(position, draggedItem.config, nodeId);
-    setActiveDragItem(null);
-  };
-
-  const handleTestDrawerClose = () => {
+  const handleTestDrawerClose = useCallback(() => {
     setTestDrawerVisible(false);
-  };
-
-  const teamValidated = validationResults && validationResults.is_valid;
-
-  const onDragStart = (item: DragItem) => {
-  };
-
-  const handleDragStart = (event: DragStartEvent) => {
-    const { active } = event;
-    if (active.data.current) {
-      setActiveDragItem(active.data.current as DragItemData);
-    }
-  };
+  }, [setTestDrawerVisible]);
 
   return (
     <div>
-      <div className="flex gap-2 text-xs rounded border-dashed border p-2 mb-2 items-center">
-        <div className="flex-1">
-          <Switch
-            onChange={() => {
-              setIsJsonMode(!isJsonMode);
-            }}
-            className="mr-2"
-            // size="small"
-            defaultChecked={!isJsonMode}
-            checkedChildren={<div className="text-xs">
-              <Cable className="w-3 h-3 inline-block mt-1 mr-1" />
-            </div>}
-            unCheckedChildren={<div className="text-xs">
-              <Code2 className="w-3 h-3 mt-1 inline-block mr-1" />
-            </div>}
-          />
-          {isJsonMode ? "View JSON" : <>Visual Builder</>}{" "}
-        </div>
-
-        <div>
-          {validationResults && !validationResults.is_valid && (
-            <div className="inline-block mr-2">
-              {" "}
-              <ValidationErrors validation={validationResults} />
-            </div>
-          )}
-          <Tooltip title="Download Team">
-            <Button
-              type="text"
-              icon={<Download size={18} />}
-              className="p-1.5 hover:bg-primary/10 rounded-md text-primary/75 hover:text-primary"
-              onClick={() => {
-                const json = JSON.stringify(syncToJson(), null, 2);
-                const blob = new Blob([json], { type: "application/json" });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement("a");
-                a.href = url;
-                a.download = "team-config.json";
-                a.click();
-                URL.revokeObjectURL(url);
-              }}
-            />
-          </Tooltip>
-
-          <Tooltip title="Save Changes">
-            <Button
-              type="text"
-              icon={
-                <div className="relative">
-                  <Save size={18} />
-                  {isDirty && (
-                    <div className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></div>
-                  )}
-                </div>
-              }
-              className="p-1.5 hover:bg-primary/10 rounded-md text-primary/75 hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={handleSave}
-              // disabled={!isDirty}
-            />
-          </Tooltip>
-
-          <Tooltip
-            title={<div>
-              Validate Team
-              {validationResults && (
-                <div className="text-xs text-center my-1">
-                  {teamValidated ? (
-                    <span>
-                      <CheckCircle className="w-3 h-3 text-green-500 inline-block mr-1" />
-                      success
-                    </span>
-                  ) : (
-                    <div className="">
-                      <CircleX className="w-3 h-3 text-red-500 inline-block mr-1" />
-                      errors
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>}
-          >
-            <Button
-              type="text"
-              loading={validationLoading}
-              icon={
-                <div className="relative">
-                  <ListCheck size={18} />
-                  {validationResults && (
-                    <div
-                      className={` ${
-                        teamValidated ? "bg-green-500" : "bg-red-500"
-                      } absolute top-0 right-0 w-2 h-2  rounded-full`}
-                    ></div>
-                  )}
-                </div>
-              }
-              className="p-1.5 hover:bg-primary/10 rounded-md text-primary/75 hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed"
-              onClick={handleValidate}
-            />
-          </Tooltip>
-
-          <Tooltip title="Run Team">
-            <Button
-              type="primary"
-              icon={<PlayCircle size={18} />}
-              className="p-1.5 ml-2 px-2.5 hover:bg-primary/10 rounded-md text-primary/75 hover:text-primary"
-              onClick={() => {
-                setTestDrawerVisible(true);
-              }}
-            >
-              Run
-            </Button>
-          </Tooltip>
-        </div>
-      </div>
+      <TeamBuilderHeader
+        isJsonMode={isJsonMode}
+        setIsJsonMode={setIsJsonMode}
+        validationResults={validationResults}
+        validationLoading={validationLoading}
+        isDirty={isDirty}
+        onValidate={handleValidate}
+        onSave={handleSave}
+        onExport={handleExport}
+        onTestRun={() => setTestDrawerVisible(true)}
+        syncToJson={syncToJson}
+      />
+      
       <DndContext
         sensors={sensors}
         onDragEnd={handleDragEnd}
         onDragOver={handleDragOver}
         onDragStart={handleDragStart}
       >
-        <Layout className=" relative bg-primary  h-[calc(100vh-239px)] rounded">
+        <Layout className="relative bg-primary h-[calc(100vh-239px)] rounded">
           {!isJsonMode && <ComponentLibrary />}
 
           <Layout className="bg-primary rounded">
-            <Content className="relative rounded bg-tertiary  ">
-              <div
-                className={`w-full h-full transition-all duration-200 ${
-                  isFullscreen
-                    ? "fixed inset-4 z-50 shadow bg-tertiary  backdrop-blur-sm"
-                    : ""
-                }`}
-              >
-                {isJsonMode ? (
-                  <MonacoEditor
-                    value={JSON.stringify(syncToJson(), null, 2)}
-                    onChange={handleJsonChange}
-                    editorRef={editorRef}
-                    language="json"
-                    minimap={false}
-                  />
-                ) : (
-                  <ReactFlow
-                    nodes={nodes}
-                    edges={edges}
-                    onNodesChange={onNodesChange}
-                    onEdgesChange={onEdgesChange}
-                    onConnect={onConnect}
-                    nodeTypes={nodeTypes}
-                    edgeTypes={edgeTypes}
-                    onDrop={(event) => event.preventDefault()}
-                    onDragOver={(event) => event.preventDefault()}
-                    className="rounded"
-                    fitView
-                    fitViewOptions={{ padding: 10 }}
-                  >
-                    {showGrid && <Background />}
-                    {showMiniMap && <MiniMap />}
-                  </ReactFlow>
-                )}
-              </div>
+            <Content className="relative rounded bg-tertiary">
+              <FlowEditor
+                isJsonMode={isJsonMode}
+                jsonValue={JSON.stringify(syncToJson(), null, 2)}
+                editorRef={editorRef}
+                handleJsonChange={handleJsonChange}
+                nodes={nodes}
+                edges={edges}
+                onNodesChange={onNodesChange}
+                onEdgesChange={onEdgesChange}
+                onConnect={onConnect}
+                nodeTypes={nodeTypes}
+                edgeTypes={edgeTypes}
+                showGrid={showGrid}
+                showMiniMap={showMiniMap}
+                isFullscreen={isFullscreen}
+              />
+              
               {isFullscreen && (
                 <div
                   className="fixed inset-0 -z-10 bg-background bg-opacity-80 backdrop-blur-sm"
                   onClick={handleToggleFullscreen}
                 />
               )}
+              
               <TeamBuilderToolbar
                 isJsonMode={isJsonMode}
                 isFullscreen={isFullscreen}
@@ -483,7 +145,7 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
                 onUndo={undo}
                 onRedo={redo}
                 onSave={handleSave}
-                onToggleGrid={() => setShowGrid(!showGrid)}
+                onToggleGrid={() => !showGrid}
                 onToggleFullscreen={handleToggleFullscreen}
                 onAutoLayout={layoutNodes}
               />
@@ -519,23 +181,16 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
             </Drawer>
           )}
         </Layout>
+        
         <DragOverlay
           dropAnimation={{
             duration: 250,
             easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)",
           }}
         >
-          {activeDragItem ? (
-            <div className="p-2 text-primary h-full rounded">
-              <div className="flex items-center gap-2">
-                {activeDragItem.icon}
-                <span className="text-sm">{activeDragItem.label}</span>
-              </div>
-            </div>
-          ) : null}
+          <DragOverlayContent activeDragItem={activeDragItem} />
         </DragOverlay>
       </DndContext>
     </div>
   );
 };
-
