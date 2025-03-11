@@ -7,8 +7,8 @@ import {
   PointerSensor,
   DragEndEvent,
   DragOverEvent,
-  DragOverlay, // Add this
-  DragStartEvent, // Add this
+  DragOverlay,
+  DragStartEvent,
 } from "@dnd-kit/core";
 import {
   ReactFlow,
@@ -42,12 +42,12 @@ import "./builder.css";
 import TeamBuilderToolbar from "./toolbar";
 import { MonacoEditor } from "./monaco";
 import debounce from "lodash.debounce";
-// import TestDrawer from "./testdrawer";
-import { validationAPI, ValidationResponse } from "../api";
+import { ValidationResponse } from "../api";
 import { ValidationErrors } from "./validationerrors";
 import ComponentEditor from "./component-editor/component-editor";
 
 const { Sider, Content } = Layout;
+
 interface DragItemData {
   type: ComponentTypes;
   config: any;
@@ -73,9 +73,6 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showGrid, setShowGrid] = useState(true);
   const [showMiniMap, setShowMiniMap] = useState(true);
-  // const [isDirty, setIsDirty] = useState(false);
-  const editorRef = useRef(null);
-  const [messageApi, contextHolder] = message.useMessage();
   const [activeDragItem, setActiveDragItem] = useState<DragItemData | null>(
     null
   );
@@ -104,10 +101,8 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
     (state) => state.currentHistoryIndex
   );
 
-  // Compute isDirty based on the store value
   const isDirty = currentHistoryIndex > 0;
 
-  // Compute undo/redo capability from history state
   const canUndo = currentHistoryIndex > 0;
   const canRedo = currentHistoryIndex < history.length - 1;
 
@@ -125,12 +120,10 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
     })
   );
 
-  // Need to notify parent whenever isDirty changes
   React.useEffect(() => {
     onDirtyStateChange?.(isDirty);
   }, [isDirty, onDirtyStateChange]);
 
-  // Add beforeunload handler when dirty
   React.useEffect(() => {
     if (isDirty) {
       const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -143,7 +136,6 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
     }
   }, [isDirty]);
 
-  // Load initial config
   React.useEffect(() => {
     if (team?.component) {
       const { nodes: initialNodes, edges: initialEdges } = loadFromJson(
@@ -155,19 +147,15 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
     handleValidate();
 
     return () => {
-      // console.log("cleanup component");
       setValidationResults(null);
     };
   }, [team, setNodes, setEdges]);
 
-  // Handle JSON changes
   const handleJsonChange = useCallback(
     debounce((value: string) => {
       try {
         const config = JSON.parse(value);
-        // Always consider JSON edits as changes that should affect isDirty state
         loadFromJson(config, false);
-        // Force history update even if nodes/edges appear same
         useTeamBuilderStore.getState().addToHistory();
       } catch (error) {
         console.error("Invalid JSON:", error);
@@ -176,7 +164,6 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
     [loadFromJson]
   );
 
-  // Cleanup debounced function
   useEffect(() => {
     return () => {
       handleJsonChange.cancel();
@@ -195,18 +182,14 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
       const validationResult = await validationAPI.validateComponent(component);
 
       setValidationResults(validationResult);
-      // if (validationResult.is_valid) {
-      //   messageApi.success("Validation successful");
-      // }
     } catch (error) {
       console.error("Validation error:", error);
-      messageApi.error("Validation failed");
+      message.error("Validation failed");
     } finally {
       setValidationLoading(false);
     }
   }, [syncToJson]);
 
-  // Handle save
   const handleSave = useCallback(async () => {
     try {
       const component = syncToJson();
@@ -227,7 +210,7 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
         resetHistory();
       }
     } catch (error) {
-      messageApi.error(
+      message.error(
         error instanceof Error
           ? error.message
           : "Failed to save team configuration"
@@ -254,7 +237,6 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
     const unsubscribe = useTeamBuilderStore.subscribe((state) => {
       setNodes(state.nodes);
       setEdges(state.edges);
-      // console.log("nodes updated", state);
     });
     return unsubscribe;
   }, [setNodes, setEdges]);
@@ -285,7 +267,6 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
       draggedType,
       targetNode.data.component.component_type
     );
-    // Add visual feedback class to target node
     if (isValid) {
       targetNode.className = "drop-target-valid";
     } else {
@@ -301,11 +282,9 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
     const dropZoneId = over.id as string;
 
     const [nodeId] = dropZoneId.split("@@@");
-    // Find target node
     const targetNode = nodes.find((node) => node.id === nodeId);
     if (!targetNode) return;
 
-    // Validate drop
     const isValid = validateDropTarget(
       draggedItem.type,
       targetNode.data.component.component_type
@@ -317,31 +296,28 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
       y: event.delta.y,
     };
 
-    // Pass both new node data AND target node id
     addNode(position, draggedItem.config, nodeId);
     setActiveDragItem(null);
   };
 
   const handleTestDrawerClose = () => {
-    // console.log("TestDrawer closed");
     setTestDrawerVisible(false);
   };
 
   const teamValidated = validationResults && validationResults.is_valid;
 
   const onDragStart = (item: DragItem) => {
-    // We can add any drag start logic here if needed
   };
+
   const handleDragStart = (event: DragStartEvent) => {
     const { active } = event;
     if (active.data.current) {
       setActiveDragItem(active.data.current as DragItemData);
     }
   };
+
   return (
     <div>
-      {contextHolder}
-
       <div className="flex gap-2 text-xs rounded border-dashed border p-2 mb-2 items-center">
         <div className="flex-1">
           <Switch
@@ -490,7 +466,6 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
                     onNodesChange={onNodesChange}
                     onEdgesChange={onEdgesChange}
                     onConnect={onConnect}
-                    // onNodeClick={(_, node) => setSelectedNode(node.id)}
                     nodeTypes={nodeTypes}
                     edgeTypes={edgeTypes}
                     onDrop={(event) => event.preventDefault()}
@@ -544,7 +519,6 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
                     nodes.find((n) => n.id === selectedNodeId)!.data.component
                   }
                   onChange={(updatedComponent) => {
-                    // console.log("builder updating component", updatedComponent);
                     if (selectedNodeId) {
                       updateNode(selectedNodeId, {
                         component: updatedComponent,
@@ -576,13 +550,3 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
         </DragOverlay>
       </DndContext>
 
-      {/* {testDrawerVisible && (
-        <TestDrawer
-          isVisble={testDrawerVisible}
-          team={team}
-          onClose={() => handleTestDrawerClose()}
-        />
-      )} */}
-    </div>
-  );
-};

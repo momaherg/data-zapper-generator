@@ -7,6 +7,7 @@ import { Team } from "../components/studio/datamodel";
 import { useGalleryStore } from "../components/studio/gallery/store";
 import { teamAPI } from "../components/studio/api";
 import { toast } from "sonner";
+import ComponentLibrary from "../components/studio/builder/library";
 
 const StudioPage = () => {
   const [team, setTeam] = useState<Team | null>(null);
@@ -72,7 +73,7 @@ const StudioPage = () => {
   }
 
   return (
-    <main className="h-full w-full p-4">
+    <main className="h-full w-full p-4 flex">
       {team && <TeamBuilder team={team} onChange={handleTeamUpdate} />}
     </main>
   );

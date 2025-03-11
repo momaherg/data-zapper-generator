@@ -8,22 +8,19 @@ import {
   ModelConfig,
   ToolConfig,
   TerminationConfig,
-  FunctionToolConfig,
-} from "../../../../../types/datamodel";
+} from "../../../datamodel";
 import {
   isAgentComponent,
   isModelComponent,
   isTeamComponent,
   isToolComponent,
   isTerminationComponent,
-  isFunctionTool,
 } from "../../../guards";
-import { TeamFields } from "./team-fields";
-import { AgentFields } from "./agent-fields";
-import { ModelFields } from "./model-fields";
-import { ToolFields } from "./tool-fields";
-import { TerminationFields } from "./termination-fields";
-import { EditPath } from "../component-editor";
+import TeamFields from "./team-fields";
+import AgentFields from "./agent-fields";
+import ModelFields from "./model-fields";
+import ToolFields from "./tool-fields";
+import TerminationFields from "./termination-fields";
 
 interface FieldsProps {
   component: Component<ComponentConfig>;
@@ -39,7 +36,7 @@ export const Fields: React.FC<FieldsProps> = ({
   if (isTeamComponent(component)) {
     return (
       <TeamFields
-        component={component}
+        component={component as Component<TeamConfig>}
         onChange={onChange}
         onNavigate={onNavigate}
       />
@@ -49,7 +46,7 @@ export const Fields: React.FC<FieldsProps> = ({
   if (isAgentComponent(component)) {
     return (
       <AgentFields
-        component={component}
+        component={component as Component<AgentConfig>}
         onChange={onChange}
         onNavigate={onNavigate}
       />
@@ -57,17 +54,27 @@ export const Fields: React.FC<FieldsProps> = ({
   }
 
   if (isModelComponent(component)) {
-    return <ModelFields component={component} onChange={onChange} />;
+    return (
+      <ModelFields
+        component={component as Component<ModelConfig>}
+        onChange={onChange}
+      />
+    );
   }
 
-  if (isToolComponent(component) && isFunctionTool(component)) {
-    return <ToolFields component={component} onChange={onChange} />;
+  if (isToolComponent(component)) {
+    return (
+      <ToolFields
+        component={component as Component<ToolConfig>}
+        onChange={onChange}
+      />
+    );
   }
 
   if (isTerminationComponent(component)) {
     return (
       <TerminationFields
-        component={component}
+        component={component as Component<TerminationConfig>}
         onChange={onChange}
         onNavigate={onNavigate}
       />
