@@ -39,7 +39,8 @@ const StudioPage = () => {
                 component_type: "agent",
                 config: {
                   name: "Research Agent",
-                  system_prompt: "You are a helpful research assistant."
+                  // Use proper fields recognized by AgentConfig
+                  description: "You are a helpful research assistant."
                 }
               },
               {
@@ -47,7 +48,8 @@ const StudioPage = () => {
                 component_type: "agent",
                 config: {
                   name: "Writing Agent",
-                  system_prompt: "You are a creative writing assistant."
+                  // Use proper fields recognized by AgentConfig
+                  description: "You are a creative writing assistant."
                 }
               }
             ],

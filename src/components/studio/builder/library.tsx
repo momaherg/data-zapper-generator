@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Input, Collapse, type CollapseProps } from "antd";
 import { useDraggable } from "@dnd-kit/core";
@@ -12,6 +13,7 @@ import {
   Minimize2,
   GripVertical,
   Loader2,
+  AlertCircle,
 } from "lucide-react";
 import Sider from "antd/es/layout/Sider";
 import { useGalleryStore } from "../gallery/store";
@@ -73,13 +75,119 @@ const PresetItem: React.FC<PresetItemProps> = ({
   );
 };
 
+// Default components to show when gallery fails to load
+const getDefaultComponents = () => {
+  return {
+    agents: [
+      {
+        label: "Research Agent",
+        config: {
+          provider: "anthropic",
+          component_type: "agent",
+          config: {
+            name: "Research Agent",
+            system_prompt: "You are a helpful research assistant."
+          }
+        }
+      },
+      {
+        label: "Writing Agent",
+        config: {
+          provider: "openai",
+          component_type: "agent",
+          config: {
+            name: "Writing Agent",
+            system_prompt: "You are a creative writing assistant."
+          }
+        }
+      },
+      {
+        label: "Coding Agent",
+        config: {
+          provider: "anthropic",
+          component_type: "agent",
+          config: {
+            name: "Coding Agent",
+            system_prompt: "You are a helpful coding assistant."
+          }
+        }
+      }
+    ],
+    models: [
+      {
+        label: "GPT-4",
+        config: {
+          provider: "openai",
+          component_type: "model",
+          config: {
+            model: "gpt-4"
+          }
+        }
+      },
+      {
+        label: "Claude",
+        config: {
+          provider: "anthropic",
+          component_type: "model",
+          config: {
+            model: "claude-3-opus-20240229"
+          }
+        }
+      }
+    ],
+    tools: [
+      {
+        config: {
+          provider: "web_search",
+          component_type: "tool",
+          config: {
+            name: "Web Search",
+            description: "Search the web for information."
+          }
+        }
+      },
+      {
+        config: {
+          provider: "calculator",
+          component_type: "tool",
+          config: {
+            name: "Calculator",
+            description: "Perform mathematical calculations."
+          }
+        }
+      }
+    ],
+    terminations: [
+      {
+        label: "Max Turns",
+        config: {
+          provider: "max_turns",
+          component_type: "termination",
+          config: {
+            max_turns: 10
+          }
+        }
+      },
+      {
+        label: "Timeout",
+        config: {
+          provider: "timeout",
+          component_type: "termination",
+          config: {
+            timeout_seconds: 300
+          }
+        }
+      }
+    ]
+  };
+};
+
 export const ComponentLibrary: React.FC<LibraryProps> = () => {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [isMinimized, setIsMinimized] = React.useState(false);
   const defaultGallery = useGalleryStore((state) => state.getSelectedGallery());
   const galleryLoading = useGalleryStore((state) => state.isLoading);
-
-  console.log("Gallery data:", defaultGallery); // Debug - to check if gallery data is loaded
+  const galleryError = useGalleryStore((state) => state.error);
 
   if (isMinimized) {
     return (
@@ -100,7 +208,7 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
   }
 
   // Loading state
-  if (galleryLoading || !defaultGallery) {
+  if (galleryLoading) {
     return (
       <Sider
         width={300}
@@ -126,14 +234,19 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
     );
   }
 
+  // Use default components if gallery failed to load or is empty
+  const componentsData = (!defaultGallery || galleryError) 
+    ? getDefaultComponents()
+    : defaultGallery.config.components;
+
   // Map gallery components to sections format
   const sections = React.useMemo(
     () => [
       {
         title: "Agents",
         type: "agent" as ComponentTypes,
-        items: defaultGallery.config.components.agents.map((agent) => ({
-          label: agent.label,
+        items: componentsData.agents.map((agent) => ({
+          label: agent.label || agent.config?.name || "Agent",
           config: agent,
         })),
         icon: <Bot className="w-4 h-4" />,
@@ -141,8 +254,8 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
       {
         title: "Models",
         type: "model" as ComponentTypes,
-        items: defaultGallery.config.components.models.map((model) => ({
-          label: `${model.label || model.config.model}`,
+        items: componentsData.models.map((model) => ({
+          label: model.label || model.config?.model || "Model",
           config: model,
         })),
         icon: <Brain className="w-4 h-4" />,
@@ -150,8 +263,8 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
       {
         title: "Tools",
         type: "tool" as ComponentTypes,
-        items: defaultGallery.config.components.tools.map((tool) => ({
-          label: tool.config.name,
+        items: componentsData.tools.map((tool) => ({
+          label: tool.config?.name || "Tool",
           config: tool,
         })),
         icon: <Wrench className="w-4 h-4" />,
@@ -159,16 +272,16 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
       {
         title: "Terminations",
         type: "termination" as ComponentTypes,
-        items: defaultGallery.config.components.terminations.map(
+        items: componentsData.terminations.map(
           (termination) => ({
-            label: `${termination.label}`,
+            label: termination.label || "Termination",
             config: termination,
           })
         ),
         icon: <Timer className="w-4 h-4" />,
       },
     ],
-    [defaultGallery]
+    [componentsData]
   );
 
   const items: CollapseProps["items"] = sections.map((section) => {
@@ -189,16 +302,22 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
       ),
       children: (
         <div className="space-y-2">
-          {filteredItems.map((item, itemIndex) => (
-            <PresetItem
-              key={itemIndex}
-              id={`${section.title.toLowerCase()}-${itemIndex}`}
-              type={section.type}
-              config={item.config}
-              label={item.label || ""}
-              icon={section.icon}
-            />
-          ))}
+          {filteredItems.length > 0 ? (
+            filteredItems.map((item, itemIndex) => (
+              <PresetItem
+                key={itemIndex}
+                id={`${section.title.toLowerCase()}-${itemIndex}`}
+                type={section.type}
+                config={item.config}
+                label={item.label || ""}
+                icon={section.icon}
+              />
+            ))
+          ) : (
+            <div className="py-2 text-sm text-gray-500 italic">
+              No {section.title.toLowerCase()} found
+            </div>
+          )}
         </div>
       ),
     };
@@ -220,6 +339,16 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
             <Minimize2 className="w-4 h-4" />
           </button>
         </div>
+
+        {galleryError && (
+          <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-600 text-sm flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+            <div>
+              <p className="font-medium">Gallery couldn't be loaded</p>
+              <p className="text-xs mt-1">Using default components instead</p>
+            </div>
+          </div>
+        )}
 
         <div className="mb-4 text-gray-500 text-sm">
           Drag a component to add it to the team
