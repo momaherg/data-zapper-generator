@@ -4,22 +4,28 @@ import { useState, useEffect } from "react";
 import { TeamBuilder } from "../components/studio/builder/builder";
 import { Loader2 } from "lucide-react";
 import { Team } from "../components/studio/datamodel";
+import { useGalleryStore } from "../components/studio/gallery/store";
+import { teamAPI } from "../components/studio/api";
+import { toast } from "sonner";
 
 const StudioPage = () => {
   const [team, setTeam] = useState<Team | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const fetchGalleries = useGalleryStore((state) => state.fetchGalleries);
 
   useEffect(() => {
     fetchTeam();
-  }, []);
+    // Load galleries for the component library
+    fetchGalleries();
+  }, [fetchGalleries]);
 
   const fetchTeam = async () => {
     try {
-      const response = await fetch("http://localhost:5000/team");
-      const data = await response.json();
+      const data = await teamAPI.getTeam();
       setTeam(data);
     } catch (error) {
       console.error("Error fetching team:", error);
+      toast.error("Failed to load team");
     } finally {
       setIsLoading(false);
     }
@@ -27,17 +33,12 @@ const StudioPage = () => {
 
   const handleTeamUpdate = async (updatedTeam: Team) => {
     try {
-      const response = await fetch("http://localhost:5000/team", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(updatedTeam),
-      });
-      const data = await response.json();
+      const data = await teamAPI.updateTeam(updatedTeam);
       setTeam(data);
+      toast.success("Team saved successfully");
     } catch (error) {
       console.error("Error updating team:", error);
+      toast.error("Failed to save team");
     }
   };
 
