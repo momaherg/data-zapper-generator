@@ -5,6 +5,7 @@ import { AgentFields } from './fields/agent-fields';
 import { TeamFields } from './fields/team-fields';
 import { ToolFields } from './fields/tool-fields';
 import { TerminationFields } from './fields/termination-fields';
+import React from 'react';
 
 // Re-export field components
 export { ModelFields, AgentFields, TeamFields, ToolFields, TerminationFields };
@@ -21,7 +22,7 @@ export interface NestedComponentButtonProps {
   description?: string;
 }
 
-export const NestedComponentButton = ({ label, onClick, description }: NestedComponentButtonProps) => {
+export const NestedComponentButton: React.FC<NestedComponentButtonProps> = ({ label, onClick, description }) => {
   return (
     <button 
       onClick={onClick}
