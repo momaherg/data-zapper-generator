@@ -1,3 +1,4 @@
+
 // Base URL for API requests
 const API_BASE_URL = 'http://localhost:5000';
 const WS_BASE_URL = 'ws://localhost:5000';
@@ -41,9 +42,16 @@ export interface TestCaseGenerationRequest {
 export interface ChatMessage {
   id?: string;
   type?: string;
-  content: string;
+  content: string | any;
   source?: string;
+  metadata?: any;
   timestamp?: Date;
+  models_usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+  };
+  target?: string;
+  context?: any[];
 }
 
 // Helper function to add session_id parameter to URLs

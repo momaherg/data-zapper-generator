@@ -1,5 +1,6 @@
+
 import React, { useState, useRef, useEffect } from 'react';
-import { Send, ThumbsUp, ThumbsDown, Loader2 } from 'lucide-react';
+import { Send, ThumbsUp, ThumbsDown, Loader2, AlertCircle, AlertTriangle } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -11,10 +12,11 @@ import { TestCaseEvent, ChatMessage, ChatWebSocket } from '@/utils/api';
 
 interface Message {
   id: string;
-  content: string;
+  content: string | any;
   isUser: boolean;
   type?: string;
   source?: string;
+  metadata?: any;
   timestamp: Date;
 }
 
@@ -80,6 +82,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         isUser: message.source === 'user',
         type: message.type,
         source: message.source,
+        metadata: message.metadata,
         timestamp: new Date(),
       };
       
@@ -174,6 +177,28 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   };
 
   const formatMessage = (message: Message) => {
+    // Handle different message types
+    if (typeof message.content !== 'string') {
+      // Handle JSON or array content
+      if (Array.isArray(message.content)) {
+        return (
+          <div className="space-y-2">
+            {message.content.map((item, idx) => (
+              <div key={idx} className="text-xs bg-muted/30 p-2 rounded">
+                {JSON.stringify(item, null, 2)}
+              </div>
+            ))}
+          </div>
+        );
+      }
+      return (
+        <pre className="text-xs overflow-auto whitespace-pre-wrap">
+          {JSON.stringify(message.content, null, 2)}
+        </pre>
+      );
+    }
+
+    // Handle different message sources
     switch (message.source) {
       case 'yoda':
         return (
@@ -187,8 +212,6 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             {message.content}
           </div>
         );
-      case 'assistant':
-      case 'user':
       default:
         return message.content;
     }
@@ -199,6 +222,21 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       return "bg-primary text-primary-foreground";
     }
     
+    // Style based on message type
+    switch (message.type) {
+      case 'error':
+        return "bg-destructive/20 border border-destructive text-destructive";
+      case 'ThoughtEvent':
+        return "bg-blue-100 dark:bg-blue-950 text-blue-800 dark:text-blue-200";
+      case 'ToolCallRequestEvent':
+      case 'ToolCallExecutionEvent':
+      case 'ToolCallSummaryMessage':
+        return "bg-yellow-100 dark:bg-yellow-950 text-yellow-800 dark:text-yellow-200";
+      case 'HandoffMessage':
+        return "bg-purple-100 dark:bg-purple-950 text-purple-800 dark:text-purple-200";
+    }
+    
+    // Style based on message source
     switch (message.source) {
       case 'system':
         return "bg-muted/80 border border-muted";
@@ -208,6 +246,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
       default:
         return "bg-muted";
     }
+  };
+
+  const getMessageIcon = (message: Message) => {
+    if (message.type === 'error') {
+      return <AlertCircle className="h-4 w-4 text-destructive" />;
+    }
+    
+    if (message.type === 'ThoughtEvent') {
+      return <AlertTriangle className="h-4 w-4 text-blue-500" />;
+    }
+    
+    return null;
   };
 
   return (
@@ -248,7 +298,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
             <div
               key={message.id}
               className={cn(
-                "flex max-w-[80%] animate-fade-up",
+                "flex max-w-[95%] animate-fade-up",
                 message.isUser ? "ml-auto" : "mr-auto"
               )}
             >
@@ -259,9 +309,20 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
                 )}
               >
                 <div className="space-y-1">
+                  {message.type && message.type !== 'text' && !message.isUser && (
+                    <div className="text-[10px] font-medium uppercase tracking-wider mb-1 flex items-center gap-1">
+                      {getMessageIcon(message)}
+                      {message.type}
+                    </div>
+                  )}
                   <div>{formatMessage(message)}</div>
-                  <div className="text-[10px] opacity-70 text-right">
-                    {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  <div className="text-[10px] opacity-70 text-right flex justify-between items-center">
+                    {message.source && (
+                      <span className="font-medium">{message.source}</span>
+                    )}
+                    <span>
+                      {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                   </div>
                 </div>
               </Card>
