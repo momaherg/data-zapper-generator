@@ -182,7 +182,7 @@ export class ChatWebSocket {
       session_id: this.sessionId,
       id: this.testCaseId,
       content,
-      type: 'text',
+      type: 'TextMessage',
       source: 'user'
     };
 
