@@ -80,22 +80,8 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
     useState<ValidationResponse | null>(null);
 
   const [validationLoading, setValidationLoading] = useState(false);
-
   const [testDrawerVisible, setTestDrawerVisible] = useState(false);
-
-  const {
-    undo,
-    redo,
-    loadFromJson,
-    syncToJson,
-    addNode,
-    layoutNodes,
-    resetHistory,
-    history,
-    updateNode,
-    selectedNodeId,
-    setSelectedNode,
-  } = useTeamBuilderStore();
+  const editorRef = useRef(null);
 
   const currentHistoryIndex = useTeamBuilderStore(
     (state) => state.currentHistoryIndex
@@ -327,12 +313,12 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
             className="mr-2"
             // size="small"
             defaultChecked={!isJsonMode}
-            checkedChildren=<div className=" text-xs">
+            checkedChildren={<div className="text-xs">
               <Cable className="w-3 h-3 inline-block mt-1 mr-1" />
-            </div>
-            unCheckedChildren=<div className=" text-xs">
+            </div>}
+            unCheckedChildren={<div className="text-xs">
               <Code2 className="w-3 h-3 mt-1 inline-block mr-1" />
-            </div>
+            </div>}
           />
           {isJsonMode ? "View JSON" : <>Visual Builder</>}{" "}
         </div>
@@ -380,7 +366,7 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
           </Tooltip>
 
           <Tooltip
-            title=<div>
+            title={<div>
               Validate Team
               {validationResults && (
                 <div className="text-xs text-center my-1">
@@ -397,7 +383,7 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
                   )}
                 </div>
               )}
-            </div>
+            </div>}
           >
             <Button
               type="text"
@@ -540,7 +526,7 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
           }}
         >
           {activeDragItem ? (
-            <div className="p-2 text-primary h-full     rounded    ">
+            <div className="p-2 text-primary h-full rounded">
               <div className="flex items-center gap-2">
                 {activeDragItem.icon}
                 <span className="text-sm">{activeDragItem.label}</span>
@@ -549,4 +535,7 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
           ) : null}
         </DragOverlay>
       </DndContext>
+    </div>
+  );
+};
 
