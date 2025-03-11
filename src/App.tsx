@@ -11,6 +11,7 @@ import UploadData from "./pages/UploadData";
 import Tools from "./pages/Tools";
 import TestSpecifications from "./pages/TestSpecifications";
 import TestCaseDetail from "./pages/TestCaseDetail";
+import StudioPage from "./pages/Studio"
 
 const queryClient = new QueryClient();
 
@@ -28,6 +29,7 @@ const App = () => (
             <Route path="upload" element={<UploadData />} />
             <Route path="tools" element={<Tools />} />
             <Route path="specs" element={<TestSpecifications />} />
+            <Route path="studio" element={<StudioPage />} />
             <Route path="test-case/:id" element={<TestCaseDetail />} />
           </Route>
           
