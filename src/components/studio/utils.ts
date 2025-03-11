@@ -1,7 +1,7 @@
-// import { IStatus } from "./types/app";
 
-export const getServerUrl = () => {
-  return "http://localhost:5000";
+// Add the missing getServerUrl function
+export const getServerUrl = (): string => {
+  return process.env.REACT_APP_API_URL || 'http://localhost:8000';
 };
 
 export function setLocalStorage(

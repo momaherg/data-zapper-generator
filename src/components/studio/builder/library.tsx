@@ -61,12 +61,12 @@ const PresetItem: React.FC<PresetItemProps> = ({
       style={style}
       {...attributes}
       {...listeners}
-      className={`p-2 text-primary mb-2 border  rounded cursor-move  bg-secondary transition-colors`}
+      className={`p-2 text-primary mb-2 border rounded cursor-move bg-secondary transition-colors`}
     >
       <div className="flex items-center gap-2">
         <GripVertical className="w-4 h-4 inline-block" />
         {icon}
-        <span className=" text-sm">{label}</span>
+        <span className="text-sm">{label}</span>
       </div>
     </div>
   );
@@ -77,9 +77,31 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
   const [isMinimized, setIsMinimized] = React.useState(false);
   const defaultGallery = useGalleryStore((state) => state.getSelectedGallery());
 
+  console.log("Gallery data:", defaultGallery); // Debug - to check if gallery data is loaded
+
   if (!defaultGallery) {
-    return null;
+    return (
+      <Sider
+        width={300}
+        className="bg-primary border z-10 mr-2 border-r border-secondary"
+      >
+        <div className="rounded p-2 pt-2">
+          <div className="flex justify-between items-center mb-2">
+            <div className="text-normal">Component Library</div>
+            <button
+              onClick={() => setIsMinimized(true)}
+              className="p-1 hover:bg-tertiary rounded transition-colors"
+              title="Minimize Library"
+            >
+              <Minimize2 className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="text-secondary italic">Loading components...</div>
+        </div>
+      </Sider>
+    );
   }
+
   // Map gallery components to sections format
   const sections = React.useMemo(
     () => [

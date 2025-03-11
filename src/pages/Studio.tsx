@@ -11,6 +11,7 @@ import { toast } from "sonner";
 const StudioPage = () => {
   const [team, setTeam] = useState<Team | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [isJsonMode, setIsJsonMode] = useState(false);
   const fetchGalleries = useGalleryStore((state) => state.fetchGalleries);
 
   useEffect(() => {
