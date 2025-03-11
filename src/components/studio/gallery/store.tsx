@@ -11,7 +11,7 @@ interface GalleryState {
   error: string | null;
 
   // Actions
-  fetchGalleries: (userId: string) => Promise<void>;
+  fetchGalleries: () => Promise<void>;
   selectGallery: (gallery: Gallery) => void;
   getSelectedGallery: () => Gallery | null;
 }
@@ -24,21 +24,19 @@ export const useGalleryStore = create<GalleryState>((set, get) => ({
   error: null,
 
   // Actions
-  fetchGalleries: async (userId: string) => {
+  fetchGalleries: async () => {
     try {
       set({ isLoading: true, error: null });
-      const galleries = await galleryAPI.listGalleries(userId);
+      const galleries = await galleryAPI.listGalleries();
 
       set({
         galleries,
-        // Automatically select first gallery if none selected
         selectedGallery: get().selectedGallery || galleries[0] || null,
         isLoading: false,
       });
     } catch (error) {
       set({
-        error:
-          error instanceof Error ? error.message : "Failed to fetch galleries",
+        error: error instanceof Error ? error.message : "Failed to fetch galleries",
         isLoading: false,
       });
     }

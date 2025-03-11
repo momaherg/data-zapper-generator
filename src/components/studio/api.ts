@@ -15,7 +15,7 @@ export interface ValidationResponse {
 
 export class TeamAPI {
   private getBaseUrl(): string {
-    return getServerUrl();
+    return "http://localhost:5000";
   }
 
   private getHeaders(): HeadersInit {
@@ -24,74 +24,38 @@ export class TeamAPI {
     };
   }
 
-  async listTeams(userId: string): Promise<Team[]> {
-    const response = await fetch(
-      `${this.getBaseUrl()}/teams/?user_id=${userId}`,
-      {
-        headers: this.getHeaders(),
-      }
-    );
-    const data = await response.json();
-    if (!data.status) throw new Error(data.message || "Failed to fetch teams");
-    return data.data;
-  }
-
-  async getTeam(teamId: number, userId: string): Promise<Team> {
-    const response = await fetch(
-      `${this.getBaseUrl()}/teams/${teamId}?user_id=${userId}`,
-      {
-        headers: this.getHeaders(),
-      }
-    );
-    const data = await response.json();
-    if (!data.status) throw new Error(data.message || "Failed to fetch team");
-    return data.data;
-  }
-
-  async createTeam(teamData: Partial<Team>, userId: string): Promise<Team> {
-    const team = {
-      ...teamData,
-      user_id: userId,
-    };
-
-    const response = await fetch(`${this.getBaseUrl()}/teams/`, {
-      method: "POST",
+  async getTeam(): Promise<Team> {
+    const response = await fetch(`${this.getBaseUrl()}/team`, {
       headers: this.getHeaders(),
-      body: JSON.stringify(team),
     });
-    const data = await response.json();
-    if (!data.status) throw new Error(data.message || "Failed to create team");
-    return data.data;
+    if (!response.ok) {
+      throw new Error("Failed to fetch team");
+    }
+    return response.json();
   }
 
-  async deleteTeam(teamId: number, userId: string): Promise<void> {
-    const response = await fetch(
-      `${this.getBaseUrl()}/teams/${teamId}?user_id=${userId}`,
-      {
-        method: "DELETE",
-        headers: this.getHeaders(),
-      }
-    );
-    const data = await response.json();
-    if (!data.status) throw new Error(data.message || "Failed to delete team");
+  async updateTeam(teamData: Partial<Team>): Promise<Team> {
+    const response = await fetch(`${this.getBaseUrl()}/team`, {
+      method: "PUT",
+      headers: this.getHeaders(),
+      body: JSON.stringify(teamData),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to update team");
+    }
+    return response.json();
   }
 
-  // Team-Agent Link Management
-  async linkAgent(teamId: number, agentId: number): Promise<void> {
-    const response = await fetch(
-      `${this.getBaseUrl()}/teams/${teamId}/agents/${agentId}`,
-      {
-        method: "POST",
-        headers: this.getHeaders(),
-      }
-    );
-    const data = await response.json();
-    if (!data.status)
-      throw new Error(data.message || "Failed to link agent to team");
+  async deleteTeam(): Promise<void> {
+    const response = await fetch(`${this.getBaseUrl()}/team`, {
+      method: "DELETE",
+      headers: this.getHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to delete team");
+    }
   }
 }
-
-// move validationapi to its own class
 
 export class ValidationAPI {
   private getBaseUrl(): string {

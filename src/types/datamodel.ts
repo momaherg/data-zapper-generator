@@ -1,8 +1,6 @@
 
-import { ComponentTypes, ComponentConfig } from "../components/studio/datamodel";
-
-// Re-export all types from the studio datamodel
-export { ComponentTypes, ComponentConfig } from "../components/studio/datamodel";
+// Re-export component types
+export type { ComponentTypes, ComponentConfig } from "../components/studio/datamodel";
 
 // Export Component type which is used in many places
 export interface Component<T extends ComponentConfig> {
@@ -15,14 +13,11 @@ export interface Component<T extends ComponentConfig> {
   label?: string;
 }
 
-// Export Gallery type with config property
+// Export Gallery type
 export interface Gallery {
-  id: string;
+  id: number;
   name: string;
   description?: string;
-  items?: any[];
-  created_at?: string;
-  updated_at?: string;
   config: {
     id: string;
     name: string;
