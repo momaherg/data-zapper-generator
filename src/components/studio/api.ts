@@ -1,4 +1,4 @@
-import { Team, Component, ComponentConfig } from "./datamodel";
+import { Team } from "./datamodel";
 import { getServerUrl } from "./utils";
 
 interface ValidationError {
@@ -34,11 +34,11 @@ export class TeamAPI {
     return response.json();
   }
 
-  async updateTeam(teamData: Partial<Team>): Promise<Team> {
+  async updateTeam(team: Partial<Team>): Promise<Team> {
     const response = await fetch(`${this.getBaseUrl()}/team`, {
       method: "PUT",
       headers: this.getHeaders(),
-      body: JSON.stringify(teamData),
+      body: JSON.stringify(team),
     });
     if (!response.ok) {
       throw new Error("Failed to update team");
@@ -89,5 +89,4 @@ export class ValidationAPI {
 }
 
 export const validationAPI = new ValidationAPI();
-
 export const teamAPI = new TeamAPI();

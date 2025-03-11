@@ -1,4 +1,3 @@
-
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -43,7 +42,38 @@ export const Paragraph = React.forwardRef<
 });
 Paragraph.displayName = "Paragraph";
 
-// Markdown components that render properly
+export interface TruncatableTextProps {
+  text: string;
+  maxLength?: number;
+}
+
+export const TruncatableText: React.FC<TruncatableTextProps> = ({ 
+  text, 
+  maxLength = 50 
+}) => {
+  if (text.length <= maxLength) return <span>{text}</span>;
+  return (
+    <span title={text}>
+      {text.substring(0, maxLength)}...
+    </span>
+  );
+};
+
+export const getRelativeTimeString = (date: string | Date): string => {
+  const now = new Date();
+  const then = new Date(date);
+  const diff = now.getTime() - then.getTime();
+  const seconds = Math.floor(diff / 1000);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const days = Math.floor(hours / 24);
+
+  if (days > 0) return `${days}d ago`;
+  if (hours > 0) return `${hours}h ago`;
+  if (minutes > 0) return `${minutes}m ago`;
+  return 'just now';
+};
+
 export const MarkdownContent: React.FC<{ children: string; className?: string }> = ({
   children,
   className,

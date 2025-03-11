@@ -26,9 +26,9 @@ export class GalleryAPI {
     return data.data;
   }
 
-  async getGallery(galleryId: number): Promise<Gallery> {
+  async getGallery(id: number): Promise<Gallery> {
     const response = await fetch(
-      `${this.getBaseUrl()}/gallery/${galleryId}`,
+      `${this.getBaseUrl()}/gallery/${id}`,
       {
         headers: this.getHeaders(),
       }
@@ -39,15 +39,7 @@ export class GalleryAPI {
     return data.data;
   }
 
-  async createGallery(
-    galleryData: Partial<Gallery>
-  ): Promise<Gallery> {
-    const gallery = {
-      ...galleryData,
-    };
-
-    console.log("Creating gallery with data:", gallery);
-
+  async createGallery(gallery: Partial<Gallery>): Promise<Gallery> {
     const response = await fetch(`${this.getBaseUrl()}/gallery/`, {
       method: "POST",
       headers: this.getHeaders(),
@@ -59,16 +51,9 @@ export class GalleryAPI {
     return data.data;
   }
 
-  async updateGallery(
-    galleryId: number,
-    galleryData: Partial<Gallery>
-  ): Promise<Gallery> {
-    const gallery = {
-      ...galleryData,
-    };
-
+  async updateGallery(id: number, gallery: Partial<Gallery>): Promise<Gallery> {
     const response = await fetch(
-      `${this.getBaseUrl()}/gallery/${galleryId}`,
+      `${this.getBaseUrl()}/gallery/${id}`,
       {
         method: "PUT",
         headers: this.getHeaders(),
@@ -81,9 +66,9 @@ export class GalleryAPI {
     return data.data;
   }
 
-  async deleteGallery(galleryId: number): Promise<void> {
+  async deleteGallery(id: number): Promise<void> {
     const response = await fetch(
-      `${this.getBaseUrl()}/gallery/${galleryId}`,
+      `${this.getBaseUrl()}/gallery/${id}`,
       {
         method: "DELETE",
         headers: this.getHeaders(),
@@ -104,3 +89,4 @@ export class GalleryAPI {
 }
 
 export const galleryAPI = new GalleryAPI();
+
