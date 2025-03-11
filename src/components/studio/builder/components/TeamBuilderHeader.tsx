@@ -43,7 +43,7 @@ export const TeamBuilderHeader: React.FC<TeamBuilderHeaderProps> = ({
   const teamValidated = validationResults && validationResults.is_valid;
 
   return (
-    <div className="flex gap-2 text-xs rounded border-dashed border p-2 mb-2 items-center">
+    <div className="flex gap-2 text-xs rounded border-dashed border p-2 mb-4 items-center bg-white shadow-sm">
       <div className="flex-1">
         <Switch
           onChange={() => {
@@ -51,20 +51,23 @@ export const TeamBuilderHeader: React.FC<TeamBuilderHeaderProps> = ({
           }}
           className="mr-2"
           defaultChecked={!isJsonMode}
-          checkedChildren={<div className="text-xs">
-            <Cable className="w-3 h-3 inline-block mt-1 mr-1" />
-          </div>}
-          unCheckedChildren={<div className="text-xs">
-            <Code2 className="w-3 h-3 mt-1 inline-block mr-1" />
-          </div>}
+          checkedChildren={
+            <div className="text-xs">
+              <Cable className="w-3 h-3 inline-block mr-1" />
+            </div>
+          }
+          unCheckedChildren={
+            <div className="text-xs">
+              <Code2 className="w-3 h-3 inline-block mr-1" />
+            </div>
+          }
         />
-        {isJsonMode ? "View JSON" : <>Visual Builder</>}{" "}
+        {isJsonMode ? "JSON Editor" : "Visual Builder"}
       </div>
 
       <div>
         {validationResults && !validationResults.is_valid && (
           <div className="inline-block mr-2">
-            {" "}
             <ValidationErrors validation={validationResults} />
           </div>
         )}
@@ -94,24 +97,26 @@ export const TeamBuilderHeader: React.FC<TeamBuilderHeaderProps> = ({
         </Tooltip>
 
         <Tooltip
-          title={<div>
-            Validate Team
-            {validationResults && (
-              <div className="text-xs text-center my-1">
-                {teamValidated ? (
-                  <span>
-                    <CheckCircle className="w-3 h-3 text-green-500 inline-block mr-1" />
-                    success
-                  </span>
-                ) : (
-                  <div className="">
-                    <CircleX className="w-3 h-3 text-red-500 inline-block mr-1" />
-                    errors
-                  </div>
-                )}
-              </div>
-            )}
-          </div>}
+          title={
+            <div>
+              Validate Team
+              {validationResults && (
+                <div className="text-xs text-center my-1">
+                  {teamValidated ? (
+                    <span>
+                      <CheckCircle className="w-3 h-3 text-green-500 inline-block mr-1" />
+                      Success
+                    </span>
+                  ) : (
+                    <div>
+                      <CircleX className="w-3 h-3 text-red-500 inline-block mr-1" />
+                      Errors
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          }
         >
           <Button
             type="text"
@@ -121,7 +126,7 @@ export const TeamBuilderHeader: React.FC<TeamBuilderHeaderProps> = ({
                 <ListCheck size={18} />
                 {validationResults && (
                   <div
-                    className={` ${
+                    className={`${
                       teamValidated ? "bg-green-500" : "bg-red-500"
                     } absolute top-0 right-0 w-2 h-2 rounded-full`}
                   ></div>
@@ -137,7 +142,7 @@ export const TeamBuilderHeader: React.FC<TeamBuilderHeaderProps> = ({
           <Button
             type="primary"
             icon={<PlayCircle size={18} />}
-            className="p-1.5 ml-2 px-2.5 hover:bg-primary/10 rounded-md text-primary/75 hover:text-primary"
+            className="p-1.5 ml-2 px-3 hover:bg-blue-600 rounded-md bg-blue-500 text-white"
             onClick={onTestRun}
           >
             Run

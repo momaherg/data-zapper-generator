@@ -19,10 +19,10 @@ export const DragOverlayContent: React.FC<DragOverlayContentProps> = ({
   if (!activeDragItem) return null;
 
   return (
-    <div className="p-2 text-primary h-full rounded">
+    <div className="p-2 bg-white border rounded shadow-md text-primary">
       <div className="flex items-center gap-2">
         {activeDragItem.icon}
-        <span className="text-sm">{activeDragItem.label}</span>
+        <span className="text-sm font-medium">{activeDragItem.label}</span>
       </div>
     </div>
   );

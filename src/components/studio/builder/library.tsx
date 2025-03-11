@@ -12,6 +12,7 @@ import {
   Maximize2,
   Minimize2,
   GripVertical,
+  Loader2,
 } from "lucide-react";
 import Sider from "antd/es/layout/Sider";
 import { useGalleryStore } from "../gallery/store";
@@ -46,6 +47,7 @@ const PresetItem: React.FC<PresetItemProps> = ({
           type,
           config,
           label,
+          icon,
         },
       },
     });
@@ -61,10 +63,10 @@ const PresetItem: React.FC<PresetItemProps> = ({
       style={style}
       {...attributes}
       {...listeners}
-      className={`p-2 text-primary mb-2 border rounded cursor-move bg-secondary transition-colors`}
+      className={`p-2 text-primary mb-2 border rounded cursor-move bg-white hover:bg-gray-50 transition-colors`}
     >
       <div className="flex items-center gap-2">
-        <GripVertical className="w-4 h-4 inline-block" />
+        <GripVertical className="w-4 h-4 text-gray-400 inline-block" />
         {icon}
         <span className="text-sm">{label}</span>
       </div>
@@ -76,27 +78,50 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
   const [searchTerm, setSearchTerm] = React.useState("");
   const [isMinimized, setIsMinimized] = React.useState(false);
   const defaultGallery = useGalleryStore((state) => state.getSelectedGallery());
+  const galleryLoading = useGalleryStore((state) => state.loading);
 
   console.log("Gallery data:", defaultGallery); // Debug - to check if gallery data is loaded
 
-  if (!defaultGallery) {
+  if (isMinimized) {
+    return (
+      <div
+        onClick={() => setIsMinimized(false)}
+        className="absolute group top-4 left-4 bg-white shadow-md rounded px-4 pr-2 py-2 cursor-pointer transition-all duration-300 z-50 flex items-center gap-2"
+      >
+        <span>Show Component Library</span>
+        <button
+          onClick={() => setIsMinimized(false)}
+          className="p-1 group-hover:bg-tertiary rounded transition-colors"
+          title="Maximize Library"
+        >
+          <Maximize2 className="w-4 h-4" />
+        </button>
+      </div>
+    );
+  }
+
+  // Loading state
+  if (galleryLoading || !defaultGallery) {
     return (
       <Sider
         width={300}
-        className="bg-primary border z-10 mr-2 border-r border-secondary"
+        className="bg-white border-r border-gray-200 shadow-sm z-10 mr-2"
       >
-        <div className="rounded p-2 pt-2">
-          <div className="flex justify-between items-center mb-2">
-            <div className="text-normal">Component Library</div>
+        <div className="p-4">
+          <div className="flex justify-between items-center mb-4">
+            <div className="text-lg font-medium">Component Library</div>
             <button
               onClick={() => setIsMinimized(true)}
-              className="p-1 hover:bg-tertiary rounded transition-colors"
+              className="p-1 hover:bg-gray-100 rounded transition-colors"
               title="Minimize Library"
             >
               <Minimize2 className="w-4 h-4" />
             </button>
           </div>
-          <div className="text-secondary italic">Loading components...</div>
+          <div className="flex flex-col items-center justify-center h-60 text-gray-500">
+            <Loader2 className="w-8 h-8 animate-spin mb-2" />
+            <p>Loading components...</p>
+          </div>
         </div>
       </Sider>
     );
@@ -180,50 +205,33 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
     };
   });
 
-  if (isMinimized) {
-    return (
-      <div
-        onClick={() => setIsMinimized(false)}
-        className="absolute group top-4 left-4 bg-primary shadow-md rounded px-4 pr-2 py-2 cursor-pointer transition-all duration-300 z-50 flex items-center gap-2"
-      >
-        <span>Show Component Library</span>
-        <button
-          onClick={() => setIsMinimized(false)}
-          className="p-1 group-hover:bg-tertiary rounded transition-colors"
-          title="Maximize Library"
-        >
-          <Maximize2 className="w-4 h-4" />
-        </button>
-      </div>
-    );
-  }
-
   return (
     <Sider
       width={300}
-      className="bg-primary border z-10 mr-2 border-r border-secondary"
+      className="bg-white border-r border-gray-200 shadow-sm z-10 mr-2"
     >
-      <div className="rounded p-2 pt-2">
-        <div className="flex justify-between items-center mb-2">
-          <div className="text-normal">Component Library</div>
+      <div className="p-4">
+        <div className="flex justify-between items-center mb-4">
+          <div className="text-lg font-medium">Component Library</div>
           <button
             onClick={() => setIsMinimized(true)}
-            className="p-1 hover:bg-tertiary rounded transition-colors"
+            className="p-1 hover:bg-gray-100 rounded transition-colors"
             title="Minimize Library"
           >
             <Minimize2 className="w-4 h-4" />
           </button>
         </div>
 
-        <div className="mb-4 text-secondary">
+        <div className="mb-4 text-gray-500 text-sm">
           Drag a component to add it to the team
         </div>
 
-        <div className="flex items-center gap-2 mb-4">
+        <div className="mb-4">
           <Input
             placeholder="Search components..."
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="flex-1 p-2"
+            className="w-full"
+            prefix={<span className="text-gray-400">🔍</span>}
           />
         </div>
 

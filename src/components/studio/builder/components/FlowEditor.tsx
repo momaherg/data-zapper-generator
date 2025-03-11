@@ -60,6 +60,7 @@ export const FlowEditor: React.FC<FlowEditorProps> = ({
           editorRef={editorRef}
           language="json"
           minimap={false}
+          height="100%"
         />
       ) : (
         <ReactFlow
@@ -72,12 +73,12 @@ export const FlowEditor: React.FC<FlowEditorProps> = ({
           edgeTypes={edgeTypes}
           onDrop={(event) => event.preventDefault()}
           onDragOver={(event) => event.preventDefault()}
-          className="rounded"
+          className="rounded bg-white"
           fitView
           fitViewOptions={{ padding: 10 }}
         >
           {showGrid && <Background />}
-          {showMiniMap && <MiniMap />}
+          {showMiniMap && <MiniMap className="!bottom-5 !right-5" />}
         </ReactFlow>
       )}
     </div>

@@ -1,18 +1,16 @@
 
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { TeamBuilder } from "../components/studio/builder/builder";
 import { Loader2 } from "lucide-react";
 import { Team } from "../components/studio/datamodel";
 import { useGalleryStore } from "../components/studio/gallery/store";
 import { teamAPI } from "../components/studio/api";
 import { toast } from "sonner";
-import ComponentLibrary from "../components/studio/builder/library";
 
 const StudioPage = () => {
   const [team, setTeam] = useState<Team | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isJsonMode, setIsJsonMode] = useState(false);
   const fetchGalleries = useGalleryStore((state) => state.fetchGalleries);
 
   useEffect(() => {
@@ -73,7 +71,7 @@ const StudioPage = () => {
   }
 
   return (
-    <main className="h-full w-full p-4 flex">
+    <main className="h-full w-full p-4 bg-gray-50">
       {team && <TeamBuilder team={team} onChange={handleTeamUpdate} />}
     </main>
   );

@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNodesState, useEdgesState, Connection, addEdge } from "@xyflow/react";
 import { ValidationResponse } from "../../api";
@@ -181,7 +182,6 @@ export function useTeamBuilderState(
     isJsonMode,
     setIsJsonMode,
     isFullscreen,
-    setIsFullscreen,
     showGrid,
     setShowGrid,
     showMiniMap,
