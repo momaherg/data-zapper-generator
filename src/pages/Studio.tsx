@@ -4,7 +4,7 @@ import TeamManager from "../components/studio/manager";
 
 const StudioPage = () => {
   return (
-    <main style={{ height: "100%" }} className="h-full">
+    <main className="h-full w-full">
       <TeamManager />
     </main>
   );
