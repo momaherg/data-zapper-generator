@@ -26,6 +26,26 @@ const StudioPage = () => {
     } catch (error) {
       console.error("Error fetching team:", error);
       toast.error("Failed to load team");
+      
+      // Create a default empty team if we couldn't fetch one
+      setTeam({
+        component: {
+          provider: "selector",
+          component_type: "team",
+          config: {
+            participants: [],
+            model_client: {
+              provider: "openai",
+              component_type: "model",
+              config: {
+                model: "gpt-4"
+              }
+            },
+            selector_prompt: "Select the next agent to speak",
+            allow_repeated_speaker: false
+          }
+        }
+      });
     } finally {
       setIsLoading(false);
     }

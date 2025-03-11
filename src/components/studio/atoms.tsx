@@ -1,3 +1,4 @@
+
 import React from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -45,12 +46,17 @@ Paragraph.displayName = "Paragraph";
 export interface TruncatableTextProps {
   text: string;
   maxLength?: number;
+  showFullscreen?: boolean;
+  textThreshold?: number;
 }
 
 export const TruncatableText: React.FC<TruncatableTextProps> = ({ 
   text, 
-  maxLength = 50 
+  maxLength = 50,
+  showFullscreen = false,
+  textThreshold = 100 
 }) => {
+  if (!text) return <span>-</span>;
   if (text.length <= maxLength) return <span>{text}</span>;
   return (
     <span title={text}>
@@ -80,9 +86,9 @@ export const MarkdownContent: React.FC<{ children: string; className?: string }>
 }) => {
   return (
     <div className={cn("prose dark:prose-invert", className)}>
-      <div className="markdown-content">
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>
         {children}
-      </div>
+      </ReactMarkdown>
     </div>
   );
 };
@@ -91,10 +97,11 @@ export const InlineMarkdown: React.FC<{ children: string; className?: string }> 
   children,
   className,
 }) => {
-  // Simple conversion for inline markdown without using a full component
   return (
     <span className={className}>
-      {children}
+      <ReactMarkdown remarkPlugins={[remarkGfm]}>
+        {children}
+      </ReactMarkdown>
     </span>
   );
 };
