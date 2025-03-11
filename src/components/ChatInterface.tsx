@@ -44,17 +44,45 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   useEffect(() => {
     if (!events || events.length === 0) return;
     
-    const initialMessages = events
-      .filter(event => event.type && event.description) // Filter out invalid events
-      .map((event, index) => ({
-        id: `event-${index}`,
-        content: `${event.type}: ${event.description}`,
-        isUser: false,
-        source: 'system',
-        type: 'event',
-        timestamp: new Date(),
-      }));
+    console.log('Processing initial events:', events);
     
+    const initialMessages: Message[] = [];
+    
+    // Process the events array which contains the full chat history
+    events.forEach((event, index) => {
+      // Check if the event has a source property (enriched event format)
+      if ('source' in event) {
+        const enrichedEvent = event as any;
+        let content = enrichedEvent.content;
+        
+        // Handle content that's an array of tool calls
+        if (Array.isArray(content) && content.length > 0 && 'id' in content[0] && 'name' in content[0]) {
+          content = `Tool calls: ${content.map(call => call.name).join(', ')}`;
+        }
+        
+        initialMessages.push({
+          id: `event-${index}-${Date.now()}`,
+          content: content,
+          isUser: enrichedEvent.source === 'user',
+          type: enrichedEvent.type || 'text',
+          source: enrichedEvent.source,
+          metadata: enrichedEvent.metadata || {},
+          timestamp: new Date(enrichedEvent.timestamp || Date.now()),
+        });
+      } else {
+        // Handle the simple event format
+        initialMessages.push({
+          id: `event-${index}-${Date.now()}`,
+          content: `${event.type}: ${event.description}`,
+          isUser: false,
+          source: 'system',
+          type: 'event',
+          timestamp: new Date(),
+        });
+      }
+    });
+    
+    console.log('Processed initial messages:', initialMessages);
     setMessages(initialMessages);
   }, [events]);
 
@@ -178,6 +206,33 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
 
   const formatMessage = (message: Message) => {
     // Handle different message types
+    if (message.type === 'ThoughtEvent') {
+      return (
+        <div className="text-blue-700 dark:text-blue-300 italic">
+          <div className="font-semibold mb-1">Thought Process:</div>
+          {typeof message.content === 'string' ? message.content : JSON.stringify(message.content, null, 2)}
+        </div>
+      );
+    }
+    
+    if (message.type === 'ToolCallRequestEvent' || message.type === 'ToolCallExecutionEvent' || message.type === 'ToolCallSummaryMessage') {
+      return (
+        <div className="text-yellow-700 dark:text-yellow-300">
+          <div className="font-semibold mb-1">Tool Activity:</div>
+          {typeof message.content === 'string' ? message.content : JSON.stringify(message.content, null, 2)}
+        </div>
+      );
+    }
+    
+    if (message.type === 'HandoffMessage') {
+      return (
+        <div className="text-purple-700 dark:text-purple-300 font-medium">
+          {typeof message.content === 'string' ? message.content : JSON.stringify(message.content, null, 2)}
+        </div>
+      );
+    }
+    
+    // Handle different content types
     if (typeof message.content !== 'string') {
       // Handle JSON or array content
       if (Array.isArray(message.content)) {
