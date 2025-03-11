@@ -1,3 +1,4 @@
+
 import { Gallery } from "../datamodel";
 import { getServerUrl } from "../utils";
 
@@ -12,9 +13,9 @@ export class GalleryAPI {
     };
   }
 
-  async listGalleries(userId: string): Promise<Gallery[]> {
+  async listGalleries(): Promise<Gallery[]> {
     const response = await fetch(
-      `${this.getBaseUrl()}/gallery/?user_id=${userId}`,
+      `${this.getBaseUrl()}/gallery/`,
       {
         headers: this.getHeaders(),
       }
@@ -25,9 +26,9 @@ export class GalleryAPI {
     return data.data;
   }
 
-  async getGallery(galleryId: number, userId: string): Promise<Gallery> {
+  async getGallery(galleryId: number): Promise<Gallery> {
     const response = await fetch(
-      `${this.getBaseUrl()}/gallery/${galleryId}?user_id=${userId}`,
+      `${this.getBaseUrl()}/gallery/${galleryId}`,
       {
         headers: this.getHeaders(),
       }
@@ -39,12 +40,10 @@ export class GalleryAPI {
   }
 
   async createGallery(
-    galleryData: Partial<Gallery>,
-    userId: string
+    galleryData: Partial<Gallery>
   ): Promise<Gallery> {
     const gallery = {
       ...galleryData,
-      user_id: userId,
     };
 
     console.log("Creating gallery with data:", gallery);
@@ -62,16 +61,14 @@ export class GalleryAPI {
 
   async updateGallery(
     galleryId: number,
-    galleryData: Partial<Gallery>,
-    userId: string
+    galleryData: Partial<Gallery>
   ): Promise<Gallery> {
     const gallery = {
       ...galleryData,
-      user_id: userId,
     };
 
     const response = await fetch(
-      `${this.getBaseUrl()}/gallery/${galleryId}?user_id=${userId}`,
+      `${this.getBaseUrl()}/gallery/${galleryId}`,
       {
         method: "PUT",
         headers: this.getHeaders(),
@@ -84,9 +81,9 @@ export class GalleryAPI {
     return data.data;
   }
 
-  async deleteGallery(galleryId: number, userId: string): Promise<void> {
+  async deleteGallery(galleryId: number): Promise<void> {
     const response = await fetch(
-      `${this.getBaseUrl()}/gallery/${galleryId}?user_id=${userId}`,
+      `${this.getBaseUrl()}/gallery/${galleryId}`,
       {
         method: "DELETE",
         headers: this.getHeaders(),
