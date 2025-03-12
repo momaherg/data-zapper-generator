@@ -2,7 +2,7 @@
 // Re-export everything from studio datamodel
 export * from "../components/studio/datamodel";
 
-// Define a compatible Gallery type that works with both implementations
+// Define a compatible Gallery interface that works with both implementations
 export interface GalleryType {
   id: string | number;
   name: string;
@@ -14,5 +14,5 @@ export interface GalleryType {
   config: any;
 }
 
-// Export GalleryConfig interface for components that import from types/datamodel
-export type { GalleryConfig } from "../components/studio/datamodel";
+// Export GalleryConfig and Gallery interfaces
+export { GalleryConfig, Gallery } from "../components/studio/datamodel";

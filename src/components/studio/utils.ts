@@ -9,7 +9,7 @@ const normalizeProvider = (provider: string): string => {
   if (!provider) return "";
   if (provider.includes("RoundRobinGroupChat")) return "roundrobin";
   if (provider.includes("SelectorGroupChat")) return "selector";
-  if (provider.includes("AssistantAgent")) return "assistant";
+  if (provider.includes("AssistantAgent")) return "assistant";  
   if (provider.includes("UserProxyAgent")) return "userproxy";
   if (provider.includes("MultimodalWebSurfer")) return "websurfer";
   if (provider.includes("OpenAIChatCompletionClient") && provider.includes("Azure")) return "azureopenai";
@@ -39,7 +39,7 @@ const normalizeComponent = (component: any): any => {
   if (normalized.config) {
     // Handle participants array
     if (Array.isArray(normalized.config.participants)) {
-      normalized.config.participants = normalized.config.participants.map(normalizeComponent);
+      normalized.config.participants = normalized.config.participants.map((p: any) => normalizeComponent(p));
     }
     
     // Handle model_client
@@ -49,7 +49,7 @@ const normalizeComponent = (component: any): any => {
     
     // Handle tools array
     if (Array.isArray(normalized.config.tools)) {
-      normalized.config.tools = normalized.config.tools.map(normalizeComponent);
+      normalized.config.tools = normalized.config.tools.map((t: any) => normalizeComponent(t));
     }
     
     // Handle termination_condition
@@ -59,12 +59,12 @@ const normalizeComponent = (component: any): any => {
     
     // Handle conditions array for OrTermination
     if (Array.isArray(normalized.config.conditions)) {
-      normalized.config.conditions = normalized.config.conditions.map(normalizeComponent);
+      normalized.config.conditions = normalized.config.conditions.map((c: any) => normalizeComponent(c));
     }
     
     // Handle handoffs array
     if (Array.isArray(normalized.config.handoffs)) {
-      normalized.config.handoffs = normalized.config.handoffs.map(normalizeComponent);
+      normalized.config.handoffs = normalized.config.handoffs.map((h: any) => normalizeComponent(h));
     }
     
     // Handle model_context
