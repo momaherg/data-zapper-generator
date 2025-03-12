@@ -1,27 +1,23 @@
 
 import React from "react";
-import { Button } from "antd";
-import { Edit } from "lucide-react";
-
-export interface NestedComponentButtonProps {
-  label: string;
-  onClick: () => void;
-}
+import { ChevronRight } from "lucide-react";
+import { NestedComponentButtonProps } from "./index";
 
 export const NestedComponentButton: React.FC<NestedComponentButtonProps> = ({
   label,
+  description,
   onClick,
 }) => {
   return (
-    <Button
-      type="text"
+    <div
       onClick={onClick}
-      icon={<Edit className="w-4 h-4" />}
-      className="flex items-center justify-between w-full"
+      className="border rounded p-3 mb-3 cursor-pointer flex items-center justify-between hover:bg-gray-50 transition-colors"
     >
-      <span className="mr-2">{label}</span>
-    </Button>
+      <div>
+        <div className="font-medium">{label}</div>
+        {description && <div className="text-sm text-gray-500">{description}</div>}
+      </div>
+      <ChevronRight className="text-gray-400" />
+    </div>
   );
 };
-
-export default NestedComponentButton;

@@ -1,7 +1,9 @@
+
 import React from "react";
-import { Form, Input, Select } from "antd";
-import { Component, AgentConfig, ComponentConfig } from "../../../../../types/datamodel";
+import { Form, Input } from "antd";
+import { Component, AgentConfig } from "../../../../../types/datamodel";
 import { NestedComponentButton, NodeEditorFieldsProps } from "../../node-editor";
+import { isAssistantAgent, isWebSurferAgent } from "../../../guards";
 
 export interface AgentFieldsProps extends NodeEditorFieldsProps {
   component: Component<AgentConfig>;
@@ -32,14 +34,14 @@ export const AgentFields: React.FC<AgentFieldsProps> = ({ component, onChange, o
             onChange={(e) => handleFieldChange("description", e.target.value)}
           />
         </Form.Item>
-        {onNavigate && (
+        {onNavigate && (isAssistantAgent(component) || isWebSurferAgent(component)) && (
           <NestedComponentButton
             label="Model Client"
             description="Select the model client for this agent"
             onClick={() => onNavigate("model", component.config.model_client?.label || "model_client", "model_client")}
           />
         )}
-        {onNavigate && (
+        {onNavigate && isAssistantAgent(component) && (
           <NestedComponentButton
             label="Tools"
             description="Add or manage tools for this agent"

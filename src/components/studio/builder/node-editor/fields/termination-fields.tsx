@@ -1,5 +1,6 @@
+
 import React from "react";
-import { Form, Input, Select } from "antd";
+import { Form, Input } from "antd";
 import { 
   Component, 
   TerminationConfig,
@@ -31,7 +32,7 @@ export const TerminationFields: React.FC<TerminationFieldsProps> = ({ component,
             <div key={index}>
               <NestedComponentButton
                 label={condition.label || condition.component_type}
-                description={condition.description}
+                description={condition.description || ""}
                 onClick={() =>
                   onNavigate?.("termination", condition.label || condition.component_type, "conditions")
                 }

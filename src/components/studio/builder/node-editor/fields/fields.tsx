@@ -1,8 +1,8 @@
+
 import React from "react";
 import { 
   Component, 
   ComponentConfig, 
-  FunctionToolConfig,
   TeamConfig,
   AgentConfig,
   ModelConfig,
@@ -28,23 +28,23 @@ export const renderFields = (props: NodeEditorFieldsProps) => {
   const { component } = props;
 
   if (isModelComponent(component)) {
-    return <ModelFields {...props} component={component} />;
+    return <ModelFields component={component} onChange={props.onChange} onNavigate={props.onNavigate} />;
   }
 
   if (isToolComponent(component)) {
-    return <ToolFields {...props} component={component} />;
+    return <ToolFields component={component} onChange={props.onChange} onNavigate={props.onNavigate} />;
   }
 
   if (isTeamComponent(component)) {
-    return <TeamFields {...props} component={component} />;
+    return <TeamFields component={component} onChange={props.onChange} onNavigate={props.onNavigate} />;
   }
 
   if (isAgentComponent(component)) {
-    return <AgentFields {...props} component={component} />;
+    return <AgentFields component={component} onChange={props.onChange} onNavigate={props.onNavigate} />;
   }
 
   if (isTerminationComponent(component)) {
-    return <TerminationFields {...props} component={component} />;
+    return <TerminationFields component={component} onChange={props.onChange} onNavigate={props.onNavigate} />;
   }
 
   return <div>Unknown component type: {component.component_type}</div>;
@@ -53,26 +53,30 @@ export const renderFields = (props: NodeEditorFieldsProps) => {
 export interface FieldsProps {
   component: Component<ComponentConfig>;
   onChange: (updates: Partial<Component<ComponentConfig>>) => void;
+  onNavigate?: (componentType: string, id: string, parentField: string) => void;
 }
 
-export const Fields: React.FC<FieldsProps> = ({ component, onChange }) => {
-  return (
-    <div className="space-y-4">
-      {component.component_type === 'agent' && (
-        <AgentFields component={component} onChange={onChange} />
-      )}
-      {component.component_type === 'model' && (
-        <ModelFields component={component} onChange={onChange} />
-      )}
-      {component.component_type === 'team' && (
-        <TeamFields component={component} onChange={onChange} />
-      )}
-      {component.component_type === 'tool' && (
-        <ToolFields component={component} onChange={onChange} />
-      )}
-      {component.component_type === 'termination' && (
-        <TerminationFields component={component} onChange={onChange} />
-      )}
-    </div>
-  );
+export const Fields: React.FC<FieldsProps> = ({ component, onChange, onNavigate }) => {
+  // Use type guards to safely pass components to their respective fields
+  if (isAgentComponent(component)) {
+    return <AgentFields component={component} onChange={onChange} onNavigate={onNavigate} />;
+  }
+  
+  if (isModelComponent(component)) {
+    return <ModelFields component={component} onChange={onChange} onNavigate={onNavigate} />;
+  }
+  
+  if (isTeamComponent(component)) {
+    return <TeamFields component={component} onChange={onChange} onNavigate={onNavigate} />;
+  }
+  
+  if (isToolComponent(component)) {
+    return <ToolFields component={component} onChange={onChange} onNavigate={onNavigate} />;
+  }
+  
+  if (isTerminationComponent(component)) {
+    return <TerminationFields component={component} onChange={onChange} onNavigate={onNavigate} />;
+  }
+  
+  return <div>Unknown component type: {component.component_type}</div>;
 };

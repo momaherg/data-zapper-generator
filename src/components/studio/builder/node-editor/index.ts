@@ -1,9 +1,16 @@
 
-// Export all the components from the node-editor directory
-export * from "./NestedComponentButton";
+import { NestedComponentButton } from "./NestedComponentButton";
+import { Component, ComponentConfig } from "../../datamodel";
 
-// Define prop interfaces
-export interface NestedComponentButtonProps {
-  label: string;
-  onClick: () => void;
+export interface NodeEditorFieldsProps {
+  component: Component<ComponentConfig>;
+  onChange: (updates: Partial<Component<ComponentConfig>>) => void;
+  onNavigate?: (componentType: string, id: string, parentField: string) => void;
 }
+
+export { NestedComponentButton };
+export type NestedComponentButtonProps = {
+  label: string;
+  description?: string;
+  onClick: () => void;
+};

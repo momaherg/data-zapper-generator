@@ -1,39 +1,65 @@
 
 import React from "react";
-import { useRef } from "react";
-import { Component, FunctionToolConfig } from "../../../datamodel";
-import { MonacoEditor } from "../../monaco";
+import { Form, Input, Switch } from "antd";
+import { Component, ToolConfig, FunctionToolConfig } from "../../../../../types/datamodel";
+import { NodeEditorFieldsProps } from "../../node-editor";
+import { isFunctionTool } from "../../../guards";
 
-export interface ToolFieldsProps {
-  component: Component<FunctionToolConfig>;
-  onChange: (updates: Partial<Component<FunctionToolConfig>>) => void;
+export interface ToolFieldsProps extends NodeEditorFieldsProps {
+  component: Component<ToolConfig>;
 }
 
 export const ToolFields: React.FC<ToolFieldsProps> = ({ component, onChange }) => {
-  const editorRef = useRef(null);
+  const { config } = component;
 
-  const handleSourceCodeChange = (value: string) => {
+  const handleFieldChange = (field: string, value: any) => {
     onChange({
       config: {
-        ...component.config,
-        source_code: value,
+        ...config,
+        [field]: value,
       },
     });
   };
 
-  return (
-    <div className="space-y-4">
+  if (isFunctionTool(component)) {
+    const functionConfig = config as FunctionToolConfig;
+    return (
       <div>
-        <label className="block text-sm font-medium mb-1">Source Code</label>
-        <MonacoEditor
-          value={component.config.source_code}
-          onChange={handleSourceCodeChange}
-          language="python"
-          editorRef={editorRef}
-          minimap={false}
-        />
-      </div>
-    </div>
-  );
-};
+        <Form layout="vertical">
+          <Form.Item label="Name">
+            <Input
+              value={functionConfig.name}
+              onChange={(e) => handleFieldChange("name", e.target.value)}
+            />
+          </Form.Item>
 
+          <Form.Item label="Description">
+            <Input.TextArea
+              value={functionConfig.description}
+              onChange={(e) => handleFieldChange("description", e.target.value)}
+            />
+          </Form.Item>
+
+          <Form.Item label="Source Code">
+            <Input.TextArea
+              value={functionConfig.source_code}
+              rows={8}
+              onChange={(e) => handleFieldChange("source_code", e.target.value)}
+            />
+          </Form.Item>
+
+          <Form.Item label="Has Cancellation Support">
+            <Switch
+              checked={functionConfig.has_cancellation_support}
+              onChange={(checked) =>
+                handleFieldChange("has_cancellation_support", checked)
+              }
+            />
+          </Form.Item>
+        </Form>
+      </div>
+    );
+  }
+
+  return <div>Unknown Tool Config</div>;
+};

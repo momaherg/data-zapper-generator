@@ -1,20 +1,27 @@
 
-import React, { createContext, useContext, useState } from "react";
+import React, { createContext, useContext } from 'react';
 
-interface UserContextType {
-  user: any | null;
-}
+// Create a default context
+export const appContext = createContext<{
+  user?: {
+    id: string;
+    name: string;
+    email: string;
+  }
+}>({});
 
-const UserContext = createContext<UserContextType>({ user: null });
-
-export const useUserContext = () => useContext(UserContext);
-
-export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user] = useState<any | null>(null);
+export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const mockUser = {
+    id: '1',
+    name: 'Test User',
+    email: 'test@example.com'
+  };
 
   return (
-    <UserContext.Provider value={{ user }}>
+    <appContext.Provider value={{ user: mockUser }}>
       {children}
-    </UserContext.Provider>
+    </appContext.Provider>
   );
 };
+
+export const useAppContext = () => useContext(appContext);

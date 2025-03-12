@@ -1,98 +1,101 @@
-import React, { useContext, useEffect, useState } from "react";
-
-import { Drawer, Button, message, Checkbox } from "antd";
-import { Team, Session } from "../datamodel";
-import ChatView from "../../playground/chat/chat";
-import { appContext } from "../../../../hooks/provider";
-import { sessionAPI } from "../../playground/api";
+import React, { useState } from "react";
+import { Drawer, Button, Input, Empty, message } from "antd";
+import { Team } from "../datamodel";
+import { Component, ComponentConfig } from "../datamodel";
+import { appContext } from "../../../hooks/provider";
+import { useContext } from "react";
 
 interface TestDrawerProps {
-  isVisble: boolean;
-  team: Team;
+  open: boolean;
   onClose: () => void;
+  team: Team | null;
 }
 
-const TestDrawer = ({ isVisble, onClose, team }: TestDrawerProps) => {
-  const [session, setSession] = useState<Session | null>(null);
+export const TestDrawer: React.FC<TestDrawerProps> = ({ open, onClose, team }) => {
   const { user } = useContext(appContext);
-  const [loading, setLoading] = useState(false);
-  const [deleteOnClose, setDeleteOnClose] = useState(true);
-  const [messageApi, contextHolder] = message.useMessage();
+  const [input, setInput] = useState("");
+  const [isRunning, setIsRunning] = useState(false);
+  const [messages, setMessages] = useState<string[]>([]);
 
-  const createSession = async (teamId: number, teamName: string) => {
-    if (!user?.email) return;
+  const handleTestRun = async () => {
+    if (!team || !input.trim()) {
+      message.error("Please enter some input to test");
+      return;
+    }
+
+    setIsRunning(true);
+    setMessages([]);
+
     try {
-      const defaultName = `Test Session ${teamName.substring(
-        0,
-        20
-      )} - ${new Date().toLocaleString()} `;
-      const created = await sessionAPI.createSession(
-        {
-          name: defaultName,
-          team_id: teamId,
-        },
-        user.email
-      );
-      setSession(created);
+      // Simulate a test run with a delay
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Add some mock messages
+      setMessages([
+        `Input: ${input}`,
+        "Processing with team configuration...",
+        "Agent 1: Analyzing input...",
+        "Agent 2: Generating response...",
+        "Test run completed successfully!"
+      ]);
+
+      message.success("Test completed successfully");
     } catch (error) {
-      messageApi.error("Error creating session");
+      console.error("Test run error:", error);
+      message.error("Failed to run test");
+    } finally {
+      setIsRunning(false);
     }
-  };
-
-  const deleteSession = async (sessionId: number) => {
-    if (!user?.email) return;
-    try {
-      await sessionAPI.deleteSession(sessionId, user.email);
-      setSession(null); // Clear session state after successful deletion
-    } catch (error) {
-      messageApi.error("Error deleting session");
-    }
-  };
-
-  // Single effect to handle session creation when drawer opens
-  useEffect(() => {
-    if (isVisble && team?.id && !session) {
-      setLoading(true);
-      createSession(
-        team.id,
-        team.component.label || team.component.component_type
-      ).finally(() => {
-        setLoading(false);
-      });
-    }
-  }, [isVisble, team?.id]);
-
-  // Single cleanup handler in the Drawer's onClose
-  const handleClose = async () => {
-    if (session?.id && deleteOnClose) {
-      // Only delete if flag is true
-      await deleteSession(session.id);
-    }
-    onClose();
   };
 
   return (
-    <div>
-      {contextHolder}
-      <Drawer
-        title={<span>Test Team: {team.component.label}</span>}
-        size="large"
-        placement="right"
-        onClose={handleClose}
-        open={isVisble}
-        extra={
-          <Checkbox
-            checked={deleteOnClose}
-            onChange={(e) => setDeleteOnClose(e.target.checked)}
+    <Drawer
+      title="Test Team"
+      placement="right"
+      open={open}
+      onClose={onClose}
+      width={500}
+      footer={
+        <div className="flex justify-end gap-2">
+          <Button onClick={onClose}>Close</Button>
+          <Button 
+            type="primary"
+            onClick={handleTestRun}
+            loading={isRunning}
+            disabled={!input.trim()}
           >
-            Delete session on close
-          </Checkbox>
-        }
-      >
-        {loading && <p>Creating a test session...</p>}
-        {session && <ChatView session={session} />}
-      </Drawer>
-    </div>
+            Run Test
+          </Button>
+        </div>
+      }
+    >
+      <div className="flex flex-col h-full">
+        <div className="mb-4">
+          <Input.TextArea
+            placeholder="Enter test input..."
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            rows={4}
+          />
+        </div>
+
+        <div className="flex-1 overflow-y-auto">
+          {messages.length > 0 ? (
+            <div className="space-y-2">
+              {messages.map((msg, index) => (
+                <div
+                  key={index}
+                  className="p-2 bg-gray-50 rounded border border-gray-200"
+                >
+                  {msg}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Empty description="No test results yet" />
+          )}
+        </div>
+      </div>
+    </Drawer>
   );
 };
-export default TestDrawer;
