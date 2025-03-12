@@ -80,11 +80,22 @@ export class GalleryAPI {
   }
 
   async syncGallery(url: string): Promise<Gallery> {
-    const response = await fetch(url);
+    const response = await fetch(`${this.getBaseUrl()}/gallery/sync`, {
+      method: "POST",
+      headers: this.getHeaders(),
+      body: JSON.stringify({ url }),
+    });
+    
     if (!response.ok) {
       throw new Error(`Failed to sync gallery from ${url}`);
     }
-    return await response.json();
+    
+    const data = await response.json();
+    if (!data.status) {
+      throw new Error(data.message || `Failed to sync gallery from ${url}`);
+    }
+    
+    return data.data;
   }
 }
 

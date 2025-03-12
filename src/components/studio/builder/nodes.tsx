@@ -348,6 +348,8 @@ export const AgentNode = memo<NodeProps<CustomNode>>((props) => {
   const toolCount = isAssistantAgent(component)
     ? component.config.tools?.length || 0
     : 0;
+    
+  const agentType = component.provider.toLowerCase();
 
   return (
     <BaseNode
@@ -368,11 +370,15 @@ export const AgentNode = memo<NodeProps<CustomNode>>((props) => {
       }
       descriptionContent={
         <div>
-          <div className="break-words truncate mb-1">
-            {" "}
+          <div className="text-gray-600 mb-1">{agentType}</div>
+          <div className="text-sm font-medium mb-1">
             {component.config.name}
           </div>
-          <div className="break-words"> {component.description}</div>
+          <div className="text-xs text-gray-500">
+            {isAssistantAgent(component) && component.config.description
+              ? component.config.description
+              : "An agent that provides assistance with tool use."}
+          </div>
         </div>
       }
     >
@@ -386,13 +392,6 @@ export const AgentNode = memo<NodeProps<CustomNode>>((props) => {
       {(isAssistantAgent(component) || isWebSurferAgent(component)) && (
         <>
           <NodeSection title="Model">
-            {/* <Handle
-              type="target"
-              position={Position.Left}
-              id={`${props.id}-model-input-handle`}
-              className="my-left-handle"
-            /> */}
-
             <div className="relative">
               {component.config?.model_client && (
                 <div className="text-sm">
@@ -412,12 +411,6 @@ export const AgentNode = memo<NodeProps<CustomNode>>((props) => {
 
           {isAssistantAgent(component) && (
             <NodeSection title="Tools">
-              {/* <Handle
-              type="target"
-              position={Position.Left}
-              id={`${props.id}-tool-input-handle`}
-              className="my-left-handle"
-            /> */}
               <div className="space-y-1">
                 {component.config.tools && toolCount > 0 && (
                   <div className="space-y-1">
@@ -508,3 +501,4 @@ export const edgeTypes = {
   "agent-connection": CustomEdge,
   "termination-connection": CustomEdge,
 };
+
