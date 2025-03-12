@@ -390,13 +390,24 @@ export interface GalleryConfig {
   id: string;
   name: string;
   url?: string;
-  metadata: GalleryMetadata;
+  metadata: {
+    author: string;
+    created_at: string;
+    updated_at: string;
+    version: string;
+    description?: string;
+    tags?: string[];
+    license?: string;
+    homepage?: string;
+    category?: string;
+    last_synced?: string;
+  };
   components: {
-    teams: Component<TeamConfig>[];
-    agents: Component<AgentConfig>[];
-    models: Component<ModelConfig>[];
-    tools: Component<ToolConfig>[];
-    terminations: Component<TerminationConfig>[];
+    teams: any[];
+    agents: any[];
+    models: any[];
+    tools: any[];
+    terminations: any[];
   };
 }
 

@@ -1,74 +1,68 @@
 
-import React from "react";
 import { Form, Input } from "antd";
-import NestedComponentButton from "../NestedComponentButton";
-import { NodeEditorFieldsProps } from "../../node-editor";
-import { Component, AgentConfig } from "../../../datamodel";
-import { isAssistantAgent, isWebSurferAgent } from "../../../guards";
+import { DetailGroup } from "./detailgroup";
+import { AgentComponent } from "../../../datamodel";
+import { Component } from "../../../datamodel";
 
-export interface AgentFieldsProps extends NodeEditorFieldsProps {
-  component: Component<AgentConfig>;
+interface AgentFieldsProps {
+  component: AgentComponent;
+  onChange: (updateData: Partial<Component<any>>) => void;
 }
 
-export const AgentFields: React.FC<AgentFieldsProps> = ({ component, onChange, onNavigate }) => {
+export const AgentFields = ({ component, onChange }: AgentFieldsProps) => {
   return (
     <>
-      <Form.Item label="Name" name="name">
-        <Input 
-          placeholder="Agent Name" 
-          value={component.config.name} 
+      <Form.Item label="Name" name="name" className="mb-4">
+        <Input
+          placeholder="Agent name"
+          defaultValue={component.config?.name || ""}
           onChange={(e) => 
             onChange({
               config: { ...component.config, name: e.target.value },
-            }, [], true)
+            })
           }
         />
       </Form.Item>
 
-      <Form.Item label="Description" name="description">
-        <Input.TextArea 
-          placeholder="Agent Description" 
-          value={component.config.description} 
+      <Form.Item label="Description" name="description" className="mb-4">
+        <Input
+          placeholder="Agent description"
+          defaultValue={component.config?.description || ""}
           onChange={(e) => 
             onChange({
               config: { ...component.config, description: e.target.value },
-            }, [], true)
+            })
           }
         />
       </Form.Item>
 
-      {(isAssistantAgent(component) || isWebSurferAgent(component)) && (
-        <>
-          <Form.Item label="Components" className="mb-0">
-            <div className="space-y-2">
-              <NestedComponentButton
-                label="Model Client"
-                description={component.config.model_client 
-                  ? `${component.config.model_client.provider} - ${component.config.model_client.config.model}`
-                  : "Not set"}
-                onClick={() => onNavigate(["config", "model_client"])}
-              />
-            </div>
-          </Form.Item>
+      <DetailGroup title="Prompt" defaultOpen={true}>
+        <Form.Item label="System Prompt" name="system_prompt" className="mb-4">
+          <Input.TextArea
+            placeholder="Instructions for the agent"
+            defaultValue={component.config?.system_prompt || ""}
+            rows={4}
+            onChange={(e) => onChange({
+              config: { ...component.config, system_prompt: e.target.value },
+            })}
+          />
+        </Form.Item>
+      </DetailGroup>
 
-          {isAssistantAgent(component) && component.config.tools && (
-            <Form.Item label="Tools" className="mb-0">
-              <div className="space-y-2">
-                {component.config.tools.map((tool, index) => (
-                  <NestedComponentButton
-                    key={index}
-                    label={tool.config.name || `Tool ${index + 1}`}
-                    description={`${tool.provider}`}
-                    onClick={() => onNavigate(["config", "tools", index.toString()])}
-                  />
-                ))}
-              </div>
-            </Form.Item>
-          )}
-        </>
-      )}
+      <DetailGroup title="Advanced" defaultOpen={false}>
+        <Form.Item label="Temperature" name="temperature" className="mb-4">
+          <Input
+            type="number"
+            min={0}
+            max={1}
+            step={0.1}
+            defaultValue={component.config?.temperature || 0.7}
+            onChange={(e) => onChange({
+              config: { ...component.config, temperature: parseFloat(e.target.value) },
+            })}
+          />
+        </Form.Item>
+      </DetailGroup>
     </>
   );
 };
-
-export default AgentFields;

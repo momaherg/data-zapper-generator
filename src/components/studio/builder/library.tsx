@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState } from "react";
 import { Input, Collapse, type CollapseProps } from "antd";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
@@ -137,6 +137,7 @@ const getDefaultComponents = () => {
     ],
     tools: [
       {
+        label: "Web Search",
         config: {
           provider: "web_search",
           component_type: "tool",
@@ -147,6 +148,7 @@ const getDefaultComponents = () => {
         }
       },
       {
+        label: "Calculator",
         config: {
           provider: "calculator",
           component_type: "tool",
@@ -183,11 +185,63 @@ const getDefaultComponents = () => {
 };
 
 export const ComponentLibrary: React.FC<LibraryProps> = () => {
-  const [searchTerm, setSearchTerm] = React.useState("");
-  const [isMinimized, setIsMinimized] = React.useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isMinimized, setIsMinimized] = useState(false);
+  
+  // Important: Always declare hooks at the top level, never conditionally
   const defaultGallery = useGalleryStore((state) => state.getSelectedGallery());
   const galleryLoading = useGalleryStore((state) => state.isLoading);
   const galleryError = useGalleryStore((state) => state.error);
+  
+  // Always compute sections, but use different data sources based on conditions
+  const componentsData = (!defaultGallery || galleryError) 
+    ? getDefaultComponents()
+    : (defaultGallery.config?.components || getDefaultComponents());
+  
+  // Move this useMemo out of the conditional rendering path
+  const sections = React.useMemo(
+    () => [
+      {
+        title: "Agents",
+        type: "agent" as ComponentTypes,
+        items: componentsData.agents?.map((agent: any) => ({
+          label: agent.label || agent.config?.name || "Agent",
+          config: agent,
+        })) || [],
+        icon: <Bot className="w-4 h-4" />,
+      },
+      {
+        title: "Models",
+        type: "model" as ComponentTypes,
+        items: componentsData.models?.map((model: any) => ({
+          label: model.label || model.config?.model || "Model",
+          config: model,
+        })) || [],
+        icon: <Brain className="w-4 h-4" />,
+      },
+      {
+        title: "Tools",
+        type: "tool" as ComponentTypes,
+        items: componentsData.tools?.map((tool: any) => ({
+          label: tool.config?.name || "Tool",
+          config: tool,
+        })) || [],
+        icon: <Wrench className="w-4 h-4" />,
+      },
+      {
+        title: "Terminations",
+        type: "termination" as ComponentTypes,
+        items: componentsData.terminations?.map(
+          (termination: any) => ({
+            label: termination.label || "Termination",
+            config: termination,
+          })
+        ) || [],
+        icon: <Timer className="w-4 h-4" />,
+      },
+    ],
+    [componentsData]
+  );
 
   if (isMinimized) {
     return (
@@ -233,56 +287,6 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
       </Sider>
     );
   }
-
-  // Use default components if gallery failed to load or is empty
-  const componentsData = (!defaultGallery || galleryError) 
-    ? getDefaultComponents()
-    : defaultGallery.config.components;
-
-  // Map gallery components to sections format
-  const sections = React.useMemo(
-    () => [
-      {
-        title: "Agents",
-        type: "agent" as ComponentTypes,
-        items: componentsData.agents.map((agent) => ({
-          label: agent.label || agent.config?.name || "Agent",
-          config: agent,
-        })),
-        icon: <Bot className="w-4 h-4" />,
-      },
-      {
-        title: "Models",
-        type: "model" as ComponentTypes,
-        items: componentsData.models.map((model) => ({
-          label: model.label || model.config?.model || "Model",
-          config: model,
-        })),
-        icon: <Brain className="w-4 h-4" />,
-      },
-      {
-        title: "Tools",
-        type: "tool" as ComponentTypes,
-        items: componentsData.tools.map((tool) => ({
-          label: tool.config?.name || "Tool",
-          config: tool,
-        })),
-        icon: <Wrench className="w-4 h-4" />,
-      },
-      {
-        title: "Terminations",
-        type: "termination" as ComponentTypes,
-        items: componentsData.terminations.map(
-          (termination) => ({
-            label: termination.label || "Termination",
-            config: termination,
-          })
-        ),
-        icon: <Timer className="w-4 h-4" />,
-      },
-    ],
-    [componentsData]
-  );
 
   const items: CollapseProps["items"] = sections.map((section) => {
     const filteredItems = section.items.filter((item) =>
