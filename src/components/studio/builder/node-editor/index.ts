@@ -1,13 +1,16 @@
 
-import NodeEditor from "./NodeEditor";
+import { Component, ComponentConfig } from "../../datamodel";
 
 export interface NodeEditorFieldsProps {
-  component: any;
-  onChange: (updates: any) => void;
-  onNavigate: (path: string[]) => void;
+  component: Component<ComponentConfig>;
+  onChange?: (updates: Partial<Component<ComponentConfig>>) => void;
+  onNavigate?: (componentType: string, id: string, parentField: string) => void;
 }
 
+// Re-export components that should be available from this module
+export * from "./fields/agent-fields";
+export * from "./fields/model-fields";
+export * from "./fields/team-fields";
+export * from "./fields/termination-fields";
+export * from "./fields/tool-fields";
 export * from "./NestedComponentButton";
-export * from "./detailgroup";
-export * from "./fields/fields";
-export default NodeEditor;

@@ -26,7 +26,7 @@ export class GalleryAPI {
     return data.data;
   }
 
-  async getGallery(id: number): Promise<Gallery> {
+  async getGallery(id: string): Promise<Gallery> {
     const response = await fetch(
       `${this.getBaseUrl()}/gallery/${id}`,
       {
@@ -51,9 +51,9 @@ export class GalleryAPI {
     return data.data;
   }
 
-  async updateGallery(id: number, gallery: Partial<Gallery>): Promise<Gallery> {
+  async updateGallery(gallery: Gallery): Promise<Gallery> {
     const response = await fetch(
-      `${this.getBaseUrl()}/gallery/${id}`,
+      `${this.getBaseUrl()}/gallery/${gallery.id}`,
       {
         method: "PUT",
         headers: this.getHeaders(),
@@ -66,7 +66,7 @@ export class GalleryAPI {
     return data.data;
   }
 
-  async deleteGallery(id: number): Promise<void> {
+  async deleteGallery(id: string): Promise<void> {
     const response = await fetch(
       `${this.getBaseUrl()}/gallery/${id}`,
       {
@@ -89,4 +89,3 @@ export class GalleryAPI {
 }
 
 export const galleryAPI = new GalleryAPI();
-

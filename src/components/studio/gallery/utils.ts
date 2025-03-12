@@ -1,15 +1,19 @@
-import { GalleryConfig } from "../../types/datamodel";
 
-// Load and parse the gallery JSON file
-const loadGalleryFromJson = (): GalleryConfig => {
-  try {
-    // You can adjust the path to your JSON file as needed
-    const galleryJson = require("./default_gallery.json");
-    return galleryJson as GalleryConfig;
-  } catch (error) {
-    console.error("Error loading gallery JSON:", error);
-    throw error;
-  }
+import { Gallery, GalleryConfig } from "../datamodel";
+
+export const formatDate = (date: string): string => {
+  return new Date(date).toLocaleString();
 };
 
-export const defaultGallery: GalleryConfig = loadGalleryFromJson();
+export const validateGalleryConfig = (config: unknown): config is GalleryConfig => {
+  if (!config || typeof config !== 'object') return false;
+  const conf = config as Record<string, unknown>;
+  
+  // Basic validation
+  return (
+    typeof conf.id === 'string' &&
+    typeof conf.name === 'string' &&
+    typeof conf.metadata === 'object' &&
+    typeof conf.components === 'object'
+  );
+};
