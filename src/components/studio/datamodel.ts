@@ -400,7 +400,11 @@ export interface GalleryConfig {
   };
 }
 
-export interface Gallery extends DBModel {
+export interface Gallery {
+  id: string;
   name: string;
+  description?: string;
   config: GalleryConfig;
+  created_at?: string;
+  updated_at?: string;
 }

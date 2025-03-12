@@ -1,3 +1,3 @@
 
-// Re-export the full datamodel from studio
+// Re-export everything from studio datamodel
 export * from "../components/studio/datamodel";

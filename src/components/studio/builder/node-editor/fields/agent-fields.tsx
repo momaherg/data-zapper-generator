@@ -20,7 +20,7 @@ export const AgentFields: React.FC<AgentFieldsProps> = ({ component, onChange, o
           onChange={(e) => 
             onChange({
               config: { ...component.config, name: e.target.value },
-            })
+            }, [], true)
           }
         />
       </Form.Item>
@@ -32,7 +32,7 @@ export const AgentFields: React.FC<AgentFieldsProps> = ({ component, onChange, o
           onChange={(e) => 
             onChange({
               config: { ...component.config, description: e.target.value },
-            })
+            }, [], true)
           }
         />
       </Form.Item>
