@@ -1,6 +1,7 @@
 
 import { create } from "zustand";
 import { Gallery } from "../datamodel";
+import { GalleryType } from "../../../types/datamodel";
 import { patchedGalleryAPI } from "./mock-api";
 
 interface GalleryState {

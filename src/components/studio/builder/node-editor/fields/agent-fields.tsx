@@ -1,7 +1,8 @@
 
+import * as React from "react";
 import { Form, Input } from "antd";
-import DetailGroup from "../../../builder/component-editor/detailgroup";
-import { Component, AgentConfig } from "../../../datamodel";
+import DetailGroup from "../detailgroup";
+import { Component, AgentConfig, AssistantAgentConfig, isAssistantAgent } from "../../../datamodel";
 
 interface AgentFieldsProps {
   component: Component<AgentConfig>;
@@ -10,6 +11,9 @@ interface AgentFieldsProps {
 }
 
 export const AgentFields = ({ component, onChange, onNavigate }: AgentFieldsProps) => {
+  // Check if it's an AssistantAgent to show specific fields
+  const isAssistant = isAssistantAgent(component);
+
   return (
     <>
       <Form.Item label="Name" name="name" className="mb-4">
@@ -36,33 +40,40 @@ export const AgentFields = ({ component, onChange, onNavigate }: AgentFieldsProp
         />
       </Form.Item>
 
-      <DetailGroup title="Prompt">
-        <Form.Item label="System Prompt" name="system_prompt" className="mb-4">
-          <Input.TextArea
-            placeholder="Instructions for the agent"
-            defaultValue={component.config?.system_prompt || ""}
-            rows={4}
-            onChange={(e) => onChange({
-              config: { ...component.config, system_prompt: e.target.value },
-            })}
-          />
-        </Form.Item>
-      </DetailGroup>
+      {isAssistant && (
+        <>
+          <DetailGroup title="Prompt">
+            <Form.Item label="System Prompt" name="system_prompt" className="mb-4">
+              <Input.TextArea
+                placeholder="Instructions for the agent"
+                defaultValue={(component.config as AssistantAgentConfig)?.system_message || ""}
+                rows={4}
+                onChange={(e) => onChange({
+                  config: { 
+                    ...component.config, 
+                    system_message: e.target.value 
+                  },
+                })}
+              />
+            </Form.Item>
+          </DetailGroup>
 
-      <DetailGroup title="Advanced">
-        <Form.Item label="Temperature" name="temperature" className="mb-4">
-          <Input
-            type="number"
-            min={0}
-            max={1}
-            step={0.1}
-            defaultValue={component.config?.temperature || 0.7}
-            onChange={(e) => onChange({
-              config: { ...component.config, temperature: parseFloat(e.target.value) },
-            })}
-          />
-        </Form.Item>
-      </DetailGroup>
+          <DetailGroup title="Advanced">
+            <Form.Item label="Model Client Stream" name="model_client_stream" className="mb-4">
+              <Input
+                type="checkbox"
+                checked={(component.config as AssistantAgentConfig)?.model_client_stream || false}
+                onChange={(e) => onChange({
+                  config: { 
+                    ...component.config, 
+                    model_client_stream: e.target.checked 
+                  },
+                })}
+              />
+            </Form.Item>
+          </DetailGroup>
+        </>
+      )}
     </>
   );
 };

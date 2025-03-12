@@ -13,3 +13,6 @@ export interface GalleryType {
   version?: number | string;
   config: any;
 }
+
+// Export GalleryConfig interface for components that import from types/datamodel
+export type { GalleryConfig } from "../components/studio/datamodel";
