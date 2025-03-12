@@ -1,83 +1,76 @@
 
 import React from "react";
-import { Form, Input } from "antd";
-import { 
-  Component, 
+import { Form, Input, InputNumber } from "antd";
+import NestedComponentButton from "../NestedComponentButton";
+import { NodeEditorFieldsProps } from "../../node-editor";
+import {
+  Component,
   TerminationConfig,
-  OrTerminationConfig,
   MaxMessageTerminationConfig,
-  TextMentionTerminationConfig
-} from "../../../../../types/datamodel";
-import { NestedComponentButton, NodeEditorFieldsProps } from "../../node-editor";
+  TextMentionTerminationConfig,
+  OrTerminationConfig,
+} from "../../../datamodel";
+import {
+  isMaxMessageTermination,
+  isTextMentionTermination,
+  isOrTermination,
+} from "../../../guards";
 
 export interface TerminationFieldsProps extends NodeEditorFieldsProps {
   component: Component<TerminationConfig>;
 }
 
 export const TerminationFields: React.FC<TerminationFieldsProps> = ({ component, onChange, onNavigate }) => {
-  const { config } = component;
-
-  const handleFieldChange = (field: string, value: any) => {
-    onChange({ config: { ...config, [field]: value } });
-  };
-
-  if ("conditions" in config) {
-    const orConfig = config as OrTerminationConfig;
-
+  if (isMaxMessageTermination(component)) {
     return (
-      <div>
-        <p>Or Termination Config</p>
-        {orConfig.conditions &&
-          orConfig.conditions.map((condition, index) => (
-            <div key={index}>
-              <NestedComponentButton
-                label={condition.label || condition.component_type}
-                description={condition.description || ""}
-                onClick={() =>
-                  onNavigate?.("termination", condition.label || condition.component_type, "conditions")
-                }
-              />
-            </div>
+      <Form.Item label="Max Messages" name="max_messages">
+        <InputNumber
+          min={1}
+          value={component.config.max_turns}
+          onChange={(value) =>
+            onChange({
+              config: { ...component.config, max_turns: value },
+            })
+          }
+        />
+      </Form.Item>
+    );
+  }
+
+  if (isTextMentionTermination(component)) {
+    return (
+      <Form.Item label="Termination Text" name="text">
+        <Input
+          placeholder="Termination text"
+          value={component.config.text}
+          onChange={(e) =>
+            onChange({
+              config: { ...component.config, text: e.target.value },
+            })
+          }
+        />
+      </Form.Item>
+    );
+  }
+
+  if (isOrTermination(component)) {
+    return (
+      <Form.Item label="Conditions" className="mb-0">
+        <div className="space-y-2">
+          {component.config.conditions.map((condition, index) => (
+            <NestedComponentButton
+              key={index}
+              label={`Condition ${index + 1}`}
+              description={condition.provider}
+              onClick={() => onNavigate(["config", "conditions", index.toString()])}
+            />
           ))}
-      </div>
+        </div>
+      </Form.Item>
     );
   }
 
-  if ("max_messages" in config) {
-    const maxMessagesConfig = config as MaxMessageTerminationConfig;
-
-    return (
-      <div>
-        <p>Max Messages Termination Config</p>
-        <Form.Item label="Max Messages">
-          <Input
-            type="number"
-            value={maxMessagesConfig.max_messages}
-            onChange={(e) =>
-              handleFieldChange("max_messages", parseInt(e.target.value))
-            }
-          />
-        </Form.Item>
-      </div>
-    );
-  }
-
-  if ("text" in config) {
-    const textMentionConfig = config as TextMentionTerminationConfig;
-
-    return (
-      <div>
-        <p>Text Mention Termination Config</p>
-        <Form.Item label="Text">
-          <Input
-            type="text"
-            value={textMentionConfig.text}
-            onChange={(e) => handleFieldChange("text", e.target.value)}
-          />
-        </Form.Item>
-      </div>
-    );
-  }
-
-  return <div>Unknown Termination Config</div>;
+  return <div>Unknown termination condition type: {component.provider}</div>;
 };
+
+export default TerminationFields;

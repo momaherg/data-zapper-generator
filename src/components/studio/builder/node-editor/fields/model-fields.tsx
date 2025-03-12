@@ -1,108 +1,129 @@
 
 import React from "react";
 import { Form, Input, Select } from "antd";
-import { Component, ModelConfig } from "../../../../../types/datamodel";
 import { NodeEditorFieldsProps } from "../../node-editor";
+import {
+  ModelConfig,
+  OpenAIClientConfig,
+  AzureOpenAIClientConfig,
+  AnthropicClientConfig,
+} from "../../../datamodel";
+import { Component } from "../../../datamodel";
 import { isOpenAIModel, isAzureOpenAIModel, isAnthropicModel } from "../../../guards";
+
+const { Option } = Select;
 
 export interface ModelFieldsProps extends NodeEditorFieldsProps {
   component: Component<ModelConfig>;
 }
 
-export const ModelFields: React.FC<ModelFieldsProps> = ({ component, onChange }) => {
-  const { config } = component;
-
-  const handleFieldChange = (field: string, value: any) => {
-    onChange({
-      config: {
-        ...config,
-        [field]: value,
-      },
-    });
-  };
-
+const CommonModelFields: React.FC<ModelFieldsProps> = ({ component, onChange }) => {
   return (
-    <div>
-      <Form layout="vertical">
-        <Form.Item label="Model">
-          <Input
-            value={config.model}
-            onChange={(e) => handleFieldChange("model", e.target.value)}
-          />
-        </Form.Item>
-
-        {isOpenAIModel(component) && (
-          <>
-            <Form.Item label="API Key">
-              <Input.Password
-                value={config.api_key}
-                onChange={(e) => handleFieldChange("api_key", e.target.value)}
-                placeholder="Enter API key (optional)"
-              />
-            </Form.Item>
-
-            <Form.Item label="Temperature">
-              <Input
-                type="number"
-                min={0}
-                max={2}
-                step={0.1}
-                value={config.temperature}
-                onChange={(e) =>
-                  handleFieldChange("temperature", parseFloat(e.target.value))
-                }
-              />
-            </Form.Item>
-          </>
-        )}
-
-        {isAzureOpenAIModel(component) && (
-          <>
-            <Form.Item label="Azure Endpoint">
-              <Input
-                value={config.azure_endpoint}
-                onChange={(e) =>
-                  handleFieldChange("azure_endpoint", e.target.value)
-                }
-              />
-            </Form.Item>
-
-            <Form.Item label="API Version">
-              <Input
-                value={config.api_version}
-                onChange={(e) =>
-                  handleFieldChange("api_version", e.target.value)
-                }
-              />
-            </Form.Item>
-          </>
-        )}
-
-        {isAnthropicModel(component) && (
-          <>
-            <Form.Item label="API Key">
-              <Input.Password
-                value={config.api_key}
-                onChange={(e) => handleFieldChange("api_key", e.target.value)}
-                placeholder="Enter API key (optional)"
-              />
-            </Form.Item>
-
-            <Form.Item label="Top P">
-              <Input
-                type="number"
-                min={0}
-                max={1}
-                step={0.1}
-                value={config.top_p}
-                onChange={(e) =>
-                  handleFieldChange("top_p", parseFloat(e.target.value))
-                }
-              />
-            </Form.Item>
-          </>
-        )}
-      </Form>
-    </div>
+    <>
+      <Form.Item label="Name" name="name">
+        <Input 
+          placeholder="Model Name" 
+          value={component.config.model} 
+          onChange={(e) => 
+            onChange({
+              config: { ...component.config, model: e.target.value },
+            })
+          }
+        />
+      </Form.Item>
+    </>
   );
 };
+
+const OpenAIModelFields: React.FC<ModelFieldsProps> = ({ component, onChange }) => {
+  const config = component.config as OpenAIClientConfig;
+  
+  return (
+    <>
+      <CommonModelFields component={component} onChange={onChange} onNavigate={() => {}} />
+      <Form.Item label="API Key" name="api_key">
+        <Input 
+          placeholder="API Key" 
+          value={config.api_key} 
+          onChange={(e) => 
+            onChange({
+              config: { ...config, api_key: e.target.value },
+            })
+          }
+        />
+      </Form.Item>
+    </>
+  );
+};
+
+const AzureOpenAIModelFields: React.FC<ModelFieldsProps> = ({ component, onChange }) => {
+  const config = component.config as AzureOpenAIClientConfig;
+  
+  return (
+    <>
+      <CommonModelFields component={component} onChange={onChange} onNavigate={() => {}} />
+      <Form.Item label="API Key" name="api_key">
+        <Input 
+          placeholder="API Key" 
+          value={config.api_key} 
+          onChange={(e) => onChange({
+            config: { ...config, api_key: e.target.value },
+          })}
+        />
+      </Form.Item>
+      <Form.Item label="Azure Endpoint" name="azure_endpoint">
+        <Input 
+          placeholder="Azure Endpoint" 
+          value={config.azure_endpoint} 
+          onChange={(e) => onChange({
+            config: { ...config, azure_endpoint: e.target.value },
+          })}
+        />
+      </Form.Item>
+      <Form.Item label="API Version" name="api_version">
+        <Input 
+          placeholder="API Version" 
+          value={config.api_version} 
+          onChange={(e) => onChange({
+            config: { ...config, api_version: e.target.value },
+          })}
+        />
+      </Form.Item>
+    </>
+  );
+};
+
+const AnthropicModelFields: React.FC<ModelFieldsProps> = ({ component, onChange }) => {
+  const config = component.config as AnthropicClientConfig;
+  
+  return (
+    <>
+      <CommonModelFields component={component} onChange={onChange} onNavigate={() => {}} />
+      <Form.Item label="API Key" name="api_key">
+        <Input 
+          placeholder="API Key" 
+          value={config.api_key} 
+          onChange={(e) => onChange({
+            config: { ...config, api_key: e.target.value },
+          })}
+        />
+      </Form.Item>
+    </>
+  );
+};
+
+export const ModelFields: React.FC<ModelFieldsProps> = (props) => {
+  // Determine which model type we're dealing with and render the appropriate fields
+  if (isOpenAIModel(props.component)) {
+    return <OpenAIModelFields {...props} />;
+  } else if (isAzureOpenAIModel(props.component)) {
+    return <AzureOpenAIModelFields {...props} />;
+  } else if (isAnthropicModel(props.component)) {
+    return <AnthropicModelFields {...props} />;
+  }
+  
+  // Default case
+  return <CommonModelFields {...props} />;
+};
+
+export default ModelFields;

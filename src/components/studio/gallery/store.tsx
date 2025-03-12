@@ -1,7 +1,7 @@
 
 import { create } from "zustand";
-import { Gallery } from "../../../types/datamodel";
-import { galleryAPI } from "./api";
+import { Gallery } from "../datamodel";
+import { patchedGalleryAPI } from "./mock-api";
 
 interface GalleryState {
   galleries: Gallery[];
@@ -23,7 +23,7 @@ export const useGalleryStore = create<GalleryState>((set, get) => ({
   fetchGalleries: async () => {
     try {
       set({ isLoading: true, error: null });
-      const galleries = await galleryAPI.listGalleries();
+      const galleries = await patchedGalleryAPI.listGalleries();
       
       set({
         galleries,
