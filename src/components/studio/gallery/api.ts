@@ -1,5 +1,5 @@
 
-import { Gallery } from "../../../types/datamodel";
+import { Gallery } from "../datamodel";
 import { getServerUrl } from "../utils";
 
 export class GalleryAPI {
@@ -77,6 +77,14 @@ export class GalleryAPI {
     const data = await response.json();
     if (!data.status)
       throw new Error(data.message || "Failed to delete gallery");
+  }
+
+  async syncGallery(url: string): Promise<Gallery> {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`Failed to sync gallery from ${url}`);
+    }
+    return await response.json();
   }
 }
 

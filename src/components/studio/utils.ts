@@ -6,14 +6,13 @@ const getServerUrl = (): string => {
 
 // Function to normalize component providers to simpler format
 const normalizeProvider = (provider: string): string => {
-  if (!provider) return "";
   if (provider.includes("RoundRobinGroupChat")) return "roundrobin";
   if (provider.includes("SelectorGroupChat")) return "selector";
-  if (provider.includes("AssistantAgent")) return "assistant";  
+  if (provider.includes("AssistantAgent")) return "assistant";
   if (provider.includes("UserProxyAgent")) return "userproxy";
   if (provider.includes("MultimodalWebSurfer")) return "websurfer";
-  if (provider.includes("OpenAIChatCompletionClient") && provider.includes("Azure")) return "azureopenai";
   if (provider.includes("OpenAIChatCompletionClient")) return "openai";
+  if (provider.includes("AzureOpenAIChatCompletionClient")) return "azureopenai";
   if (provider.includes("AnthropicCompletionClient")) return "anthropic";
   if (provider.includes("FunctionTool")) return "function";
   if (provider.includes("OrTerminationCondition")) return "or";
@@ -39,7 +38,7 @@ const normalizeComponent = (component: any): any => {
   if (normalized.config) {
     // Handle participants array
     if (Array.isArray(normalized.config.participants)) {
-      normalized.config.participants = normalized.config.participants.map((p: any) => normalizeComponent(p));
+      normalized.config.participants = normalized.config.participants.map(normalizeComponent);
     }
     
     // Handle model_client
@@ -49,7 +48,7 @@ const normalizeComponent = (component: any): any => {
     
     // Handle tools array
     if (Array.isArray(normalized.config.tools)) {
-      normalized.config.tools = normalized.config.tools.map((t: any) => normalizeComponent(t));
+      normalized.config.tools = normalized.config.tools.map(normalizeComponent);
     }
     
     // Handle termination_condition
@@ -59,17 +58,7 @@ const normalizeComponent = (component: any): any => {
     
     // Handle conditions array for OrTermination
     if (Array.isArray(normalized.config.conditions)) {
-      normalized.config.conditions = normalized.config.conditions.map((c: any) => normalizeComponent(c));
-    }
-    
-    // Handle handoffs array
-    if (Array.isArray(normalized.config.handoffs)) {
-      normalized.config.handoffs = normalized.config.handoffs.map((h: any) => normalizeComponent(h));
-    }
-    
-    // Handle model_context
-    if (normalized.config.model_context) {
-      normalized.config.model_context = normalizeComponent(normalized.config.model_context);
+      normalized.config.conditions = normalized.config.conditions.map(normalizeComponent);
     }
   }
   

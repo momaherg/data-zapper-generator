@@ -23,14 +23,11 @@ const StudioPage = () => {
   const fetchTeam = async () => {
     try {
       const data = await teamAPI.getTeam();
-      if (!data) throw new Error("No team data received");
-      
       // Normalize the component structure to match what our UI expects
       const normalizedTeam = {
         ...data,
-        component: data.component ? normalizeComponent(data.component) : null
+        component: normalizeComponent(data)
       };
-      
       console.log("Normalized team:", normalizedTeam);
       setTeam(normalizedTeam);
     } catch (error) {

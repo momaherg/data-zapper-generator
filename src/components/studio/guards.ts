@@ -86,7 +86,6 @@ type ConfigForProvider<P extends Provider> = P extends keyof ProviderToConfig
   ? ProviderToConfig[P]
   : never;
 
-// Base component type guards
 export function isComponent(value: any): value is Component<ComponentConfig> {
   return (
     value &&
@@ -96,16 +95,12 @@ export function isComponent(value: any): value is Component<ComponentConfig> {
     "config" in value
   );
 }
-
-// Component type guards with proper type narrowing
-export function isAssistantAgent(
-  component: Component<ComponentConfig>
-): component is Component<AssistantAgentConfig> {
-  return (
-    component.component_type === "agent" &&
-    (component.provider.includes("AssistantAgent") || 
-     component.provider === "assistant")
-  );
+// Generic component type guard
+function isComponentOfType<P extends Provider>(
+  component: Component<ComponentConfig>,
+  provider: P
+): component is Component<ConfigForProvider<P>> {
+  return component.provider === provider;
 }
 
 // Base component type guards
@@ -167,6 +162,12 @@ export function isSelectorTeam(
 }
 
 // Agent provider guards with proper type narrowing
+export function isAssistantAgent(
+  component: Component<ComponentConfig>
+): component is Component<AssistantAgentConfig> {
+  return isComponentOfType(component, PROVIDERS.ASSISTANT_AGENT);
+}
+
 export function isUserProxyAgent(
   component: Component<ComponentConfig>
 ): component is Component<UserProxyAgentConfig> {

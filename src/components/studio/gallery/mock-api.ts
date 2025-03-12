@@ -1,5 +1,5 @@
 
-import { Gallery } from "../../../types/datamodel";
+import { Gallery } from "../datamodel";
 import defaultGallery from "./default_gallery.json";
 
 // Create a proper Gallery object from the JSON
@@ -17,12 +17,6 @@ const createGalleryFromJson = (json: any): Gallery => {
         created_at: json.metadata?.created_at || new Date().toISOString(),
         updated_at: json.metadata?.updated_at || new Date().toISOString(),
         version: json.metadata?.version || "1.0.0",
-        description: json.metadata?.description || "",
-        tags: json.metadata?.tags || [],
-        license: json.metadata?.license || "",
-        homepage: json.metadata?.homepage || "",
-        category: json.metadata?.category || "",
-        last_synced: json.metadata?.last_synced || new Date().toISOString(),
       },
       components: {
         teams: json.components?.teams || [],
@@ -70,7 +64,7 @@ export const mockGalleryAPI = {
   }
 };
 
-// Export a patched version of the API that tries the real API first, falls back to mock
+// Export a patched version of the API
 export const patchGalleryAPI = () => {
   return {
     listGalleries: async () => {
