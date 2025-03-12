@@ -7,6 +7,7 @@ import { Team } from "../components/studio/datamodel";
 import { useGalleryStore } from "../components/studio/gallery/store";
 import { teamAPI } from "../components/studio/api";
 import { toast } from "sonner";
+import { normalizeComponent } from "../components/studio/utils";
 
 const StudioPage = () => {
   const [team, setTeam] = useState<Team | null>(null);
@@ -22,7 +23,13 @@ const StudioPage = () => {
   const fetchTeam = async () => {
     try {
       const data = await teamAPI.getTeam();
-      setTeam(data);
+      // Normalize the component structure to match what our UI expects
+      const normalizedTeam = {
+        ...data,
+        component: normalizeComponent(data)
+      };
+      console.log("Normalized team:", normalizedTeam);
+      setTeam(normalizedTeam);
     } catch (error) {
       console.error("Error fetching team:", error);
       toast.error("Failed to load team, using default configuration");
@@ -30,38 +37,34 @@ const StudioPage = () => {
       // Create a default empty team with initial components if we couldn't fetch one
       setTeam({
         component: {
-          provider: "selector",
+          provider: "roundrobin",
           component_type: "team",
           config: {
             participants: [
               {
-                provider: "anthropic",
+                provider: "assistant",
                 component_type: "agent",
                 config: {
                   name: "Research Agent",
-                  // Use proper fields recognized by AgentConfig
                   description: "You are a helpful research assistant."
                 }
               },
               {
-                provider: "openai",
+                provider: "assistant",
                 component_type: "agent",
                 config: {
                   name: "Writing Agent",
-                  // Use proper fields recognized by AgentConfig
                   description: "You are a creative writing assistant."
                 }
               }
             ],
-            model_client: {
-              provider: "openai",
-              component_type: "model",
+            termination_condition: {
+              provider: "maxmessage",
+              component_type: "termination",
               config: {
-                model: "gpt-4"
+                max_messages: 10
               }
-            },
-            selector_prompt: "Select the next agent to speak",
-            allow_repeated_speaker: false
+            }
           }
         }
       });

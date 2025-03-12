@@ -22,7 +22,6 @@ interface NodeDimensions {
   height: number;
 }
 
-// Updated layout configuration with dynamic height handling
 const LAYOUT_CONFIG = {
   TEAM_NODE: {
     X_POSITION: 100,
@@ -32,16 +31,15 @@ const LAYOUT_CONFIG = {
     START_X: 600,
     START_Y: 200,
     X_STAGGER: 0,
-    MIN_Y_STAGGER: 50, // Minimum vertical space between nodes
+    MIN_Y_STAGGER: 50,
   },
   NODE: {
     WIDTH: 272,
     MIN_HEIGHT: 100,
     PADDING: 20,
   },
-  // Estimated heights for different node contents
   CONTENT_HEIGHTS: {
-    BASE: 80, // Header + basic info
+    BASE: 80,
     DESCRIPTION: 60,
     MODEL_SECTION: 100,
     TOOL_SECTION: 80,
@@ -52,37 +50,30 @@ const LAYOUT_CONFIG = {
   },
 };
 
-// Calculate estimated node height based on content
 const calculateNodeHeight = (component: Component<ComponentConfig>): number => {
   let height = LAYOUT_CONFIG.CONTENT_HEIGHTS.BASE;
 
-  // Add height for description if present
   if (component.description) {
     height += LAYOUT_CONFIG.CONTENT_HEIGHTS.DESCRIPTION;
   }
 
-  // Add heights for specific component types
   switch (component.component_type) {
     case "team":
       const teamConfig = component as Component<TeamConfig>;
-      // Add height for agents section
       if (teamConfig.config.participants?.length) {
         height += LAYOUT_CONFIG.CONTENT_HEIGHTS.AGENT_SECTION;
         height +=
           teamConfig.config.participants.length *
           LAYOUT_CONFIG.CONTENT_HEIGHTS.AGENT_ITEM;
       }
-      // Add height for termination section if present
       if (teamConfig.config.termination_condition) {
         height += LAYOUT_CONFIG.CONTENT_HEIGHTS.TERMINATION_SECTION;
       }
       break;
 
     case "agent":
-      // Only AssistantAgent has model_client and tools
       if (isAssistantAgent(component)) {
         height += 200;
-        // Add height for tools section and items
         if (component.config.tools?.length) {
           height += LAYOUT_CONFIG.CONTENT_HEIGHTS.TOOL_SECTION;
           height +=
@@ -104,7 +95,6 @@ const calculateNodeHeight = (component: Component<ComponentConfig>): number => {
   return Math.max(height, LAYOUT_CONFIG.NODE.MIN_HEIGHT);
 };
 
-// Calculate position for an agent node considering previous nodes' heights
 const calculateAgentPosition = (
   index: number,
   previousNodes: CustomNode[]
@@ -124,7 +114,6 @@ const calculateAgentPosition = (
   };
 };
 
-// Calculate team node position based on connected agents
 const calculateTeamPosition = (agentNodes: CustomNode[]): Position => {
   if (agentNodes.length === 0) {
     return {
@@ -133,20 +122,15 @@ const calculateTeamPosition = (agentNodes: CustomNode[]): Position => {
     };
   }
 
-  // Calculate the average Y position of all agent nodes
   const totalY = agentNodes.reduce((sum, node) => sum + node.position.y, 0);
   const averageY = totalY / agentNodes.length;
 
-  // Ensure minimum Y position
-  const y = Math.max(LAYOUT_CONFIG.TEAM_NODE.MIN_Y_POSITION, averageY);
-
   return {
     x: LAYOUT_CONFIG.TEAM_NODE.X_POSITION,
-    y,
+    y: Math.max(LAYOUT_CONFIG.TEAM_NODE.MIN_Y_POSITION, averageY),
   };
 };
 
-// Helper to create nodes with consistent structure and dynamic height
 const createNode = (
   position: Position,
   component: Component<ComponentConfig>,
@@ -166,7 +150,6 @@ const createNode = (
   },
 });
 
-// Helper to create edges with consistent structure
 const createEdge = (
   source: string,
   target: string,
@@ -180,45 +163,60 @@ const createEdge = (
   type,
 });
 
-// Convert team configuration to graph structure with dynamic layout
 export const convertTeamConfigToGraph = (
   teamComponent: Component<TeamConfig>
 ): { nodes: CustomNode[]; edges: CustomEdge[] } => {
   const nodes: CustomNode[] = [];
   const edges: CustomEdge[] = [];
 
-  // Create agent nodes first to calculate their positions
-  const agentNodes: CustomNode[] = [];
-  teamComponent.config.participants.forEach((participant, index) => {
-    const position = calculateAgentPosition(index, agentNodes);
-    const agentNode = createNode(position, participant);
-    agentNodes.push(agentNode);
+  const teamNodeId = nanoid();
+  nodes.push({
+    id: teamNodeId,
+    type: "team",
+    position: { x: 300, y: 100 },
+    data: {
+      component: teamComponent,
+      type: "team",
+    },
   });
 
-  // Create team node with position based on agent positions
-  const teamNode = createNode(calculateTeamPosition(agentNodes), teamComponent);
-
-  // Add all nodes and create edges
-  nodes.push(teamNode, ...agentNodes);
-  agentNodes.forEach((agentNode) => {
-    edges.push(createEdge(teamNode.id, agentNode.id, "agent-connection"));
-  });
+  if (teamComponent.config.participants && Array.isArray(teamComponent.config.participants)) {
+    teamComponent.config.participants.forEach((agent, index) => {
+      const agentNodeId = nanoid();
+      
+      nodes.push({
+        id: agentNodeId,
+        type: "agent",
+        position: { x: 700, y: 100 + index * 200 },
+        data: {
+          component: agent,
+          type: "agent",
+        },
+      });
+      
+      edges.push({
+        id: nanoid(),
+        source: teamNodeId,
+        target: agentNodeId,
+        sourceHandle: `${teamNodeId}-agent-output-handle`,
+        targetHandle: `${agentNodeId}-agent-input-handle`,
+        type: "agent-connection",
+      });
+    });
+  }
 
   return { nodes, edges };
 };
 
-// Layout existing nodes with dynamic heights
 export const getLayoutedElements = (
   nodes: CustomNode[],
   edges: CustomEdge[]
 ): { nodes: CustomNode[]; edges: CustomEdge[] } => {
-  // Find team node and agent nodes
   const teamNode = nodes.find((n) => n.data.type === "team");
   if (!teamNode) return { nodes, edges };
 
   const agentNodes = nodes.filter((n) => n.data.type !== "team");
 
-  // Calculate new positions for agent nodes
   const layoutedAgentNodes = agentNodes.map((node, index) => ({
     ...node,
     position: calculateAgentPosition(index, agentNodes.slice(0, index)),
@@ -231,7 +229,6 @@ export const getLayoutedElements = (
     },
   }));
 
-  // Update team node position
   const layoutedTeamNode = {
     ...teamNode,
     position: calculateTeamPosition(layoutedAgentNodes),
@@ -250,7 +247,6 @@ export const getLayoutedElements = (
   };
 };
 
-// Generate unique names (unchanged)
 export const getUniqueName = (
   baseName: string,
   existingNames: string[]
