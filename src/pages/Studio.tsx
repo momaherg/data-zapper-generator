@@ -26,7 +26,7 @@ const StudioPage = () => {
       // Normalize the component structure to match what our UI expects
       const normalizedTeam = {
         ...data,
-        component: normalizeComponent(data)
+        component: normalizeComponent(data.component)
       };
       console.log("Normalized team:", normalizedTeam);
       setTeam(normalizedTeam);

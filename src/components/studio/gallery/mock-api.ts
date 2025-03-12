@@ -17,6 +17,12 @@ const createGalleryFromJson = (json: any): Gallery => {
         created_at: json.metadata?.created_at || new Date().toISOString(),
         updated_at: json.metadata?.updated_at || new Date().toISOString(),
         version: json.metadata?.version || "1.0.0",
+        description: json.metadata?.description || "",
+        tags: json.metadata?.tags || [],
+        license: json.metadata?.license || "",
+        homepage: json.metadata?.homepage || "",
+        category: json.metadata?.category || "",
+        last_synced: json.metadata?.last_synced || "",
       },
       components: {
         teams: json.components?.teams || [],

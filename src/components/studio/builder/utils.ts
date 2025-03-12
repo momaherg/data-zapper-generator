@@ -1,3 +1,4 @@
+
 import { nanoid } from "nanoid";
 import {
   TeamConfig,
@@ -169,40 +170,35 @@ export const convertTeamConfigToGraph = (
   const nodes: CustomNode[] = [];
   const edges: CustomEdge[] = [];
 
-  const teamNodeId = nanoid();
-  nodes.push({
-    id: teamNodeId,
-    type: "team",
-    position: { x: 300, y: 100 },
-    data: {
-      component: teamComponent,
-      type: "team",
-    },
-  });
+  // Create team node
+  const teamNode = createNode(
+    { x: LAYOUT_CONFIG.TEAM_NODE.X_POSITION, y: LAYOUT_CONFIG.TEAM_NODE.MIN_Y_POSITION },
+    teamComponent,
+    "Team"
+  );
+  nodes.push(teamNode);
 
+  // Create agent nodes if they exist
   if (teamComponent.config.participants && Array.isArray(teamComponent.config.participants)) {
+    const agentNodes: CustomNode[] = [];
+    
     teamComponent.config.participants.forEach((agent, index) => {
-      const agentNodeId = nanoid();
+      const position = calculateAgentPosition(index, agentNodes);
+      const agentNode = createNode(position, agent, agent.config.name || `Agent ${index + 1}`);
+      agentNodes.push(agentNode);
       
-      nodes.push({
-        id: agentNodeId,
-        type: "agent",
-        position: { x: 700, y: 100 + index * 200 },
-        data: {
-          component: agent,
-          type: "agent",
-        },
-      });
-      
-      edges.push({
-        id: nanoid(),
-        source: teamNodeId,
-        target: agentNodeId,
-        sourceHandle: `${teamNodeId}-agent-output-handle`,
-        targetHandle: `${agentNodeId}-agent-input-handle`,
-        type: "agent-connection",
-      });
+      // Create edge from team to agent
+      edges.push(
+        createEdge(teamNode.id, agentNode.id, "agent-connection")
+      );
     });
+    
+    nodes.push(...agentNodes);
+    
+    // Adjust team node position based on agents
+    if (agentNodes.length > 0) {
+      teamNode.position = calculateTeamPosition(agentNodes);
+    }
   }
 
   return { nodes, edges };
