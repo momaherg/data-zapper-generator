@@ -15,6 +15,12 @@ export interface ValidationResponse {
 }
 
 export class TeamAPI {
+  private sessionId: string | null = null;
+
+  setSessionId(sessionId: string) {
+    this.sessionId = sessionId;
+  }
+
   private getBaseUrl(): string {
     return getServerUrl();
   }
@@ -25,8 +31,17 @@ export class TeamAPI {
     };
   }
 
+  private appendSessionId(url: string): string {
+    if (this.sessionId) {
+      const separator = url.includes('?') ? '&' : '?';
+      return `${url}${separator}session_id=${this.sessionId}`;
+    }
+    return url;
+  }
+
   async listTeams(): Promise<Team[]> {
-    const response = await fetch(`${this.getBaseUrl()}/teams`, {
+    const url = this.appendSessionId(`${this.getBaseUrl()}/teams`);
+    const response = await fetch(url, {
       headers: this.getHeaders(),
     });
     if (!response.ok) {
@@ -36,7 +51,8 @@ export class TeamAPI {
   }
 
   async getTeam(): Promise<Team> {
-    const response = await fetch(`${this.getBaseUrl()}/team`, {
+    const url = this.appendSessionId(`${this.getBaseUrl()}/team`);
+    const response = await fetch(url, {
       headers: this.getHeaders(),
     });
     if (!response.ok) {
@@ -46,7 +62,8 @@ export class TeamAPI {
   }
 
   async createTeam(team: Partial<Team>): Promise<Team> {
-    const response = await fetch(`${this.getBaseUrl()}/team`, {
+    const url = this.appendSessionId(`${this.getBaseUrl()}/team`);
+    const response = await fetch(url, {
       method: "POST", 
       headers: this.getHeaders(),
       body: JSON.stringify(team),
@@ -58,7 +75,8 @@ export class TeamAPI {
   }
 
   async updateTeam(team: Partial<Team>): Promise<Team> {
-    const response = await fetch(`${this.getBaseUrl()}/team`, {
+    const url = this.appendSessionId(`${this.getBaseUrl()}/team`);
+    const response = await fetch(url, {
       method: "PUT",
       headers: this.getHeaders(),
       body: JSON.stringify(team),
@@ -70,7 +88,8 @@ export class TeamAPI {
   }
 
   async deleteTeam(): Promise<void> {
-    const response = await fetch(`${this.getBaseUrl()}/team`, {
+    const url = this.appendSessionId(`${this.getBaseUrl()}/team`);
+    const response = await fetch(url, {
       method: "DELETE",
       headers: this.getHeaders(),
     });
@@ -81,6 +100,12 @@ export class TeamAPI {
 }
 
 export class ValidationAPI {
+  private sessionId: string | null = null;
+
+  setSessionId(sessionId: string) {
+    this.sessionId = sessionId;
+  }
+
   private getBaseUrl(): string {
     return getServerUrl();
   }
@@ -91,10 +116,19 @@ export class ValidationAPI {
     };
   }
 
+  private appendSessionId(url: string): string {
+    if (this.sessionId) {
+      const separator = url.includes('?') ? '&' : '?';
+      return `${url}${separator}session_id=${this.sessionId}`;
+    }
+    return url;
+  }
+
   async validateComponent(
     component: Component<ComponentConfig>
   ): Promise<ValidationResponse> {
-    const response = await fetch(`${this.getBaseUrl()}/validate`, {
+    const url = this.appendSessionId(`${this.getBaseUrl()}/validate`);
+    const response = await fetch(url, {
       method: "POST",
       headers: this.getHeaders(),
       body: JSON.stringify({

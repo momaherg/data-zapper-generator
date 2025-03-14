@@ -7,18 +7,29 @@ import { Team } from "../components/studio/datamodel";
 import { useGalleryStore } from "../components/studio/gallery/store";
 import { teamAPI } from "../components/studio/api";
 import { toast } from "sonner";
+import { useLocation } from "react-router-dom";
 // import { normalizeComponent } from "../components/studio/utils";
 
 const StudioPage = () => {
   const [team, setTeam] = useState<Team | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const fetchGalleries = useGalleryStore((state) => state.fetchGalleries);
+  const location = useLocation();
 
   useEffect(() => {
+    // Get session_id from query parameters
+    const queryParams = new URLSearchParams(location.search);
+    const sessionId = queryParams.get("session_id");
+    
+    if (sessionId) {
+      // Set the session ID for the API
+      teamAPI.setSessionId(sessionId);
+    }
+    
     fetchTeam();
     // Load galleries for the component library
     fetchGalleries();
-  }, [fetchGalleries]);
+  }, [fetchGalleries, location.search]);
 
   const fetchTeam = async () => {
     try {
