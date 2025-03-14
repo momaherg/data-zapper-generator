@@ -7,7 +7,7 @@ import { Team } from "../components/studio/datamodel";
 import { useGalleryStore } from "../components/studio/gallery/store";
 import { teamAPI } from "../components/studio/api";
 import { toast } from "sonner";
-import { normalizeComponent } from "../components/studio/utils";
+// import { normalizeComponent } from "../components/studio/utils";
 
 const StudioPage = () => {
   const [team, setTeam] = useState<Team | null>(null);
@@ -26,7 +26,7 @@ const StudioPage = () => {
       // Normalize the component structure to match what our UI expects
       const normalizedTeam = {
         ...data,
-        component: normalizeComponent(data)
+        component: data
       };
       console.log("Normalized team:", normalizedTeam);
       setTeam(normalizedTeam);

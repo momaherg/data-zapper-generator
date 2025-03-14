@@ -28,41 +28,41 @@ const normalizeProvider = (provider: string): string => {
 const normalizeComponent = (component: any): any => {
   if (!component) return component;
   
-  // Create a copy with normalized provider
-  const normalized = {
-    ...component,
-    provider: normalizeProvider(component.provider),
-  };
+  // // Create a copy with normalized provider
+  // const normalized = {
+  //   ...component,
+  //   provider: normalizeProvider(component.provider),
+  // };
   
-  // Normalize nested components in config
-  if (normalized.config) {
-    // Handle participants array
-    if (Array.isArray(normalized.config.participants)) {
-      normalized.config.participants = normalized.config.participants.map(normalizeComponent);
-    }
+  // // Normalize nested components in config
+  // if (normalized.config) {
+  //   // Handle participants array
+  //   if (Array.isArray(normalized.config.participants)) {
+  //     normalized.config.participants = normalized.config.participants.map(normalizeComponent);
+  //   }
     
-    // Handle model_client
-    if (normalized.config.model_client) {
-      normalized.config.model_client = normalizeComponent(normalized.config.model_client);
-    }
+  //   // Handle model_client
+  //   if (normalized.config.model_client) {
+  //     normalized.config.model_client = normalizeComponent(normalized.config.model_client);
+  //   }
     
-    // Handle tools array
-    if (Array.isArray(normalized.config.tools)) {
-      normalized.config.tools = normalized.config.tools.map(normalizeComponent);
-    }
+  //   // Handle tools array
+  //   if (Array.isArray(normalized.config.tools)) {
+  //     normalized.config.tools = normalized.config.tools.map(normalizeComponent);
+  //   }
     
-    // Handle termination_condition
-    if (normalized.config.termination_condition) {
-      normalized.config.termination_condition = normalizeComponent(normalized.config.termination_condition);
-    }
+  //   // Handle termination_condition
+  //   if (normalized.config.termination_condition) {
+  //     normalized.config.termination_condition = normalizeComponent(normalized.config.termination_condition);
+  //   }
     
-    // Handle conditions array for OrTermination
-    if (Array.isArray(normalized.config.conditions)) {
-      normalized.config.conditions = normalized.config.conditions.map(normalizeComponent);
-    }
-  }
+  //   // Handle conditions array for OrTermination
+  //   if (Array.isArray(normalized.config.conditions)) {
+  //     normalized.config.conditions = normalized.config.conditions.map(normalizeComponent);
+  //   }
+  // }
   
-  return normalized;
+  return component;
 };
 
 export { getServerUrl, normalizeComponent, normalizeProvider };

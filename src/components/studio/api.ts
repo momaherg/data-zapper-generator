@@ -94,7 +94,7 @@ export class ValidationAPI {
   async validateComponent(
     component: Component<ComponentConfig>
   ): Promise<ValidationResponse> {
-    const response = await fetch(`${this.getBaseUrl()}/validate/`, {
+    const response = await fetch(`${this.getBaseUrl()}/validate`, {
       method: "POST",
       headers: this.getHeaders(),
       body: JSON.stringify({

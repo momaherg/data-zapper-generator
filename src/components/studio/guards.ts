@@ -144,21 +144,13 @@ export function isTerminationComponent(
 export function isRoundRobinTeam(
   component: Component<ComponentConfig>
 ): component is Component<RoundRobinGroupChatConfig> {
-  return (
-    component.component_type === "team" &&
-    (component.provider.includes("RoundRobinGroupChat") || 
-     component.provider === "roundrobin")
-  );
+  return isComponentOfType(component, PROVIDERS.ROUND_ROBIN_TEAM);
 }
 
 export function isSelectorTeam(
   component: Component<ComponentConfig>
 ): component is Component<SelectorGroupChatConfig> {
-  return (
-    component.component_type === "team" &&
-    (component.provider.includes("SelectorGroupChat") || 
-     component.provider === "selector")
-  );
+  return isComponentOfType(component, PROVIDERS.SELECTOR_TEAM);
 }
 
 // Agent provider guards with proper type narrowing
