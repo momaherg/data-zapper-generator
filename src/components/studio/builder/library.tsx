@@ -223,7 +223,7 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
         title: "Tools",
         type: "tool" as ComponentTypes,
         items: componentsData.tools?.map((tool: any) => ({
-          label: tool.config?.name || "Tool",
+          label: tool.label || "Tool",
           config: tool,
         })) || [],
         icon: <Wrench className="w-4 h-4" />,
@@ -370,7 +370,7 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
         <Collapse
           accordion
           items={items}
-          defaultActiveKey={["Agents"]}
+          defaultActiveKey={["Tools"]}
           bordered={false}
           expandIcon={({ isActive }) => (
             <ChevronDown
