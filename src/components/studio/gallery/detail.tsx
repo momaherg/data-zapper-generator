@@ -1,12 +1,13 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, Button, Popconfirm } from "antd";
-import ComponentEditor from "../builder/component-editor/component-editor";
+import { MonacoEditor } from "../monaco";
 import { Gallery } from "../datamodel";
 import { galleryAPI } from "./api";
 import { toast } from "sonner";
 import { useGalleryStore } from "./store";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2, Code, FormInput } from "lucide-react";
 
 export const GalleryDetail: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -14,6 +15,7 @@ export const GalleryDetail: React.FC = () => {
   const [gallery, setGallery] = useState<Gallery | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const [jsonContent, setJsonContent] = useState("");
   const fetchGalleries = useGalleryStore((state) => state.fetchGalleries);
 
   useEffect(() => {
@@ -27,6 +29,7 @@ export const GalleryDetail: React.FC = () => {
       setIsLoading(true);
       const data = await galleryAPI.getGallery(galleryId);
       setGallery(data);
+      setJsonContent(JSON.stringify(data.config, null, 2));
     } catch (error) {
       console.error("Error fetching gallery:", error);
       toast.error("Failed to load gallery");
@@ -49,8 +52,15 @@ export const GalleryDetail: React.FC = () => {
     }
   };
 
-  const handleUpdate = async (updatedGallery: Gallery) => {
+  const handleUpdate = async () => {
+    if (!gallery) return;
+    
     try {
+      const updatedConfig = JSON.parse(jsonContent);
+      const updatedGallery = {
+        ...gallery,
+        config: updatedConfig
+      };
       const data = await galleryAPI.updateGallery(updatedGallery);
       setGallery(data);
       setIsEditing(false);
@@ -107,21 +117,30 @@ export const GalleryDetail: React.FC = () => {
       <Card title={gallery.name} className="mb-4">
         <p className="text-gray-500">{gallery.description}</p>
         <p className="text-xs text-gray-400">
-          Last updated: {new Date(gallery.updated_at).toLocaleString()}
+          Last updated: {gallery.updated_at ? new Date(gallery.updated_at).toLocaleString() : 'N/A'}
         </p>
       </Card>
 
       {isEditing ? (
-        <ComponentEditor
-          component={gallery.config}
-          onChange={(updatedConfig) => {
-            handleUpdate({
-              ...gallery,
-              config: updatedConfig,
-            });
-          }}
-          onClose={() => setIsEditing(false)}
-        />
+        <div className="bg-white p-4 rounded shadow">
+          <div className="mb-4 flex justify-between items-center">
+            <h3 className="text-lg font-medium">Edit Gallery Content</h3>
+            <Button 
+              type="primary" 
+              onClick={handleUpdate}
+            >
+              Save Changes
+            </Button>
+          </div>
+          <div className="h-96">
+            <MonacoEditor
+              value={jsonContent}
+              onChange={setJsonContent}
+              language="json"
+              minimap={true}
+            />
+          </div>
+        </div>
       ) : (
         <div className="bg-white p-4 rounded shadow">
           <h3 className="text-lg font-medium mb-2">Gallery Components</h3>
