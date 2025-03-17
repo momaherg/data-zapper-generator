@@ -1,8 +1,8 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { Plus, AlertTriangle, FileText, Clock, Calendar, ArrowRight } from 'lucide-react';
-import { Card, CardContent, CardFooter } from '@/components/ui/card';
+import { Plus, AlertTriangle, FileText, Clock, Calendar, ArrowRight, Maximize2, Copy, BookText, ScrollText } from 'lucide-react';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
@@ -11,6 +11,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import TestSpecModal from '@/components/TestSpecModal';
 import { api, DataSource, TestCase } from '@/utils/api';
+import { DetailGroup } from '@/components/studio/builder/node-editor/detailgroup';
 
 interface TestSpecificationsProps {}
 
@@ -22,6 +23,7 @@ const TestSpecifications: React.FC<TestSpecificationsProps> = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
+  const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   
   // Mock test cases (since the API doesn't provide a way to get all test cases)
   const mockTestCases: TestCase[] = [
@@ -114,12 +116,79 @@ const TestSpecifications: React.FC<TestSpecificationsProps> = () => {
     }).format(date);
   };
 
-  const truncateText = (text: string, maxLength: number) => {
-    if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength) + '...';
+  const toggleCardExpansion = (id: string) => {
+    setExpandedCards(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
   };
 
-  console.log(testCases)
+  const copyToClipboard = (text: string, type: string) => {
+    navigator.clipboard.writeText(text)
+      .then(() => toast.success(`${type} copied to clipboard`))
+      .catch(() => toast.error("Failed to copy text"));
+  };
+
+  const renderCardContent = (testCase: TestCase, isExpanded: boolean) => {
+    return (
+      <>
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-transparent">
+            Test Case
+          </Badge>
+          <Badge variant="outline" className="flex gap-1.5 items-center">
+            <Calendar className="h-3 w-3" />
+            {formatDate(testCase.created_at)}
+          </Badge>
+        </div>
+        
+        <CardTitle className="text-lg font-medium mb-3 line-clamp-2">
+          {isExpanded ? testCase.requirement : truncateText(testCase.requirement, 100)}
+        </CardTitle>
+        
+        <div className="text-sm text-muted-foreground mb-3">
+          <span className="font-medium">Format:</span> {isExpanded ? testCase.format : truncateText(testCase.format, 60)}
+        </div>
+        
+        {testCase.notes && (
+          <div className="text-sm text-muted-foreground mb-3">
+            <span className="font-medium">Notes:</span> {isExpanded ? testCase.notes : truncateText(testCase.notes, 60)}
+          </div>
+        )}
+        
+        <Separator className="my-3" />
+        
+        <DetailGroup 
+          title="Test Case Specification" 
+          defaultOpen={isExpanded}
+        >
+          <div className={cn(
+            "font-mono text-sm text-muted-foreground bg-muted/50 rounded p-2",
+            isExpanded ? "" : "max-h-32 overflow-hidden"
+          )}>
+            <pre className="whitespace-pre-wrap">
+              {testCase.test_case_text}
+            </pre>
+          </div>
+        </DetailGroup>
+        
+        {isExpanded && testCase.events && testCase.events.length > 0 && (
+          <DetailGroup 
+            title="Events" 
+            defaultOpen={false}
+          >
+            <div className="space-y-2 mt-2">
+              {testCase.events.map((event, idx) => (
+                <div key={idx} className="text-xs border-l-2 border-primary/30 pl-2 py-1">
+                  <span className="font-semibold">{event.type}:</span> {event.description}
+                </div>
+              ))}
+            </div>
+          </DetailGroup>
+        )}
+      </>
+    );
+  };
 
   return (
     <div className="container py-8 animate-fade-up">
@@ -163,57 +232,57 @@ const TestSpecifications: React.FC<TestSpecificationsProps> = () => {
         </div>
       ) : (
         <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-          {testCases.map(testCase => (
-            <Card 
-              key={testCase.id} 
-              className="overflow-hidden transition-all duration-200 hover:shadow-md hover-lift border"
-            >
-              <CardContent className="p-0">
-                <div className="p-4">
-                  <div className="flex items-start gap-2 mb-3">
-                    <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-transparent">
-                      Test Case
-                    </Badge>
-                    <Badge variant="outline" className="flex gap-1.5 items-center ml-auto">
-                      <Calendar className="h-3 w-3" />
-                      {formatDate(testCase.created_at)}
-                    </Badge>
-                  </div>
-                  
-                  <h3 className="text-lg font-medium line-clamp-2 mb-2">
-                    {truncateText(testCase.requirement, 100)}
-                  </h3>
-                  
-                  <div className="text-sm text-muted-foreground mb-4">
-                    <span className="font-medium">Format:</span> {truncateText(testCase.format, 60)}
-                  </div>
-                  
-                  <Separator className="mb-4" />
-                  
-                  <div className="text-sm line-clamp-4 font-mono text-muted-foreground bg-muted/50 rounded p-2 text-xs">
-                    {truncateText(testCase.test_case_text, 200)}
-                  </div>
-                </div>
-              </CardContent>
-              
-              <CardFooter className="p-4 pt-1 flex justify-between">
-                <div className="flex items-center text-sm text-muted-foreground">
-                  <Clock className="h-3 w-3 mr-1" />
-                  {testCase.events.length} events
-                </div>
+          {testCases.map(testCase => {
+            const isExpanded = !!expandedCards[testCase.id];
+            
+            return (
+              <Card 
+                key={testCase.id} 
+                className={cn(
+                  "overflow-hidden transition-all duration-200 hover:shadow-md",
+                  isExpanded ? "col-span-full xl:col-span-2" : ""
+                )}
+              >
+                <CardContent className={cn("p-4", isExpanded ? "pb-0" : "")}>
+                  {renderCardContent(testCase, isExpanded)}
+                </CardContent>
                 
-                <Button 
-                  size="sm" 
-                  variant="ghost"
-                  className="gap-1 text-primary hover:text-primary/90"
-                  onClick={() => navigate(`/dashboard/test-case/${testCase.id}?session_id=${sessionId}`)}
-                >
-                  View Details
-                  <ArrowRight className="h-3 w-3" />
-                </Button>
-              </CardFooter>
-            </Card>
-          ))}
+                <CardFooter className={cn("p-4 pt-2 flex justify-between")}>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      size="sm" 
+                      variant="ghost"
+                      className="h-8 gap-1 text-muted-foreground"
+                      onClick={() => toggleCardExpansion(testCase.id)}
+                    >
+                      {isExpanded ? "Collapse" : "Expand"}
+                      <Maximize2 className="h-3.5 w-3.5" />
+                    </Button>
+                    
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-8 gap-1 text-muted-foreground"
+                      onClick={() => copyToClipboard(testCase.test_case_text, "Test case")}
+                    >
+                      Copy
+                      <Copy className="h-3.5 w-3.5" />
+                    </Button>
+                  </div>
+                  
+                  <Button 
+                    size="sm" 
+                    variant="ghost"
+                    className="h-8 gap-1 text-primary hover:text-primary/90"
+                    onClick={() => navigate(`/dashboard/test-case/${testCase.id}?session_id=${sessionId}`)}
+                  >
+                    View Details
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Button>
+                </CardFooter>
+              </Card>
+            );
+          })}
         </div>
       )}
       
