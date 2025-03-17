@@ -1,26 +1,19 @@
 
-import React from "react";
+import React from 'react';
 
 interface DetailGroupProps {
   title: string;
   children: React.ReactNode;
-  defaultOpen?: boolean;
 }
 
-export const DetailGroup: React.FC<DetailGroupProps> = ({
-  title,
-  children,
-  defaultOpen = true,
-}) => {
+const DetailGroup: React.FC<DetailGroupProps> = ({ title, children }) => {
   return (
-    <details className="mb-4" open={defaultOpen}>
-      <summary className="font-medium cursor-pointer p-2 bg-gray-100 rounded">
-        {title}
-      </summary>
-      <div className="p-2 pl-4 border-l border-gray-200 ml-2 mt-2">
+    <div className="mb-6">
+      <h3 className="text-sm font-medium text-gray-700 mb-2">{title}</h3>
+      <div className="bg-white p-4 rounded-md border border-gray-200">
         {children}
       </div>
-    </details>
+    </div>
   );
 };
 

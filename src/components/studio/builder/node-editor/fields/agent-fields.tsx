@@ -1,79 +1,156 @@
 
-import { Form, Input } from "antd";
-import { DetailGroup } from "../../../builder/node-editor/detailgroup";
-import { Component } from "../../../datamodel";
-import { AgentConfig, AssistantAgentConfig } from "../../../datamodel";
-import { isAssistantAgent } from "../../../guards";
+import React, { useCallback } from "react";
+import { Input, Button } from "antd";
+import DetailGroup from "../detailgroup";
+import { Component, AgentConfig, ComponentConfig } from "../../../datamodel";
+import { isAssistantAgent, isUserProxyAgent, isWebSurferAgent } from "../../../guards";
+import { NodeEditorFieldsProps } from "../index";
+import { NestedComponentButton } from "../NestedComponentButton";
 
-interface AgentFieldsProps {
+const { TextArea } = Input;
+
+export interface AgentFieldsProps extends NodeEditorFieldsProps {
   component: Component<AgentConfig>;
-  onChange: (updateData: Partial<Component<any>>) => void;
   onNavigate?: (componentType: string, id: string, parentField: string) => void;
 }
 
-export const AgentFields = ({ component, onChange, onNavigate }: AgentFieldsProps) => {
-  const isAssistant = isAssistantAgent(component);
+export const AgentFields: React.FC<AgentFieldsProps> = ({
+  component,
+  onChange,
+  onNavigate,
+}) => {
+  const handleComponentUpdate = useCallback(
+    (updates: Partial<Component<ComponentConfig>>) => {
+      if (onChange) {
+        onChange({
+          ...component,
+          ...updates,
+          config: {
+            ...component.config,
+            ...(updates.config || {}),
+          },
+        });
+      }
+    },
+    [component, onChange]
+  );
 
   return (
-    <>
-      <Form.Item label="Name" name="name" className="mb-4">
-        <Input
-          placeholder="Agent name"
-          defaultValue={component.config?.name || ""}
-          onChange={(e) => 
-            onChange({
-              config: { ...component.config, name: e.target.value },
-            })
-          }
-        />
-      </Form.Item>
-
-      <Form.Item label="Description" name="description" className="mb-4">
-        <Input
-          placeholder="Agent description"
-          defaultValue={component.config?.description || ""}
-          onChange={(e) => 
-            onChange({
-              config: { ...component.config, description: e.target.value },
-            })
-          }
-        />
-      </Form.Item>
-
-      {isAssistant && (
-        <DetailGroup title="Prompt" defaultOpen={true}>
-          <Form.Item label="System Message" name="system_message" className="mb-4">
-            <Input.TextArea
-              placeholder="Instructions for the agent"
-              defaultValue={(component.config as AssistantAgentConfig)?.system_message || ""}
-              rows={4}
-              onChange={(e) => onChange({
-                config: { ...component.config, system_message: e.target.value },
-              })}
+    <div className="space-y-4">
+      <DetailGroup title="Basic Information">
+        <div className="space-y-4">
+          <label className="block">
+            <span className="text-sm font-medium text-primary">Name</span>
+            <Input
+              value={component.label || ""}
+              onChange={(e) => handleComponentUpdate({ label: e.target.value })}
+              placeholder="Agent name"
+              className="mt-1"
             />
-          </Form.Item>
-        </DetailGroup>
-      )}
+          </label>
 
-      {isAssistant && (
-        <DetailGroup title="Advanced" defaultOpen={false}>
-          {component.config.model_client && (
-            <Form.Item label="Model Client" className="mb-4">
-              <div className="text-sm text-gray-500">
-                Configure temperature and other options in the model client.
-                {onNavigate && (
-                  <button 
-                    className="ml-2 text-blue-500 underline"
-                    onClick={() => onNavigate('model', 'model_client', 'model_client')}
-                  >
-                    Edit Model
-                  </button>
-                )}
+          <label className="block">
+            <span className="text-sm font-medium text-primary">
+              Description
+            </span>
+            <TextArea
+              value={component.description || ""}
+              onChange={(e) =>
+                handleComponentUpdate({ description: e.target.value })
+              }
+              placeholder="Agent description"
+              rows={4}
+              className="mt-1"
+            />
+          </label>
+        </div>
+      </DetailGroup>
+
+      {isAssistantAgent(component) && (
+        <>
+          <DetailGroup title="Agent Configuration">
+            <div className="space-y-4">
+              <label className="block">
+                <span className="text-sm font-medium text-primary">
+                  Agent Name
+                </span>
+                <Input
+                  value={component.config.name || ""}
+                  onChange={(e) =>
+                    handleComponentUpdate({
+                      config: {
+                        ...component.config,
+                        name: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="Agent name to display"
+                  className="mt-1"
+                />
+              </label>
+
+              <label className="block">
+                <span className="text-sm font-medium text-primary">
+                  System Message
+                </span>
+                <TextArea
+                  value={component.config.system_message || ""}
+                  onChange={(e) =>
+                    handleComponentUpdate({
+                      config: {
+                        ...component.config,
+                        system_message: e.target.value,
+                      },
+                    })
+                  }
+                  placeholder="System message for the agent"
+                  rows={4}
+                  className="mt-1"
+                />
+              </label>
+            </div>
+          </DetailGroup>
+
+          <DetailGroup title="Model">
+            {component.config.model_client ? (
+              <NestedComponentButton
+                label={component.config.model_client.label || "Model"}
+                description="Click to edit model configuration"
+                onClick={() =>
+                  onNavigate && onNavigate("model", component.config.model_client?.label || "", "model_client")
+                }
+              />
+            ) : (
+              <div className="text-sm text-gray-500 p-2 border border-dashed rounded text-center">
+                No model configured
               </div>
-            </Form.Item>
-          )}
-        </DetailGroup>
+            )}
+          </DetailGroup>
+
+          <DetailGroup title="Tools">
+            {component.config.tools && component.config.tools.length > 0 ? (
+              <div className="space-y-2">
+                {component.config.tools.map((tool, index) => (
+                  <NestedComponentButton
+                    key={index}
+                    label={tool.label || tool.config.name || `Tool ${index + 1}`}
+                    description="Click to edit tool configuration"
+                    onClick={() =>
+                      onNavigate && onNavigate("tool", tool.label || "", "tools")
+                    }
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500 p-2 border border-dashed rounded text-center">
+                No tools configured
+              </div>
+            )}
+          </DetailGroup>
+        </>
       )}
-    </>
+    </div>
   );
 };
+
+export default React.memo(AgentFields);

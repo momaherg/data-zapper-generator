@@ -25,7 +25,6 @@ export const GalleryManager: React.FC = () => {
   const { user } = useContext(appContext);
   const [messageApi, contextHolder] = message.useMessage();
 
-  // Persist sidebar state
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("gallerySidebar", JSON.stringify(isSidebarOpen));
@@ -54,7 +53,6 @@ export const GalleryManager: React.FC = () => {
     fetchGalleries();
   }, [fetchGalleries]);
 
-  // Handle URL params
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const galleryId = params.get("galleryId");
@@ -67,7 +65,6 @@ export const GalleryManager: React.FC = () => {
     }
   }, []);
 
-  // Update URL when gallery changes
   useEffect(() => {
     if (currentGallery?.id) {
       window.history.pushState(
@@ -146,7 +143,7 @@ export const GalleryManager: React.FC = () => {
         user.email
       );
       setGalleries(
-        galleries.map((g) => (g.id === updatedGallery.id ? updatedGallery : g))
+        galleries.map((g) => (g.id.toString() === updatedGallery.id.toString() ? updatedGallery : g))
       );
       setCurrentGallery(updatedGallery);
       setHasUnsavedChanges(false);
@@ -215,14 +212,12 @@ export const GalleryManager: React.FC = () => {
     <div className="relative flex h-full w-full">
       {contextHolder}
 
-      {/* Create Modal */}
       <GalleryCreateModal
         open={isCreateModalOpen}
         onCancel={() => setIsCreateModalOpen(false)}
         onCreateGallery={handleCreateGallery}
       />
 
-      {/* Sidebar */}
       <div
         className={`absolute left-0 top-0 h-full transition-all duration-200 ease-in-out ${
           isSidebarOpen ? "w-64" : "w-12"
@@ -241,14 +236,12 @@ export const GalleryManager: React.FC = () => {
         />
       </div>
 
-      {/* Main Content */}
       <div
         className={`flex-1 transition-all -mr-6 duration-200 ${
           isSidebarOpen ? "ml-64" : "ml-12"
         }`}
       >
         <div className="p-4 pt-2">
-          {/* Breadcrumb */}
           <div className="flex items-center gap-2 mb-4 text-sm">
             <span className="text-primary font-medium">Galleries</span>
             {currentGallery && (
@@ -261,7 +254,6 @@ export const GalleryManager: React.FC = () => {
             )}
           </div>
 
-          {/* Content Area */}
           {isLoading && !currentGallery ? (
             <div className="flex items-center justify-center h-[calc(100vh-120px)] text-secondary">
               Loading galleries...

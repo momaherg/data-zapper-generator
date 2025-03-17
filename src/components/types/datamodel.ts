@@ -4,14 +4,10 @@ export * from "../studio/datamodel";
 
 // Define a Gallery type compatible with both implementations
 export interface Gallery {
-  id: string | number;
+  id: string;
   name: string;
   description?: string;
   url?: string | null;
-  user_id?: string;
-  created_at?: string;
-  updated_at?: string;
-  version?: number;
   config: {
     id: string;
     name: string;
