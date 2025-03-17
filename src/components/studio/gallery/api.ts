@@ -1,5 +1,5 @@
 
-import { Gallery } from "../datamodel";
+import { Gallery } from "../../types/datamodel";
 import { getServerUrl } from "../utils";
 
 export class GalleryAPI {

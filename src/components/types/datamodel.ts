@@ -4,7 +4,7 @@ export * from "../studio/datamodel";
 
 // Define a Gallery type compatible with both implementations
 export interface Gallery {
-  id: number | string;
+  id: string | number;
   name: string;
   description?: string;
   url?: string | null;
@@ -12,25 +12,28 @@ export interface Gallery {
   created_at?: string;
   updated_at?: string;
   version?: number;
-  metadata?: {
-    author: string;
-    created_at: string;
-    updated_at: string;
-    version: string;
-    description: string;
-    tags?: string[];
-    license?: string;
-    homepage?: string | null;
-    category?: string;
-    last_synced?: string | null;
-  };
-  components?: {
-    agents?: any[];
-    models?: any[];
-    tools?: any[];
-    terminations?: any[];
-    teams?: any[];
-  };
-  config?: any;
-  items?: any[];
+  config: {
+    id: string;
+    name: string;
+    url?: string | null;
+    metadata: {
+      author: string;
+      created_at: string;
+      updated_at: string;
+      version: string;
+      description?: string;
+      tags?: string[];
+      license?: string;
+      homepage?: string | null;
+      category?: string;
+      lastSynced?: string | null;
+    };
+    components: {
+      teams?: any[];
+      agents?: any[];
+      models?: any[];
+      tools?: any[];
+      terminations?: any[];
+    };
+  }
 }

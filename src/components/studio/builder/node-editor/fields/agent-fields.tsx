@@ -1,15 +1,19 @@
 
 import { Form, Input } from "antd";
-import { DetailGroup } from "./detailgroup";
-import { AgentComponent } from "../../../datamodel";
+import { DetailGroup } from "../../../builder/node-editor/detailgroup";
 import { Component } from "../../../datamodel";
+import { AgentConfig, AssistantAgentConfig } from "../../../datamodel";
+import { isAssistantAgent } from "../../../guards";
 
 interface AgentFieldsProps {
-  component: AgentComponent;
+  component: Component<AgentConfig>;
   onChange: (updateData: Partial<Component<any>>) => void;
+  onNavigate?: (componentType: string, id: string, parentField: string) => void;
 }
 
-export const AgentFields = ({ component, onChange }: AgentFieldsProps) => {
+export const AgentFields = ({ component, onChange, onNavigate }: AgentFieldsProps) => {
+  const isAssistant = isAssistantAgent(component);
+
   return (
     <>
       <Form.Item label="Name" name="name" className="mb-4">
@@ -36,33 +40,40 @@ export const AgentFields = ({ component, onChange }: AgentFieldsProps) => {
         />
       </Form.Item>
 
-      <DetailGroup title="Prompt" defaultOpen={true}>
-        <Form.Item label="System Prompt" name="system_prompt" className="mb-4">
-          <Input.TextArea
-            placeholder="Instructions for the agent"
-            defaultValue={component.config?.system_prompt || ""}
-            rows={4}
-            onChange={(e) => onChange({
-              config: { ...component.config, system_prompt: e.target.value },
-            })}
-          />
-        </Form.Item>
-      </DetailGroup>
+      {isAssistant && (
+        <DetailGroup title="Prompt" defaultOpen={true}>
+          <Form.Item label="System Message" name="system_message" className="mb-4">
+            <Input.TextArea
+              placeholder="Instructions for the agent"
+              defaultValue={(component.config as AssistantAgentConfig)?.system_message || ""}
+              rows={4}
+              onChange={(e) => onChange({
+                config: { ...component.config, system_message: e.target.value },
+              })}
+            />
+          </Form.Item>
+        </DetailGroup>
+      )}
 
-      <DetailGroup title="Advanced" defaultOpen={false}>
-        <Form.Item label="Temperature" name="temperature" className="mb-4">
-          <Input
-            type="number"
-            min={0}
-            max={1}
-            step={0.1}
-            defaultValue={component.config?.temperature || 0.7}
-            onChange={(e) => onChange({
-              config: { ...component.config, temperature: parseFloat(e.target.value) },
-            })}
-          />
-        </Form.Item>
-      </DetailGroup>
+      {isAssistant && (
+        <DetailGroup title="Advanced" defaultOpen={false}>
+          {component.config.model_client && (
+            <Form.Item label="Model Client" className="mb-4">
+              <div className="text-sm text-gray-500">
+                Configure temperature and other options in the model client.
+                {onNavigate && (
+                  <button 
+                    className="ml-2 text-blue-500 underline"
+                    onClick={() => onNavigate('model', 'model_client', 'model_client')}
+                  >
+                    Edit Model
+                  </button>
+                )}
+              </div>
+            </Form.Item>
+          )}
+        </DetailGroup>
+      )}
     </>
   );
 };

@@ -1,6 +1,6 @@
 
 import { create } from "zustand";
-import { Gallery } from "../datamodel";
+import { Gallery } from "../../types/datamodel";
 import { galleryAPI } from "./api";
 
 interface GalleryState {

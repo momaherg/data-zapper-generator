@@ -1,5 +1,5 @@
 
-import { Gallery } from "../datamodel";
+import { Gallery } from "../../types/datamodel";
 import defaultGallery from "./default_gallery.json";
 
 // Create a proper Gallery object from the JSON
@@ -8,27 +8,9 @@ const createGalleryFromJson = (json: any): Gallery => {
     id: json.id || crypto.randomUUID(),
     name: json.name || "Default Gallery",
     description: json.metadata?.description || "",
-    url: json.url || null,
-    metadata: {
-      author: json.metadata?.author || "",
-      created_at: json.metadata?.created_at || new Date().toISOString(),
-      updated_at: json.metadata?.updated_at || new Date().toISOString(),
-      version: json.metadata?.version || "1.0.0",
-      description: json.metadata?.description || "",
-      tags: json.metadata?.tags || [],
-      license: json.metadata?.license || "MIT",
-      category: json.metadata?.category || "",
-      last_synced: json.metadata?.last_synced || null,
-    },
-    components: {
-      agents: json.components?.agents || [],
-      models: json.components?.models || [],
-      tools: json.components?.tools || [],
-      terminations: json.components?.terminations || [],
-      teams: json.components?.teams || [],
-    },
     created_at: new Date().toISOString(),
     updated_at: new Date().toISOString(),
+    config: json
   };
 };
 
@@ -43,16 +25,9 @@ export const mockGalleryAPI = {
       id: crypto.randomUUID(),
       name: gallery.name || "New Gallery",
       description: gallery.description || "",
-      components: gallery.components || createGalleryFromJson(defaultGallery).components,
-      metadata: gallery.metadata || {
-        author: "",
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        version: "1.0.0",
-        description: "",
-      },
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
+      config: gallery.config || defaultGallery
     };
   },
   
