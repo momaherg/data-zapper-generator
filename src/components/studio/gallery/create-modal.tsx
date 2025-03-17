@@ -1,11 +1,10 @@
-
 import React, { useState, useRef } from "react";
 import { Modal, Tabs, Input, Button, Alert, Upload } from "antd";
 import { Globe, Upload as UploadIcon, Code } from "lucide-react";
 import { MonacoEditor } from "../monaco";
 import type { InputRef, UploadFile, UploadProps } from "antd";
 import { defaultGallery } from "./utils";
-import { Gallery } from "../../types/datamodel";
+import { Gallery, GalleryConfig } from "../../types/datamodel";
 
 interface GalleryCreateModalProps {
   open: boolean;
@@ -21,7 +20,7 @@ export const GalleryCreateModal: React.FC<GalleryCreateModalProps> = ({
   const [activeTab, setActiveTab] = useState("url");
   const [url, setUrl] = useState("");
   const [jsonContent, setJsonContent] = useState(
-    JSON.stringify(defaultGallery.config, null, 2)
+    JSON.stringify(defaultGallery, null, 2)
   );
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -32,17 +31,11 @@ export const GalleryCreateModal: React.FC<GalleryCreateModalProps> = ({
     setError("");
     try {
       const response = await fetch(url);
-      const data = await response.json();
-      // Create a valid Gallery object
-      const newGallery: Gallery = {
-        id: data.id || crypto.randomUUID(),
-        name: data.name || "Imported Gallery",
-        description: data.metadata?.description || "",
+      const data = (await response.json()) as GalleryConfig;
+      // TODO: Validate against Gallery schema
+      onCreateGallery({
         config: data,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      onCreateGallery(newGallery);
+      });
       onCancel();
     } catch (err) {
       setError("Failed to fetch or parse gallery from URL");
@@ -57,17 +50,14 @@ export const GalleryCreateModal: React.FC<GalleryCreateModalProps> = ({
       const reader = new FileReader();
       reader.onload = (e: ProgressEvent<FileReader>) => {
         try {
-          const content = JSON.parse(e.target?.result as string);
-          // Create a valid Gallery object
-          const newGallery: Gallery = {
-            id: content.id || crypto.randomUUID(),
-            name: content.name || "Uploaded Gallery",
-            description: content.metadata?.description || "",
+          const content = JSON.parse(
+            e.target?.result as string
+          ) as GalleryConfig;
+
+          // TODO: Validate against Gallery schema
+          onCreateGallery({
             config: content,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          };
-          onCreateGallery(newGallery);
+          });
           onCancel();
         } catch (err) {
           setError("Invalid JSON file");
@@ -81,17 +71,11 @@ export const GalleryCreateModal: React.FC<GalleryCreateModalProps> = ({
 
   const handlePasteImport = () => {
     try {
-      const content = JSON.parse(jsonContent);
-      // Create a valid Gallery object
-      const newGallery: Gallery = {
-        id: content.id || crypto.randomUUID(),
-        name: content.name || "Pasted Gallery",
-        description: content.metadata?.description || "",
+      const content = JSON.parse(jsonContent) as GalleryConfig;
+      // TODO: Validate against Gallery schema
+      onCreateGallery({
         config: content,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      onCreateGallery(newGallery);
+      });
       onCancel();
     } catch (err) {
       setError("Invalid JSON format");

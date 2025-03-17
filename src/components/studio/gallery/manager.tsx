@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useState, useContext } from "react";
 import { message, Modal } from "antd";
 import { ChevronRight } from "lucide-react";
@@ -7,7 +6,7 @@ import { galleryAPI } from "./api";
 import { GallerySidebar } from "./sidebar";
 import { GalleryDetail } from "./detail";
 import { GalleryCreateModal } from "./create-modal";
-import type { Gallery } from "../../types/datamodel";
+import type { Gallery } from "../datamodel";
 
 export const GalleryManager: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -26,6 +25,7 @@ export const GalleryManager: React.FC = () => {
   const { user } = useContext(appContext);
   const [messageApi, contextHolder] = message.useMessage();
 
+  // Persist sidebar state
   useEffect(() => {
     if (typeof window !== "undefined") {
       localStorage.setItem("gallerySidebar", JSON.stringify(isSidebarOpen));
@@ -37,7 +37,7 @@ export const GalleryManager: React.FC = () => {
 
     try {
       setIsLoading(true);
-      const data = await galleryAPI.listGalleries();
+      const data = await galleryAPI.listGalleries(user.email);
       setGalleries(data);
       if (!currentGallery && data.length > 0) {
         setCurrentGallery(data[0]);
@@ -54,15 +54,20 @@ export const GalleryManager: React.FC = () => {
     fetchGalleries();
   }, [fetchGalleries]);
 
+  // Handle URL params
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const galleryId = params.get("galleryId");
 
     if (galleryId && !currentGallery) {
-      handleSelectGallery(galleryId);
+      const numericId = parseInt(galleryId, 10);
+      if (!isNaN(numericId)) {
+        handleSelectGallery(numericId);
+      }
     }
   }, []);
 
+  // Update URL when gallery changes
   useEffect(() => {
     if (currentGallery?.id) {
       window.history.pushState(
@@ -73,7 +78,7 @@ export const GalleryManager: React.FC = () => {
     }
   }, [currentGallery?.id]);
 
-  const handleSelectGallery = async (galleryId: string) => {
+  const handleSelectGallery = async (galleryId: number) => {
     if (!user?.email) return;
 
     if (hasUnsavedChanges) {
@@ -92,12 +97,12 @@ export const GalleryManager: React.FC = () => {
     }
   };
 
-  const switchToGallery = async (galleryId: string) => {
+  const switchToGallery = async (galleryId: number) => {
     if (!user?.email) return;
 
     setIsLoading(true);
     try {
-      const data = await galleryAPI.getGallery(galleryId);
+      const data = await galleryAPI.getGallery(galleryId, user.email);
       setCurrentGallery(data);
     } catch (error) {
       console.error("Error loading gallery:", error);
@@ -110,8 +115,12 @@ export const GalleryManager: React.FC = () => {
   const handleCreateGallery = async (galleryData: Gallery) => {
     if (!user?.email) return;
 
+    galleryData.user_id = user.email;
     try {
-      const savedGallery = await galleryAPI.createGallery(galleryData);
+      const savedGallery = await galleryAPI.createGallery(
+        galleryData,
+        user.email
+      );
       setGalleries([savedGallery, ...galleries]);
       setCurrentGallery(savedGallery);
       setIsCreateModalOpen(false);
@@ -128,11 +137,14 @@ export const GalleryManager: React.FC = () => {
     try {
       const sanitizedUpdates = {
         ...updates,
+        created_at: undefined,
+        updated_at: undefined,
       };
-      const updatedGallery = await galleryAPI.updateGallery({
-        ...currentGallery,
-        ...sanitizedUpdates
-      });
+      const updatedGallery = await galleryAPI.updateGallery(
+        currentGallery.id,
+        sanitizedUpdates,
+        user.email
+      );
       setGalleries(
         galleries.map((g) => (g.id === updatedGallery.id ? updatedGallery : g))
       );
@@ -145,11 +157,11 @@ export const GalleryManager: React.FC = () => {
     }
   };
 
-  const handleDeleteGallery = async (galleryId: string) => {
+  const handleDeleteGallery = async (galleryId: number) => {
     if (!user?.email) return;
 
     try {
-      await galleryAPI.deleteGallery(galleryId);
+      await galleryAPI.deleteGallery(galleryId, user.email);
       setGalleries(galleries.filter((g) => g.id !== galleryId));
       if (currentGallery?.id === galleryId) {
         setCurrentGallery(null);
@@ -161,7 +173,7 @@ export const GalleryManager: React.FC = () => {
     }
   };
 
-  const handleSyncGallery = async (galleryId: string) => {
+  const handleSyncGallery = async (galleryId: number) => {
     if (!user?.email) return;
 
     try {
@@ -203,12 +215,14 @@ export const GalleryManager: React.FC = () => {
     <div className="relative flex h-full w-full">
       {contextHolder}
 
+      {/* Create Modal */}
       <GalleryCreateModal
         open={isCreateModalOpen}
         onCancel={() => setIsCreateModalOpen(false)}
         onCreateGallery={handleCreateGallery}
       />
 
+      {/* Sidebar */}
       <div
         className={`absolute left-0 top-0 h-full transition-all duration-200 ease-in-out ${
           isSidebarOpen ? "w-64" : "w-12"
@@ -219,7 +233,7 @@ export const GalleryManager: React.FC = () => {
           galleries={galleries}
           currentGallery={currentGallery}
           onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-          onSelectGallery={(gallery) => handleSelectGallery(gallery.id)}
+          onSelectGallery={(gallery) => handleSelectGallery(gallery.id!)}
           onCreateGallery={() => setIsCreateModalOpen(true)}
           onDeleteGallery={handleDeleteGallery}
           onSyncGallery={handleSyncGallery}
@@ -227,12 +241,14 @@ export const GalleryManager: React.FC = () => {
         />
       </div>
 
+      {/* Main Content */}
       <div
         className={`flex-1 transition-all -mr-6 duration-200 ${
           isSidebarOpen ? "ml-64" : "ml-12"
         }`}
       >
         <div className="p-4 pt-2">
+          {/* Breadcrumb */}
           <div className="flex items-center gap-2 mb-4 text-sm">
             <span className="text-primary font-medium">Galleries</span>
             {currentGallery && (
@@ -245,6 +261,7 @@ export const GalleryManager: React.FC = () => {
             )}
           </div>
 
+          {/* Content Area */}
           {isLoading && !currentGallery ? (
             <div className="flex items-center justify-center h-[calc(100vh-120px)] text-secondary">
               Loading galleries...

@@ -1,5 +1,5 @@
 
-import { Gallery, GalleryConfig } from "../../types/datamodel";
+import { Gallery, GalleryConfig } from "../datamodel";
 import defaultGalleryData from "./default_gallery.json";
 
 export const defaultGallery: Gallery = {

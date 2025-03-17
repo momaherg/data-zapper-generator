@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button, Tooltip } from "antd";
 import {
@@ -21,8 +20,8 @@ interface GallerySidebarProps {
   onToggle: () => void;
   onSelectGallery: (gallery: Gallery) => void;
   onCreateGallery: () => void;
-  onDeleteGallery: (galleryId: string) => void;
-  onSyncGallery: (galleryId: string) => void;
+  onDeleteGallery: (galleryId: number) => void;
+  onSyncGallery: (galleryId: number) => void;
   isLoading?: boolean;
 }
 
@@ -156,7 +155,7 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
                           icon={<RefreshCw className="w-4 h-4" />}
                           onClick={(e) => {
                             e.stopPropagation();
-                            onSyncGallery(gallery.id);
+                            onSyncGallery(gallery.id!);
                           }}
                         />
                       </Tooltip>
@@ -177,7 +176,7 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
                         icon={<Trash2 className="w-4 h-4 text-red-500" />}
                         onClick={(e) => {
                           e.stopPropagation();
-                          onDeleteGallery(gallery.id);
+                          onDeleteGallery(gallery.id!);
                         }}
                       />
                     </Tooltip>
@@ -192,8 +191,8 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
                   <div className="flex items-center gap-1">
                     <Package className="w-3 h-3" />
                     <span>
-                      {Object.values(gallery.config.components || {}).reduce(
-                        (sum, arr) => sum + (Array.isArray(arr) ? arr.length : 0),
+                      {Object.values(gallery.config.components).reduce(
+                        (sum, arr) => sum + arr.length,
                         0
                       )}{" "}
                       components

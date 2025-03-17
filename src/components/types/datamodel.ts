@@ -1,46 +1,36 @@
 
-// Re-export everything from studio datamodel
-export type { 
-  ComponentTypes, 
-  Component, 
-  ComponentConfig,
-  GalleryConfig,
-  Team,
-  AgentConfig,
-  ModelConfig,
-  ToolConfig,
-  TerminationConfig
-} from "../components/studio/datamodel";
+// Re-export the full datamodel from studio
+export * from "../studio/datamodel";
 
 // Define a Gallery type compatible with both implementations
 export interface Gallery {
-  id: string;
+  id: number | string;
   name: string;
   description?: string;
-  config: {
-    id: string;
-    name: string;
-    url?: string | null;
-    metadata: {
-      author: string;
-      created_at: string;
-      updated_at: string;
-      version: string;
-      description?: string;
-      tags?: string[];
-      license?: string;
-      homepage?: string | null;
-      category?: string;
-      lastSynced?: string | null;
-    };
-    components: {
-      teams?: any[];
-      agents?: any[];
-      models?: any[];
-      tools?: any[];
-      terminations?: any[];
-    };
-  };
+  url?: string | null;
+  user_id?: string;
   created_at?: string;
   updated_at?: string;
+  version?: number;
+  metadata?: {
+    author: string;
+    created_at: string;
+    updated_at: string;
+    version: string;
+    description: string;
+    tags?: string[];
+    license?: string;
+    homepage?: string | null;
+    category?: string;
+    last_synced?: string | null;
+  };
+  components?: {
+    agents?: any[];
+    models?: any[];
+    tools?: any[];
+    terminations?: any[];
+    teams?: any[];
+  };
+  config?: any;
+  items?: any[];
 }

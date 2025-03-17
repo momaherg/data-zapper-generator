@@ -14,7 +14,7 @@ import { TeamFields } from "./team-fields";
 import { ModelFields } from "./model-fields";
 import { ToolFields } from "./tool-fields";
 import { TerminationFields } from "./termination-fields";
-import { NodeEditorFieldsProps } from "../index";
+import { NodeEditorFieldsProps } from "../../node-editor";
 import {
   isTeamComponent,
   isAgentComponent,
