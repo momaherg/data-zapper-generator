@@ -22,6 +22,7 @@ const StudioPage = () => {
     const sessionId = queryParams.get("session_id");
     
     if (sessionId) {
+      console.log("Setting session ID:", sessionId);
       // Set the session ID for all APIs
       teamAPI.setSessionId(sessionId);
       validationAPI.setSessionId(sessionId);
@@ -37,7 +38,7 @@ const StudioPage = () => {
     try {
       setIsLoading(true);
       const data = await teamAPI.getTeam();
-      console.log("Normalized team:", data);
+      console.log("Loaded team:", data);
       setTeam(data);
     } catch (error) {
       console.error("Error fetching team:", error);

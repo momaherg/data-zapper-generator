@@ -11,4 +11,4 @@ export type {
   ModelConfig,
   ToolConfig,
   TerminationConfig
-} from "../components/studio/datamodel";
+} from "../studio/datamodel";

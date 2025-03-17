@@ -85,7 +85,7 @@ const getDefaultComponents = () => {
           component_type: "agent",
           config: {
             name: "Research Agent",
-            system_prompt: "You are a helpful research assistant."
+            system_message: "You are a helpful research assistant."
           }
         }
       },
@@ -96,7 +96,7 @@ const getDefaultComponents = () => {
           component_type: "agent",
           config: {
             name: "Writing Agent",
-            system_prompt: "You are a creative writing assistant."
+            system_message: "You are a creative writing assistant."
           }
         }
       },
@@ -107,7 +107,7 @@ const getDefaultComponents = () => {
           component_type: "agent",
           config: {
             name: "Coding Agent",
-            system_prompt: "You are a helpful coding assistant."
+            system_message: "You are a helpful coding assistant."
           }
         }
       }
@@ -192,15 +192,20 @@ export const ComponentLibrary: React.FC = () => {
   // Use selected gallery or default components if not available
   const componentsData = React.useMemo(() => {
     if (!selectedGallery || galleryError) {
+      console.log("Using default components");
       return getDefaultComponents();
     }
     
     try {
-      const components = selectedGallery.config?.components;
+      console.log("Processing gallery:", selectedGallery);
+      const components = selectedGallery.components || selectedGallery.config?.components;
+      
       if (!components) {
         console.warn("Gallery has no components section, using defaults");
         return getDefaultComponents();
       }
+      
+      console.log("Using gallery components:", components);
       return components;
     } catch (err) {
       console.error("Error processing gallery components:", err);

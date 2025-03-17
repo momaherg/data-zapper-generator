@@ -25,17 +25,27 @@ export const useGalleryStore = create<GalleryState>((set, get) => ({
       set({ isLoading: true, error: null });
       const galleries = await galleryAPI.listGalleries();
       
-      set({
-        galleries,
-        selectedGallery: galleries.length > 0 ? galleries[0] : null,
-        isLoading: false,
-      });
+      if (galleries && Array.isArray(galleries)) {
+        set({
+          galleries,
+          selectedGallery: galleries.length > 0 ? galleries[0] : null,
+          isLoading: false,
+        });
+        console.log("Loaded galleries:", galleries);
+      } else {
+        console.error("Received invalid galleries data:", galleries);
+        set({
+          error: "Invalid gallery data received",
+          isLoading: false,
+          galleries: [],
+          selectedGallery: null,
+        });
+      }
     } catch (error) {
       console.error("Error fetching galleries:", error);
       set({
         error: error instanceof Error ? error.message : "Failed to fetch galleries",
         isLoading: false,
-        // Set empty galleries array on error
         galleries: [],
         selectedGallery: null,
       });

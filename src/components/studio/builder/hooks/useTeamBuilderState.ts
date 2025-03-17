@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNodesState, useEdgesState, Connection, addEdge } from "@xyflow/react";
 import { ValidationResponse, validationAPI } from "../../api";
@@ -63,11 +64,22 @@ export function useTeamBuilderState(
 
   useEffect(() => {
     if (team?.component) {
-      const { nodes: initialNodes, edges: initialEdges } = loadFromJson(team.component);
-      setNodes(initialNodes);
-      setEdges(initialEdges);
+      console.log("Loading team into builder:", team);
+      try {
+        const { nodes: initialNodes, edges: initialEdges } = loadFromJson(team.component);
+        setNodes(initialNodes);
+        setEdges(initialEdges);
+        // Handle validation after loading
+        setTimeout(() => {
+          handleValidate().catch(console.error);
+        }, 500);
+      } catch (error) {
+        console.error("Error loading team:", error);
+        message.error("Failed to load team configuration");
+      }
+    } else {
+      console.warn("No team component provided");
     }
-    handleValidate();
 
     return () => {
       setValidationResults(null);
@@ -103,12 +115,13 @@ export function useTeamBuilderState(
   }, [setNodes, setEdges]);
 
   const handleValidate = useCallback(async () => {
-    const component = syncToJson();
-    if (!component) {
-      throw new Error("Unable to generate valid configuration");
-    }
-
     try {
+      const component = syncToJson();
+      if (!component) {
+        console.error("Unable to generate valid configuration from current state");
+        return;
+      }
+
       setValidationLoading(true);
       const validationResult = await validationAPI.validateComponent(component);
       setValidationResults(validationResult);
@@ -138,8 +151,10 @@ export function useTeamBuilderState(
           : { component };
         await onChange(teamData);
         resetHistory();
+        message.success("Team saved successfully");
       }
     } catch (error) {
+      console.error("Save error:", error);
       message.error(
         error instanceof Error
           ? error.message
@@ -149,14 +164,25 @@ export function useTeamBuilderState(
   }, [syncToJson, onChange, resetHistory, team]);
 
   const handleExport = useCallback(() => {
-    const json = JSON.stringify(syncToJson(), null, 2);
-    const blob = new Blob([json], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = "team-config.json";
-    a.click();
-    URL.revokeObjectURL(url);
+    try {
+      const config = syncToJson();
+      if (!config) {
+        message.error("Unable to generate valid configuration for export");
+        return;
+      }
+      
+      const json = JSON.stringify(config, null, 2);
+      const blob = new Blob([json], { type: "application/json" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "team-config.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Export error:", error);
+      message.error("Failed to export team configuration");
+    }
   }, [syncToJson]);
 
   const handleToggleFullscreen = useCallback(() => {
