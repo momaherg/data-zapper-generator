@@ -21,7 +21,7 @@ export const GalleryCreateModal: React.FC<GalleryCreateModalProps> = ({
   const [activeTab, setActiveTab] = useState("url");
   const [url, setUrl] = useState("");
   const [jsonContent, setJsonContent] = useState(
-    JSON.stringify(defaultGallery, null, 2)
+    JSON.stringify(defaultGallery.config, null, 2)
   );
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -38,9 +38,9 @@ export const GalleryCreateModal: React.FC<GalleryCreateModalProps> = ({
         id: data.id || crypto.randomUUID(),
         name: data.name || "Imported Gallery",
         description: data.metadata?.description || "",
+        config: data,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        config: data
+        updated_at: new Date().toISOString()
       };
       onCreateGallery(newGallery);
       onCancel();
@@ -63,9 +63,9 @@ export const GalleryCreateModal: React.FC<GalleryCreateModalProps> = ({
             id: content.id || crypto.randomUUID(),
             name: content.name || "Uploaded Gallery",
             description: content.metadata?.description || "",
+            config: content,
             created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            config: content
+            updated_at: new Date().toISOString()
           };
           onCreateGallery(newGallery);
           onCancel();
@@ -87,9 +87,9 @@ export const GalleryCreateModal: React.FC<GalleryCreateModalProps> = ({
         id: content.id || crypto.randomUUID(),
         name: content.name || "Pasted Gallery",
         description: content.metadata?.description || "",
+        config: content,
         created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-        config: content
+        updated_at: new Date().toISOString()
       };
       onCreateGallery(newGallery);
       onCancel();

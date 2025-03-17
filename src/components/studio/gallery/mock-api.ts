@@ -8,9 +8,9 @@ const createGalleryFromJson = (json: any): Gallery => {
     id: json.id || crypto.randomUUID(),
     name: json.name || "Default Gallery",
     description: json.metadata?.description || "",
+    config: json,
     created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    config: json
+    updated_at: new Date().toISOString()
   };
 };
 
@@ -25,9 +25,9 @@ export const mockGalleryAPI = {
       id: crypto.randomUUID(),
       name: gallery.name || "New Gallery",
       description: gallery.description || "",
+      config: gallery.config || defaultGallery,
       created_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-      config: gallery.config || defaultGallery
+      updated_at: new Date().toISOString()
     };
   },
   

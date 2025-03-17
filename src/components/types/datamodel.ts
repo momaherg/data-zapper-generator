@@ -1,13 +1,22 @@
 
-// Re-export the full datamodel from studio
-export * from "../studio/datamodel";
+// Re-export everything from studio datamodel
+export type { 
+  ComponentTypes, 
+  Component, 
+  ComponentConfig,
+  GalleryConfig,
+  Team,
+  AgentConfig,
+  ModelConfig,
+  ToolConfig,
+  TerminationConfig
+} from "../components/studio/datamodel";
 
 // Define a Gallery type compatible with both implementations
 export interface Gallery {
   id: string;
   name: string;
   description?: string;
-  url?: string | null;
   config: {
     id: string;
     name: string;
@@ -31,5 +40,7 @@ export interface Gallery {
       tools?: any[];
       terminations?: any[];
     };
-  }
+  };
+  created_at?: string;
+  updated_at?: string;
 }
