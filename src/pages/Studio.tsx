@@ -5,10 +5,10 @@ import { TeamBuilder } from "../components/studio/builder/builder";
 import { Loader2, Users } from "lucide-react";
 import { Team } from "../components/studio/datamodel";
 import { useGalleryStore } from "../components/studio/gallery/store";
-import { teamAPI } from "../components/studio/api";
+import { teamAPI, validationAPI } from "../components/studio/api";
+import { galleryAPI } from "../components/studio/gallery/api";
 import { toast } from "sonner";
 import { useLocation } from "react-router-dom";
-// import { normalizeComponent } from "../components/studio/utils";
 
 const StudioPage = () => {
   const [team, setTeam] = useState<Team | null>(null);
@@ -22,8 +22,10 @@ const StudioPage = () => {
     const sessionId = queryParams.get("session_id");
     
     if (sessionId) {
-      // Set the session ID for the API
+      // Set the session ID for all APIs
       teamAPI.setSessionId(sessionId);
+      validationAPI.setSessionId(sessionId);
+      galleryAPI.setSessionId(sessionId);
     }
     
     fetchTeam();

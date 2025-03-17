@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Input, Collapse, type CollapseProps } from "antd";
 import { useDraggable } from "@dnd-kit/core";
@@ -75,7 +74,6 @@ const PresetItem: React.FC<PresetItemProps> = ({
   );
 };
 
-// Default components to show when gallery fails to load
 const getDefaultComponents = () => {
   return {
     agents: [
@@ -184,21 +182,18 @@ const getDefaultComponents = () => {
   };
 };
 
-export const ComponentLibrary: React.FC<LibraryProps> = () => {
+export const ComponentLibrary: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isMinimized, setIsMinimized] = useState(false);
   
-  // Important: Always declare hooks at the top level, never conditionally
   const defaultGallery = useGalleryStore((state) => state.getSelectedGallery());
   const galleryLoading = useGalleryStore((state) => state.isLoading);
   const galleryError = useGalleryStore((state) => state.error);
   
-  // Always compute sections, but use different data sources based on conditions
   const componentsData = (!defaultGallery || galleryError) 
     ? getDefaultComponents()
     : (defaultGallery.config?.components || getDefaultComponents());
   
-  // Move this useMemo out of the conditional rendering path
   const sections = React.useMemo(
     () => [
       {
@@ -223,7 +218,7 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
         title: "Tools",
         type: "tool" as ComponentTypes,
         items: componentsData.tools?.map((tool: any) => ({
-          label: tool.label || "Tool",
+          label: tool.label || tool.config?.name || "Tool",
           config: tool,
         })) || [],
         icon: <Wrench className="w-4 h-4" />,
@@ -261,7 +256,6 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
     );
   }
 
-  // Loading state
   if (galleryLoading) {
     return (
       <Sider
