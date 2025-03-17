@@ -184,19 +184,32 @@ const getDefaultComponents = () => {
   };
 };
 
+// Function to extract components from the gallery
+const extractGalleryComponents = (gallery: any) => {
+  if (!gallery) return getDefaultComponents();
+  
+  // Handle both legacy format (config.components) and new format (components)
+  const components = gallery.components || gallery.config?.components || {};
+  
+  return {
+    agents: components.agents || [],
+    models: components.models || [],
+    tools: components.tools || [],
+    terminations: components.terminations || [],
+  };
+};
+
 export const ComponentLibrary: React.FC<LibraryProps> = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isMinimized, setIsMinimized] = useState(false);
   
   // Important: Always declare hooks at the top level, never conditionally
-  const defaultGallery = useGalleryStore((state) => state.getSelectedGallery());
+  const gallery = useGalleryStore((state) => state.getSelectedGallery());
   const galleryLoading = useGalleryStore((state) => state.isLoading);
   const galleryError = useGalleryStore((state) => state.error);
   
-  // Always compute sections, but use different data sources based on conditions
-  const componentsData = (!defaultGallery || galleryError) 
-    ? getDefaultComponents()
-    : (defaultGallery.config?.components || getDefaultComponents());
+  // Extract components from the gallery
+  const componentsData = extractGalleryComponents(gallery);
   
   // Move this useMemo out of the conditional rendering path
   const sections = React.useMemo(
@@ -223,7 +236,7 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
         title: "Tools",
         type: "tool" as ComponentTypes,
         items: componentsData.tools?.map((tool: any) => ({
-          label: tool.label || "Tool",
+          label: tool.label || tool.config?.name || "Tool",
           config: tool,
         })) || [],
         icon: <Wrench className="w-4 h-4" />,

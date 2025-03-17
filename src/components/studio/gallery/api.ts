@@ -15,15 +15,22 @@ export class GalleryAPI {
 
   async listGalleries(): Promise<Gallery[]> {
     const response = await fetch(
-      `${this.getBaseUrl()}/gallery/`,
+      `${this.getBaseUrl()}/gallery`,
       {
         headers: this.getHeaders(),
       }
     );
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch galleries: ${response.statusText}`);
+    }
+    
     const data = await response.json();
-    if (!data.status)
-      throw new Error(data.message || "Failed to fetch galleries");
-    return data.data;
+    // If it's a single gallery, convert to array
+    if (!Array.isArray(data)) {
+      return [data];
+    }
+    return data;
   }
 
   async getGallery(id: string): Promise<Gallery> {
@@ -33,22 +40,26 @@ export class GalleryAPI {
         headers: this.getHeaders(),
       }
     );
-    const data = await response.json();
-    if (!data.status)
-      throw new Error(data.message || "Failed to fetch gallery");
-    return data.data;
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch gallery: ${response.statusText}`);
+    }
+    
+    return response.json();
   }
 
   async createGallery(gallery: Partial<Gallery>): Promise<Gallery> {
-    const response = await fetch(`${this.getBaseUrl()}/gallery/`, {
+    const response = await fetch(`${this.getBaseUrl()}/gallery`, {
       method: "POST",
       headers: this.getHeaders(),
       body: JSON.stringify(gallery),
     });
-    const data = await response.json();
-    if (!data.status)
-      throw new Error(data.message || "Failed to create gallery");
-    return data.data;
+    
+    if (!response.ok) {
+      throw new Error(`Failed to create gallery: ${response.statusText}`);
+    }
+    
+    return response.json();
   }
 
   async updateGallery(gallery: Gallery): Promise<Gallery> {
@@ -60,10 +71,12 @@ export class GalleryAPI {
         body: JSON.stringify(gallery),
       }
     );
-    const data = await response.json();
-    if (!data.status)
-      throw new Error(data.message || "Failed to update gallery");
-    return data.data;
+    
+    if (!response.ok) {
+      throw new Error(`Failed to update gallery: ${response.statusText}`);
+    }
+    
+    return response.json();
   }
 
   async deleteGallery(id: string): Promise<void> {
@@ -74,9 +87,10 @@ export class GalleryAPI {
         headers: this.getHeaders(),
       }
     );
-    const data = await response.json();
-    if (!data.status)
-      throw new Error(data.message || "Failed to delete gallery");
+    
+    if (!response.ok) {
+      throw new Error(`Failed to delete gallery: ${response.statusText}`);
+    }
   }
 
   async syncGallery(url: string): Promise<Gallery> {
@@ -91,11 +105,7 @@ export class GalleryAPI {
     }
     
     const data = await response.json();
-    if (!data.status) {
-      throw new Error(data.message || `Failed to sync gallery from ${url}`);
-    }
-    
-    return data.data;
+    return data;
   }
 }
 
