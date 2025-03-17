@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Input, Collapse, type CollapseProps } from "antd";
 import { useDraggable } from "@dnd-kit/core";
@@ -186,13 +187,26 @@ export const ComponentLibrary: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isMinimized, setIsMinimized] = useState(false);
   
-  const defaultGallery = useGalleryStore((state) => state.getSelectedGallery());
-  const galleryLoading = useGalleryStore((state) => state.isLoading);
-  const galleryError = useGalleryStore((state) => state.error);
+  const { selectedGallery, isLoading: galleryLoading, error: galleryError } = useGalleryStore();
   
-  const componentsData = (!defaultGallery || galleryError) 
-    ? getDefaultComponents()
-    : (defaultGallery.config?.components || getDefaultComponents());
+  // Use selected gallery or default components if not available
+  const componentsData = React.useMemo(() => {
+    if (!selectedGallery || galleryError) {
+      return getDefaultComponents();
+    }
+    
+    try {
+      const components = selectedGallery.config?.components;
+      if (!components) {
+        console.warn("Gallery has no components section, using defaults");
+        return getDefaultComponents();
+      }
+      return components;
+    } catch (err) {
+      console.error("Error processing gallery components:", err);
+      return getDefaultComponents();
+    }
+  }, [selectedGallery, galleryError]);
   
   const sections = React.useMemo(
     () => [

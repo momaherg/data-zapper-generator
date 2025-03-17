@@ -1,9 +1,9 @@
 
-// Re-export the full datamodel from studio
-export * from "../components/studio/datamodel";
+// Re-export the Gallery type from studio datamodel
+export * from "../studio/datamodel";
 
-// Define a Gallery type compatible with both implementations
-export interface Gallery {
+// Define a simpler Gallery type compatible with both implementations
+export interface SimpleGallery {
   id: number | string;
   name: string;
   description?: string;

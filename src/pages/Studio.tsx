@@ -35,14 +35,10 @@ const StudioPage = () => {
 
   const fetchTeam = async () => {
     try {
+      setIsLoading(true);
       const data = await teamAPI.getTeam();
-      // Normalize the component structure to match what our UI expects
-      const normalizedTeam = {
-        ...data,
-        component: data
-      };
-      console.log("Normalized team:", normalizedTeam);
-      setTeam(normalizedTeam);
+      console.log("Normalized team:", data);
+      setTeam(data);
     } catch (error) {
       console.error("Error fetching team:", error);
       toast.error("Failed to load team, using default configuration");

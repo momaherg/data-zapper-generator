@@ -107,9 +107,7 @@ export class GalleryAPI {
       throw new Error(`Failed to sync gallery from ${url}`);
     }
     
-    const data = await response.json();
-    
-    return data;
+    return response.json();
   }
 }
 
