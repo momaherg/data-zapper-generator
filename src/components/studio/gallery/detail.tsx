@@ -9,34 +9,28 @@ import { useGalleryStore } from "./store";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Trash2, Code, FormInput } from "lucide-react";
 
-export const GalleryDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
+interface GalleryDetailProps {
+  gallery: Gallery;
+  onSave?: (updates: Partial<Gallery>) => Promise<void>;
+  onDirtyStateChange?: (isDirty: boolean) => void;
+}
+
+export const GalleryDetail: React.FC<GalleryDetailProps> = ({ 
+  gallery, 
+  onSave,
+  onDirtyStateChange 
+}) => {
   const navigate = useNavigate();
-  const [gallery, setGallery] = useState<Gallery | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [jsonContent, setJsonContent] = useState("");
   const fetchGalleries = useGalleryStore((state) => state.fetchGalleries);
 
   useEffect(() => {
-    if (id) {
-      fetchGallery(id);
+    if (gallery) {
+      setJsonContent(JSON.stringify(gallery.config, null, 2));
     }
-  }, [id]);
-
-  const fetchGallery = async (galleryId: string) => {
-    try {
-      setIsLoading(true);
-      const data = await galleryAPI.getGallery(galleryId);
-      setGallery(data);
-      setJsonContent(JSON.stringify(data.config, null, 2));
-    } catch (error) {
-      console.error("Error fetching gallery:", error);
-      toast.error("Failed to load gallery");
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  }, [gallery]);
 
   const handleDelete = async () => {
     if (!gallery) return;
@@ -61,11 +55,19 @@ export const GalleryDetail: React.FC = () => {
         ...gallery,
         config: updatedConfig
       };
-      const data = await galleryAPI.updateGallery(updatedGallery);
-      setGallery(data);
-      setIsEditing(false);
-      toast.success("Gallery updated successfully");
-      fetchGalleries();
+      
+      if (onSave) {
+        await onSave(updatedGallery);
+      } else {
+        const data = await galleryAPI.updateGallery(updatedGallery);
+        setIsEditing(false);
+        toast.success("Gallery updated successfully");
+        fetchGalleries();
+      }
+      
+      if (onDirtyStateChange) {
+        onDirtyStateChange(false);
+      }
     } catch (error) {
       console.error("Error updating gallery:", error);
       toast.error("Failed to update gallery");
@@ -93,7 +95,12 @@ export const GalleryDetail: React.FC = () => {
         <div className="flex gap-2">
           <Button 
             type="primary" 
-            onClick={() => setIsEditing(!isEditing)}
+            onClick={() => {
+              setIsEditing(!isEditing);
+              if (onDirtyStateChange) {
+                onDirtyStateChange(!isEditing);
+              }
+            }}
           >
             {isEditing ? "Cancel" : "Edit"}
           </Button>
@@ -135,7 +142,12 @@ export const GalleryDetail: React.FC = () => {
           <div className="h-96">
             <MonacoEditor
               value={jsonContent}
-              onChange={setJsonContent}
+              onChange={(value) => {
+                setJsonContent(value);
+                if (onDirtyStateChange) {
+                  onDirtyStateChange(true);
+                }
+              }}
               language="json"
               minimap={true}
             />

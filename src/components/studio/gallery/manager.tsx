@@ -1,3 +1,4 @@
+
 import React, { useCallback, useEffect, useState, useContext } from "react";
 import { message, Modal } from "antd";
 import { ChevronRight } from "lucide-react";
@@ -37,7 +38,7 @@ export const GalleryManager: React.FC = () => {
 
     try {
       setIsLoading(true);
-      const data = await galleryAPI.listGalleries(user.email);
+      const data = await galleryAPI.listGalleries();
       setGalleries(data);
       if (!currentGallery && data.length > 0) {
         setCurrentGallery(data[0]);
@@ -60,10 +61,7 @@ export const GalleryManager: React.FC = () => {
     const galleryId = params.get("galleryId");
 
     if (galleryId && !currentGallery) {
-      const numericId = parseInt(galleryId, 10);
-      if (!isNaN(numericId)) {
-        handleSelectGallery(numericId);
-      }
+      handleSelectGallery(galleryId);
     }
   }, []);
 
@@ -78,7 +76,7 @@ export const GalleryManager: React.FC = () => {
     }
   }, [currentGallery?.id]);
 
-  const handleSelectGallery = async (galleryId: number) => {
+  const handleSelectGallery = async (galleryId: string) => {
     if (!user?.email) return;
 
     if (hasUnsavedChanges) {
@@ -97,12 +95,12 @@ export const GalleryManager: React.FC = () => {
     }
   };
 
-  const switchToGallery = async (galleryId: number) => {
+  const switchToGallery = async (galleryId: string) => {
     if (!user?.email) return;
 
     setIsLoading(true);
     try {
-      const data = await galleryAPI.getGallery(galleryId, user.email);
+      const data = await galleryAPI.getGallery(galleryId);
       setCurrentGallery(data);
     } catch (error) {
       console.error("Error loading gallery:", error);
@@ -112,15 +110,11 @@ export const GalleryManager: React.FC = () => {
     }
   };
 
-  const handleCreateGallery = async (galleryData: Gallery) => {
+  const handleCreateGallery = async (galleryData: Partial<Gallery>) => {
     if (!user?.email) return;
 
-    galleryData.user_id = user.email;
     try {
-      const savedGallery = await galleryAPI.createGallery(
-        galleryData,
-        user.email
-      );
+      const savedGallery = await galleryAPI.createGallery(galleryData);
       setGalleries([savedGallery, ...galleries]);
       setCurrentGallery(savedGallery);
       setIsCreateModalOpen(false);
@@ -140,11 +134,13 @@ export const GalleryManager: React.FC = () => {
         created_at: undefined,
         updated_at: undefined,
       };
-      const updatedGallery = await galleryAPI.updateGallery(
-        currentGallery.id,
-        sanitizedUpdates,
-        user.email
-      );
+      
+      // Need to merge with current gallery to have a complete gallery object
+      const updatedGallery = await galleryAPI.updateGallery({
+        ...currentGallery,
+        ...sanitizedUpdates,
+      });
+      
       setGalleries(
         galleries.map((g) => (g.id === updatedGallery.id ? updatedGallery : g))
       );
@@ -157,11 +153,11 @@ export const GalleryManager: React.FC = () => {
     }
   };
 
-  const handleDeleteGallery = async (galleryId: number) => {
+  const handleDeleteGallery = async (galleryId: string) => {
     if (!user?.email) return;
 
     try {
-      await galleryAPI.deleteGallery(galleryId, user.email);
+      await galleryAPI.deleteGallery(galleryId);
       setGalleries(galleries.filter((g) => g.id !== galleryId));
       if (currentGallery?.id === galleryId) {
         setCurrentGallery(null);
@@ -173,7 +169,7 @@ export const GalleryManager: React.FC = () => {
     }
   };
 
-  const handleSyncGallery = async (galleryId: number) => {
+  const handleSyncGallery = async (galleryId: string) => {
     if (!user?.email) return;
 
     try {
@@ -182,7 +178,9 @@ export const GalleryManager: React.FC = () => {
       if (!gallery?.config.url) return;
 
       const remoteGallery = await galleryAPI.syncGallery(gallery.config.url);
-      await handleUpdateGallery({
+      
+      // Update the existing gallery with the synced data
+      const updatedGallery = await galleryAPI.updateGallery({
         ...remoteGallery,
         id: galleryId,
         config: {
@@ -193,6 +191,11 @@ export const GalleryManager: React.FC = () => {
           },
         },
       });
+
+      setGalleries(galleries.map(g => g.id === galleryId ? updatedGallery : g));
+      if (currentGallery?.id === galleryId) {
+        setCurrentGallery(updatedGallery);
+      }
 
       messageApi.success("Gallery synced successfully");
     } catch (error) {
@@ -233,7 +236,7 @@ export const GalleryManager: React.FC = () => {
           galleries={galleries}
           currentGallery={currentGallery}
           onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
-          onSelectGallery={(gallery) => handleSelectGallery(gallery.id!)}
+          onSelectGallery={(gallery) => handleSelectGallery(gallery.id)}
           onCreateGallery={() => setIsCreateModalOpen(true)}
           onDeleteGallery={handleDeleteGallery}
           onSyncGallery={handleSyncGallery}

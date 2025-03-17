@@ -1,3 +1,4 @@
+
 import React, { useCallback, useEffect, useState, useContext } from "react";
 import { message, Modal } from "antd";
 import { ChevronRight } from "lucide-react";
@@ -17,6 +18,7 @@ export const TeamManager: React.FC = () => {
       const stored = localStorage.getItem("teamSidebar");
       return stored !== null ? JSON.parse(stored) : true;
     }
+    return true;
   });
 
   const { user } = useContext(appContext);
@@ -27,7 +29,7 @@ export const TeamManager: React.FC = () => {
   const fetchGalleries = useGalleryStore((state) => state.fetchGalleries);
   useEffect(() => {
     if (user?.email) {
-      fetchGalleries(user.email);
+      fetchGalleries();
     }
   }, [user?.email, fetchGalleries]);
 
@@ -43,7 +45,7 @@ export const TeamManager: React.FC = () => {
 
     try {
       setIsLoading(true);
-      const data = await teamAPI.listTeams(user.email);
+      const data = await teamAPI.listTeams();
       setTeams(data);
       if (!currentTeam && data.length > 0) {
         setCurrentTeam(data[0]);
@@ -91,7 +93,7 @@ export const TeamManager: React.FC = () => {
     if (!teamId || !user?.email) return;
     setIsLoading(true);
     try {
-      const data = await teamAPI.getTeam(teamId, user.email!);
+      const data = await teamAPI.getTeam();
       setCurrentTeam(data);
       window.history.pushState({}, "", `?teamId=${teamId}`);
     } catch (error) {
@@ -106,7 +108,7 @@ export const TeamManager: React.FC = () => {
     if (!user?.email) return;
 
     try {
-      await teamAPI.deleteTeam(teamId, user.email);
+      await teamAPI.deleteTeam();
       setTeams(teams.filter((t) => t.id !== teamId));
       if (currentTeam?.id === teamId) {
         setCurrentTeam(null);
@@ -133,7 +135,7 @@ export const TeamManager: React.FC = () => {
         updated_at: undefined,
       };
 
-      const savedTeam = await teamAPI.createTeam(sanitizedTeamData, user.email);
+      const savedTeam = await teamAPI.createTeam(sanitizedTeamData);
       messageApi.success(
         `Team ${teamData.id ? "updated" : "created"} successfully`
       );
