@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Plus, AlertTriangle, FileText, Clock, Calendar, ArrowRight, Maximize2, Copy, BookText, ScrollText } from 'lucide-react';
@@ -12,6 +11,7 @@ import { cn } from '@/lib/utils';
 import TestSpecModal from '@/components/TestSpecModal';
 import { api, DataSource, TestCase } from '@/utils/api';
 import { DetailGroup } from '@/components/studio/builder/node-editor/detailgroup';
+import { truncateText } from '@/components/studio/gallery/utils';
 
 interface TestSpecificationsProps {}
 
@@ -25,7 +25,6 @@ const TestSpecifications: React.FC<TestSpecificationsProps> = () => {
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   
-  // Mock test cases (since the API doesn't provide a way to get all test cases)
   const mockTestCases: TestCase[] = [
     {
       id: 'tc1',
@@ -49,19 +48,16 @@ const TestSpecifications: React.FC<TestSpecificationsProps> = () => {
       events: [
         { type: 'DataSourceAccess', description: 'Examining csv file at user_data.csv' },
       ],
-      created_at: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
+      created_at: new Date(Date.now() - 86400000).toISOString(),
     }
   ];
 
-  // Fetch data sources on load
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await api.getDataSources(sessionId);
         setDataSources(response.dataSources);
         
-        // In a real implementation, we would fetch the test cases here
-        // For this demo, we're using mock data
         const testCases = await api.getTestCases(sessionId)
         setTestCases(testCases.testCases);
       } catch (error) {
@@ -93,10 +89,8 @@ const TestSpecifications: React.FC<TestSpecificationsProps> = () => {
         dataSourceIds: data.dataSourceIds,
       });
       
-      // In a real implementation, we would add the new test case to the list
       toast.success('Test case generated successfully');
       
-      // Navigate to the test case detail page
       navigate(`/dashboard/test-case/${result.id}?session_id=${sessionId}`);
     } catch (error) {
       console.error('Failed to generate test case:', error);
