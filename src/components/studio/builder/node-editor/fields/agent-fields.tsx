@@ -1,7 +1,8 @@
 
 import { Form, Input } from "antd";
 import { DetailGroup } from "../detailgroup";
-import { Component, AgentConfig } from "../../../datamodel";
+import { Component, AgentConfig, AssistantAgentConfig } from "../../../datamodel";
+import { isAssistantAgent } from "../../../guards";
 
 interface AgentFieldsProps {
   component: Component<AgentConfig>;
@@ -36,33 +37,57 @@ export const AgentFields = ({ component, onChange, onNavigate }: AgentFieldsProp
         />
       </Form.Item>
 
-      <DetailGroup title="Prompt" defaultOpen={true}>
-        <Form.Item label="System Prompt" name="system_prompt" className="mb-4">
-          <Input.TextArea
-            placeholder="Instructions for the agent"
-            defaultValue={component.config?.system_prompt || ""}
-            rows={4}
-            onChange={(e) => onChange({
-              config: { ...component.config, system_prompt: e.target.value },
-            })}
-          />
-        </Form.Item>
-      </DetailGroup>
+      {isAssistantAgent(component) && (
+        <>
+          <DetailGroup title="Prompt" defaultOpen={true}>
+            <Form.Item label="System Message" name="system_message" className="mb-4">
+              <Input.TextArea
+                placeholder="Instructions for the agent"
+                defaultValue={component.config?.system_message || ""}
+                rows={4}
+                onChange={(e) => onChange({
+                  config: { ...component.config, system_message: e.target.value },
+                })}
+              />
+            </Form.Item>
+          </DetailGroup>
 
-      <DetailGroup title="Advanced" defaultOpen={false}>
-        <Form.Item label="Temperature" name="temperature" className="mb-4">
-          <Input
-            type="number"
-            min={0}
-            max={1}
-            step={0.1}
-            defaultValue={component.config?.temperature || 0.7}
-            onChange={(e) => onChange({
-              config: { ...component.config, temperature: parseFloat(e.target.value) },
-            })}
-          />
-        </Form.Item>
-      </DetailGroup>
+          <DetailGroup title="Advanced" defaultOpen={false}>
+            {component.config.model_client?.config && 'temperature' in component.config.model_client.config && (
+              <Form.Item label="Temperature" name="temperature" className="mb-4">
+                <Input
+                  type="number"
+                  min={0}
+                  max={1}
+                  step={0.1}
+                  defaultValue={
+                    (component.config.model_client.config as any).temperature || 0.7
+                  }
+                  onChange={(e) => {
+                    // Update the model client's temperature if it exists
+                    if (component.config.model_client && component.config.model_client.config) {
+                      const updatedModelClient = {
+                        ...component.config.model_client,
+                        config: {
+                          ...component.config.model_client.config,
+                          temperature: parseFloat(e.target.value)
+                        }
+                      };
+                      
+                      onChange({
+                        config: {
+                          ...component.config,
+                          model_client: updatedModelClient
+                        }
+                      });
+                    }
+                  }}
+                />
+              </Form.Item>
+            )}
+          </DetailGroup>
+        </>
+      )}
     </>
   );
 };
