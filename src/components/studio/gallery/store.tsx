@@ -1,7 +1,7 @@
 
 import { create } from "zustand";
 import { Gallery } from "../datamodel";
-import { galleryAPI } from "./api";
+import { patchedGalleryAPI } from "./mock-api";
 
 interface GalleryState {
   galleries: Gallery[];
@@ -23,31 +23,17 @@ export const useGalleryStore = create<GalleryState>((set, get) => ({
   fetchGalleries: async () => {
     try {
       set({ isLoading: true, error: null });
-      const galleries = await galleryAPI.listGalleries();
+      const galleries = await patchedGalleryAPI.listGalleries();
       
-      if (galleries && Array.isArray(galleries)) {
-        set({
-          galleries,
-          selectedGallery: galleries.length > 0 ? galleries[0] : null,
-          isLoading: false,
-        });
-        console.log("Loaded galleries:", galleries);
-      } else {
-        console.error("Received invalid galleries data:", galleries);
-        set({
-          error: "Invalid gallery data received",
-          isLoading: false,
-          galleries: [],
-          selectedGallery: null,
-        });
-      }
+      set({
+        galleries,
+        selectedGallery: galleries[0] || null,
+        isLoading: false,
+      });
     } catch (error) {
-      console.error("Error fetching galleries:", error);
       set({
         error: error instanceof Error ? error.message : "Failed to fetch galleries",
         isLoading: false,
-        galleries: [],
-        selectedGallery: null,
       });
     }
   },

@@ -75,6 +75,7 @@ const PresetItem: React.FC<PresetItemProps> = ({
   );
 };
 
+// Default components to show when gallery fails to load
 const getDefaultComponents = () => {
   return {
     agents: [
@@ -85,7 +86,7 @@ const getDefaultComponents = () => {
           component_type: "agent",
           config: {
             name: "Research Agent",
-            system_message: "You are a helpful research assistant."
+            system_prompt: "You are a helpful research assistant."
           }
         }
       },
@@ -96,7 +97,7 @@ const getDefaultComponents = () => {
           component_type: "agent",
           config: {
             name: "Writing Agent",
-            system_message: "You are a creative writing assistant."
+            system_prompt: "You are a creative writing assistant."
           }
         }
       },
@@ -107,7 +108,7 @@ const getDefaultComponents = () => {
           component_type: "agent",
           config: {
             name: "Coding Agent",
-            system_message: "You are a helpful coding assistant."
+            system_prompt: "You are a helpful coding assistant."
           }
         }
       }
@@ -183,36 +184,21 @@ const getDefaultComponents = () => {
   };
 };
 
-export const ComponentLibrary: React.FC = () => {
+export const ComponentLibrary: React.FC<LibraryProps> = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isMinimized, setIsMinimized] = useState(false);
   
-  const { selectedGallery, isLoading: galleryLoading, error: galleryError } = useGalleryStore();
+  // Important: Always declare hooks at the top level, never conditionally
+  const defaultGallery = useGalleryStore((state) => state.getSelectedGallery());
+  const galleryLoading = useGalleryStore((state) => state.isLoading);
+  const galleryError = useGalleryStore((state) => state.error);
   
-  // Use selected gallery or default components if not available
-  const componentsData = React.useMemo(() => {
-    if (!selectedGallery || galleryError) {
-      console.log("Using default components");
-      return getDefaultComponents();
-    }
-    
-    try {
-      console.log("Processing gallery:", selectedGallery);
-      const components = selectedGallery.components || selectedGallery.config?.components;
-      
-      if (!components) {
-        console.warn("Gallery has no components section, using defaults");
-        return getDefaultComponents();
-      }
-      
-      console.log("Using gallery components:", components);
-      return components;
-    } catch (err) {
-      console.error("Error processing gallery components:", err);
-      return getDefaultComponents();
-    }
-  }, [selectedGallery, galleryError]);
+  // Always compute sections, but use different data sources based on conditions
+  const componentsData = (!defaultGallery || galleryError) 
+    ? getDefaultComponents()
+    : (defaultGallery.config?.components || getDefaultComponents());
   
+  // Move this useMemo out of the conditional rendering path
   const sections = React.useMemo(
     () => [
       {
@@ -237,7 +223,7 @@ export const ComponentLibrary: React.FC = () => {
         title: "Tools",
         type: "tool" as ComponentTypes,
         items: componentsData.tools?.map((tool: any) => ({
-          label: tool.label || tool.config?.name || "Tool",
+          label: tool.label || "Tool",
           config: tool,
         })) || [],
         icon: <Wrench className="w-4 h-4" />,
@@ -275,6 +261,7 @@ export const ComponentLibrary: React.FC = () => {
     );
   }
 
+  // Loading state
   if (galleryLoading) {
     return (
       <Sider

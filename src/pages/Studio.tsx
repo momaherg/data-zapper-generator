@@ -5,10 +5,10 @@ import { TeamBuilder } from "../components/studio/builder/builder";
 import { Loader2, Users } from "lucide-react";
 import { Team } from "../components/studio/datamodel";
 import { useGalleryStore } from "../components/studio/gallery/store";
-import { teamAPI, validationAPI } from "../components/studio/api";
-import { galleryAPI } from "../components/studio/gallery/api";
+import { teamAPI } from "../components/studio/api";
 import { toast } from "sonner";
 import { useLocation } from "react-router-dom";
+// import { normalizeComponent } from "../components/studio/utils";
 
 const StudioPage = () => {
   const [team, setTeam] = useState<Team | null>(null);
@@ -22,11 +22,8 @@ const StudioPage = () => {
     const sessionId = queryParams.get("session_id");
     
     if (sessionId) {
-      console.log("Setting session ID:", sessionId);
-      // Set the session ID for all APIs
+      // Set the session ID for the API
       teamAPI.setSessionId(sessionId);
-      validationAPI.setSessionId(sessionId);
-      galleryAPI.setSessionId(sessionId);
     }
     
     fetchTeam();
@@ -36,10 +33,14 @@ const StudioPage = () => {
 
   const fetchTeam = async () => {
     try {
-      setIsLoading(true);
       const data = await teamAPI.getTeam();
-      console.log("Loaded team:", data);
-      setTeam(data);
+      // Normalize the component structure to match what our UI expects
+      const normalizedTeam = {
+        ...data,
+        component: data
+      };
+      console.log("Normalized team:", normalizedTeam);
+      setTeam(normalizedTeam);
     } catch (error) {
       console.error("Error fetching team:", error);
       toast.error("Failed to load team, using default configuration");

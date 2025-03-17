@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Button, Tooltip } from "antd";
 import {
@@ -11,7 +10,7 @@ import {
   Globe,
   Info,
 } from "lucide-react";
-import type { Gallery } from "../datamodel";
+import type { Gallery } from "../../types/datamodel";
 import { getRelativeTimeString } from "../atoms";
 
 interface GallerySidebarProps {
@@ -21,8 +20,8 @@ interface GallerySidebarProps {
   onToggle: () => void;
   onSelectGallery: (gallery: Gallery) => void;
   onCreateGallery: () => void;
-  onDeleteGallery: (galleryId: string) => void;
-  onSyncGallery: (galleryId: string) => void;
+  onDeleteGallery: (galleryId: number) => void;
+  onSyncGallery: (galleryId: number) => void;
   isLoading?: boolean;
 }
 
@@ -156,7 +155,7 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
                           icon={<RefreshCw className="w-4 h-4" />}
                           onClick={(e) => {
                             e.stopPropagation();
-                            onSyncGallery(gallery.id);
+                            onSyncGallery(gallery.id!);
                           }}
                         />
                       </Tooltip>
@@ -177,7 +176,7 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
                         icon={<Trash2 className="w-4 h-4 text-red-500" />}
                         onClick={(e) => {
                           e.stopPropagation();
-                          onDeleteGallery(gallery.id);
+                          onDeleteGallery(gallery.id!);
                         }}
                       />
                     </Tooltip>

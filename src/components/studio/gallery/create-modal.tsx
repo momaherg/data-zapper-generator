@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from "react";
 import { Modal, Tabs, Input, Button, Alert, Upload } from "antd";
 import { Globe, Upload as UploadIcon, Code } from "lucide-react";
@@ -10,7 +9,7 @@ import { Gallery, GalleryConfig } from "../../types/datamodel";
 interface GalleryCreateModalProps {
   open: boolean;
   onCancel: () => void;
-  onCreateGallery: (gallery: Partial<Gallery>) => void;
+  onCreateGallery: (gallery: Gallery) => void;
 }
 
 export const GalleryCreateModal: React.FC<GalleryCreateModalProps> = ({
@@ -21,7 +20,7 @@ export const GalleryCreateModal: React.FC<GalleryCreateModalProps> = ({
   const [activeTab, setActiveTab] = useState("url");
   const [url, setUrl] = useState("");
   const [jsonContent, setJsonContent] = useState(
-    JSON.stringify(defaultGallery.config, null, 2)
+    JSON.stringify(defaultGallery, null, 2)
   );
   const [error, setError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -35,8 +34,6 @@ export const GalleryCreateModal: React.FC<GalleryCreateModalProps> = ({
       const data = (await response.json()) as GalleryConfig;
       // TODO: Validate against Gallery schema
       onCreateGallery({
-        name: data.name || "Imported Gallery",
-        description: data.metadata?.description || "",
         config: data,
       });
       onCancel();
@@ -59,8 +56,6 @@ export const GalleryCreateModal: React.FC<GalleryCreateModalProps> = ({
 
           // TODO: Validate against Gallery schema
           onCreateGallery({
-            name: content.name || "Uploaded Gallery",
-            description: content.metadata?.description || "",
             config: content,
           });
           onCancel();
@@ -79,8 +74,6 @@ export const GalleryCreateModal: React.FC<GalleryCreateModalProps> = ({
       const content = JSON.parse(jsonContent) as GalleryConfig;
       // TODO: Validate against Gallery schema
       onCreateGallery({
-        name: content.name || "Pasted Gallery",
-        description: content.metadata?.description || "",
         config: content,
       });
       onCancel();
