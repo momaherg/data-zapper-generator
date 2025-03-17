@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useOutletContext, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Copy, Download, Share, Calendar, Clock } from 'lucide-react';
@@ -11,24 +10,27 @@ import { toast } from 'sonner';
 import ChatInterface from '@/components/ChatInterface';
 import { cn } from '@/lib/utils';
 import { api, TestCase } from '@/utils/api';
-
 interface TestCaseDetailProps {}
-
 const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
-  const { id } = useParams<{ id: string }>();
-  const { sessionId } = useOutletContext<{ sessionId: string }>();
+  const {
+    id
+  } = useParams<{
+    id: string;
+  }>();
+  const {
+    sessionId
+  } = useOutletContext<{
+    sessionId: string;
+  }>();
   const navigate = useNavigate();
   const [testCase, setTestCase] = useState<TestCase | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
   useEffect(() => {
     const fetchTestCase = async () => {
       if (!id || !sessionId) return;
-      
       setIsLoading(true);
-      
       try {
-        const testCases = await api.getTestCase(sessionId, id)
+        const testCases = await api.getTestCase(sessionId, id);
         setTestCase(testCases);
       } catch (error) {
         console.error('Failed to fetch test case:', error);
@@ -37,31 +39,26 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
         setIsLoading(false);
       }
     };
-
     fetchTestCase();
   }, [id, sessionId]);
-
   const handleCopyTestCase = () => {
     if (!testCase) return;
-    
     navigator.clipboard.writeText(testCase.test_case_text);
     toast.success('Test case copied to clipboard');
   };
-
   const handleDownloadTestCase = () => {
     if (!testCase) return;
-    
     const element = document.createElement('a');
-    const file = new Blob([testCase.test_case_text], { type: 'text/plain' });
+    const file = new Blob([testCase.test_case_text], {
+      type: 'text/plain'
+    });
     element.href = URL.createObjectURL(file);
     element.download = `test-case-${testCase.id}.txt`;
     document.body.appendChild(element);
     element.click();
     document.body.removeChild(element);
-    
     toast.success('Test case downloaded');
   };
-
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', {
@@ -69,21 +66,16 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
       day: 'numeric',
       year: 'numeric',
       hour: '2-digit',
-      minute: '2-digit',
+      minute: '2-digit'
     }).format(date);
   };
-
   if (isLoading) {
-    return (
-      <div className="flex justify-center items-center h-screen">
+    return <div className="flex justify-center items-center h-screen">
         <div className="animate-pulse">Loading test case...</div>
-      </div>
-    );
+      </div>;
   }
-
   if (!testCase) {
-    return (
-      <div className="container py-8">
+    return <div className="container py-8">
         <div className="text-center">
           <h2 className="text-xl font-medium mb-2">Test case not found</h2>
           <p className="text-muted-foreground mb-4">
@@ -94,21 +86,13 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
             Back to Test Specifications
           </Button>
         </div>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="flex h-screen overflow-hidden">
+  return <div className="flex h-screen overflow-hidden">
       <div className="flex-1 overflow-auto">
         <div className="container py-8 animate-fade-up">
           <div className="flex items-center mb-4">
-            <Button 
-              variant="ghost" 
-              size="sm" 
-              onClick={() => navigate(`/dashboard/specs?session_id=${sessionId}`)}
-              className="mr-2"
-            >
+            <Button variant="ghost" size="sm" onClick={() => navigate(`/dashboard/specs?session_id=${sessionId}`)} className="mr-2">
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back
             </Button>
@@ -121,20 +105,14 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
                 {formatDate(testCase.created_at)}
               </Badge>
               
-              <Button variant="outline" size="sm" onClick={handleCopyTestCase} className="gap-1.5">
-                <Copy className="h-4 w-4" />
-                Copy
-              </Button>
+              
               
               <Button variant="outline" size="sm" onClick={handleDownloadTestCase} className="gap-1.5">
                 <Download className="h-4 w-4" />
                 Download
               </Button>
               
-              <Button variant="outline" size="sm" className="gap-1.5">
-                <Share className="h-4 w-4" />
-                Share
-              </Button>
+              
             </div>
           </div>
           
@@ -164,14 +142,12 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
                     </p>
                   </div>
                   
-                  {testCase.notes && (
-                    <div>
+                  {testCase.notes && <div>
                       <h3 className="text-sm font-medium">Notes</h3>
                       <p className="text-sm text-muted-foreground">
                         {testCase.notes}
                       </p>
-                    </div>
-                  )}
+                    </div>}
                 </div>
               </div>
             </CardContent>
@@ -183,11 +159,7 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
             <CardContent className="p-0">
               <ScrollArea className="h-[calc(100vh-380px)] w-full">
                 <div className="p-6">
-                  <pre className={cn(
-                    "text-sm font-mono whitespace-pre-wrap",
-                    "bg-muted/30 rounded p-4",
-                    "overflow-x-auto"
-                  )}>
+                  <pre className={cn("text-sm font-mono whitespace-pre-wrap", "bg-muted/30 rounded p-4", "overflow-x-auto")}>
                     {testCase.test_case_text}
                   </pre>
                 </div>
@@ -198,14 +170,8 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
       </div>
       
       <div className="w-80 border-l border-border flex flex-col animate-slide-in-right">
-        <ChatInterface 
-          events={testCase.events}
-          sessionId={sessionId}
-          testCaseId={testCase.id}
-        />
+        <ChatInterface events={testCase.events} sessionId={sessionId} testCaseId={testCase.id} />
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default TestCaseDetail;
