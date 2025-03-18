@@ -1,5 +1,5 @@
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Upload, Settings, FileText, LogOut, ChevronLeft, ChevronRight, Users } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -20,7 +20,7 @@ const Navigation: React.FC<NavigationProps> = ({
 }) => {
   const location = useLocation();
   
-  const navItems = [
+  const navItems = useMemo(() => [
     {
       name: 'Upload Data',
       path: '/upload',
@@ -41,7 +41,12 @@ const Navigation: React.FC<NavigationProps> = ({
       path: '/studio',
       icon: Users
     }
-  ];
+  ], []);
+
+  // Memoize the session query parameter to prevent re-renders
+  const sessionParam = useMemo(() => 
+    sessionId ? `?session_id=${sessionId}` : '', 
+  [sessionId]);
   
   return (
     <div className={cn(
@@ -67,7 +72,7 @@ const Navigation: React.FC<NavigationProps> = ({
       <div className="space-y-1 flex-1">
         {navItems.map(item => {
           // Create the URL once to avoid unnecessary re-renders
-          const to = `/dashboard${item.path}${sessionId ? `?session_id=${sessionId}` : ''}`;
+          const to = `/dashboard${item.path}${sessionParam}`;
           
           return (
             <NavLink

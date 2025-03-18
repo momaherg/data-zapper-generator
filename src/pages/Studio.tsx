@@ -1,6 +1,6 @@
 
 import * as React from "react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { TeamBuilder } from "../components/studio/builder/builder";
 import { Loader2, Users } from "lucide-react";
 import { Team } from "../components/studio/datamodel";
@@ -14,8 +14,14 @@ const StudioPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const fetchGalleries = useGalleryStore((state) => state.fetchGalleries);
   const location = useLocation();
+  const initializationRef = useRef(false);
 
   useEffect(() => {
+    // Skip if we've already initialized once to prevent double fetching
+    if (initializationRef.current) return;
+    
+    initializationRef.current = true;
+    
     // Get session_id from query parameters
     const queryParams = new URLSearchParams(location.search);
     const sessionId = queryParams.get("session_id");
@@ -39,7 +45,12 @@ const StudioPage = () => {
         ...data,
         component: data
       };
-      console.log("Normalized team:", normalizedTeam);
+      
+      // Only log in development environment
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Normalized team:", normalizedTeam);
+      }
+      
       setTeam(normalizedTeam);
     } catch (error) {
       console.error("Error fetching team:", error);
