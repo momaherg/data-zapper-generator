@@ -1,6 +1,5 @@
-
 import React from 'react';
-import { AlertCircle, ChevronDown, ChevronUp, Wrench } from 'lucide-react';
+import { AlertCircle, ChevronDown, ChevronUp, Wrench, Terminal, Code } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
@@ -70,11 +69,45 @@ const getToolNames = (content: any): string[] => {
     .map(item => item.name);
 };
 
+// Check if a message contains a test specification
+const hasTestSpecification = (message: Message): boolean => {
+  if (!message || typeof message.content !== 'string') return false;
+  
+  const testSpecMarkers = {
+    start: '<test_spec_start>',
+    end: '<test_spec_end>'
+  };
+  
+  return message.content.includes(testSpecMarkers.start) && 
+         message.content.includes(testSpecMarkers.end);
+};
+
+// Render a test specification placeholder component
+const renderTestSpecPlaceholder = () => {
+  return (
+    <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+      <div className="flex items-center gap-2 mb-2 text-primary">
+        <Code className="h-5 w-5" />
+        <span className="font-medium">Writing Test Specification</span>
+      </div>
+      <div className="text-sm text-muted-foreground flex items-center gap-2">
+        <Terminal className="h-4 w-4" />
+        <span>AI agent is generating a detailed test specification...</span>
+      </div>
+    </div>
+  );
+};
+
 const formatMessage = (
   message: Message, 
   isCollapsed: boolean,
   onToggleCollapse: (messageId: string) => void
 ) => {
+  // Check for test specification messages
+  if (hasTestSpecification(message) || ('hasTestSpec' in message && message.hasTestSpec)) {
+    return renderTestSpecPlaceholder();
+  }
+  
   // For ThoughtEvent with tool calls, create a collapsible section
   if (message.type === 'ThoughtEvent') {
     const toolCalls = hasToolCalls(message.content) ? getToolNames(message.content) : [];

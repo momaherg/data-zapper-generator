@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useOutletContext, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Copy, Download, Share, Calendar, Clock } from 'lucide-react';
@@ -29,48 +28,41 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
   const [testCase, setTestCase] = useState<TestCase | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
-  // Extract test case text from events if needed
   const extractTestCaseFromEvents = (events: any[]): string => {
     if (!events || events.length === 0) return '';
     
-    // We need to find the most recent occurrence of the test spec tags
     let testCaseText = '';
     const marker = {
       start: '<test_spec_start>',
       end: '<test_spec_end>'
     };
     
-    // Iterate through events in reverse to find the most recent test case
     for (let i = events.length - 1; i >= 0; i--) {
       const event = events[i];
       
-      // Check if event has content property (enriched event format)
       if ('content' in event && typeof event.content === 'string') {
         const content = event.content;
         const startIdx = content.indexOf(marker.start);
         const endIdx = content.indexOf(marker.end);
         
         if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
-          // Extract text between markers
           testCaseText = content.substring(
             startIdx + marker.start.length,
             endIdx
           ).trim();
-          break; // Found the most recent test case
+          break;
         }
       } else if ('description' in event && typeof event.description === 'string') {
-        // Check in description field for older event format
         const description = event.description;
         const startIdx = description.indexOf(marker.start);
         const endIdx = description.indexOf(marker.end);
         
         if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
-          // Extract text between markers
           testCaseText = description.substring(
             startIdx + marker.start.length,
             endIdx
           ).trim();
-          break; // Found the most recent test case
+          break;
         }
       }
     }
@@ -85,7 +77,6 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
       try {
         const fetchedTestCase = await api.getTestCase(sessionId, id);
         
-        // If the test case doesn't have test_case_text, extract it from events
         if (!fetchedTestCase.test_case_text && fetchedTestCase.events && fetchedTestCase.events.length > 0) {
           const extractedText = extractTestCaseFromEvents(fetchedTestCase.events);
           if (extractedText) {

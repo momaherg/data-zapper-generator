@@ -9,6 +9,7 @@ export interface Message {
   source?: string;
   metadata?: any;
   timestamp: Date;
+  hasTestSpec?: boolean;
 }
 
 export interface ChatInterfaceProps {
