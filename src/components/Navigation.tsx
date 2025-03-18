@@ -65,22 +65,27 @@ const Navigation: React.FC<NavigationProps> = ({
       </div>
       
       <div className="space-y-1 flex-1">
-        {navItems.map(item => (
-          <NavLink
-            key={item.path}
-            to={`/dashboard${item.path}?session_id=${sessionId}`}
-            className={({ isActive }) => cn(
-              "flex items-center gap-3 px-3 py-2 rounded-md transition-colors hover-lift",
-              isActive
-                ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                : "text-sidebar-foreground hover:bg-sidebar-accent/50",
-              isCollapsed && "justify-center"
-            )}
-          >
-            <item.icon size={20} />
-            {!isCollapsed && <span>{item.name}</span>}
-          </NavLink>
-        ))}
+        {navItems.map(item => {
+          // Create the URL once to avoid unnecessary re-renders
+          const to = `/dashboard${item.path}${sessionId ? `?session_id=${sessionId}` : ''}`;
+          
+          return (
+            <NavLink
+              key={item.path}
+              to={to}
+              className={({ isActive }) => cn(
+                "flex items-center gap-3 px-3 py-2 rounded-md transition-colors hover-lift",
+                isActive
+                  ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                  : "text-sidebar-foreground hover:bg-sidebar-accent/50",
+                isCollapsed && "justify-center"
+              )}
+            >
+              <item.icon size={20} />
+              {!isCollapsed && <span>{item.name}</span>}
+            </NavLink>
+          );
+        })}
       </div>
       
       <div className="mt-auto pt-4 border-t border-border">

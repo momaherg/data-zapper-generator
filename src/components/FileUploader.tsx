@@ -1,5 +1,5 @@
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Upload, X, FileArchive, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -75,6 +75,12 @@ const FileUploader: React.FC<FileUploaderProps> = ({
     }
   };
 
+  const handleBrowseClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.click();
+    }
+  };
+
   return (
     <div className="w-full">
       <Card className={cn(
@@ -100,18 +106,18 @@ const FileUploader: React.FC<FileUploaderProps> = ({
                 Drag and drop a ZIP file, or click to browse your files
               </p>
               <Button
-                onClick={() => fileInputRef.current?.click()}
-                className="relative overflow-hidden"
+                onClick={handleBrowseClick}
+                className="relative"
               >
                 Browse Files
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".zip"
-                  onChange={handleChange}
-                  className="absolute inset-0 opacity-0 cursor-pointer"
-                />
               </Button>
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".zip"
+                onChange={handleChange}
+                className="hidden"
+              />
             </>
           ) : (
             <>
