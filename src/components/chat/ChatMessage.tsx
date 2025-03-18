@@ -69,23 +69,34 @@ const getToolNames = (content: any): string[] => {
     .map(item => item.name);
 };
 
-// Check if a message contains a test specification
-const hasTestSpecification = (message: Message): boolean => {
-  if (!message || typeof message.content !== 'string') return false;
-  
+// Process content to replace test spec with placeholder
+const processTestSpecContent = (content: string): { modifiedContent: string, hasTestSpec: boolean } => {
   const testSpecMarkers = {
     start: '<test_spec_start>',
     end: '<test_spec_end>'
   };
   
-  return message.content.includes(testSpecMarkers.start) && 
-         message.content.includes(testSpecMarkers.end);
+  let hasTestSpec = false;
+  let modifiedContent = content;
+  
+  if (content.includes(testSpecMarkers.start) && content.includes(testSpecMarkers.end)) {
+    hasTestSpec = true;
+    
+    // Find the start and end of the test spec
+    const startIdx = content.indexOf(testSpecMarkers.start);
+    const endIdx = content.indexOf(testSpecMarkers.end) + testSpecMarkers.end.length;
+    
+    // Replace the test spec with an empty string to effectively remove it
+    modifiedContent = content.substring(0, startIdx) + content.substring(endIdx);
+  }
+  
+  return { modifiedContent, hasTestSpec };
 };
 
 // Render a test specification placeholder component
 const renderTestSpecPlaceholder = () => {
   return (
-    <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+    <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800 my-3">
       <div className="flex items-center gap-2 mb-2 text-primary">
         <Code className="h-5 w-5" />
         <span className="font-medium">Writing Test Specification</span>
@@ -103,49 +114,68 @@ const formatMessage = (
   isCollapsed: boolean,
   onToggleCollapse: (messageId: string) => void
 ) => {
-  // Check for test specification messages
-  if (hasTestSpecification(message) || ('hasTestSpec' in message && message.hasTestSpec)) {
-    return renderTestSpecPlaceholder();
+  // For messages with string content, check and process test specifications
+  if (typeof message.content === 'string') {
+    const { modifiedContent, hasTestSpec } = processTestSpecContent(message.content);
+    
+    // For ThoughtEvent with tool calls, create a collapsible section
+    if (message.type === 'ThoughtEvent') {
+      const toolCalls = hasToolCalls(message.content) ? getToolNames(message.content) : [];
+      
+      return (
+        <Collapsible 
+          open={!isCollapsed} 
+          className="w-full border border-blue-200 dark:border-blue-800 rounded-md overflow-hidden"
+        >
+          <CollapsibleTrigger 
+            onClick={() => onToggleCollapse(message.id)}
+            className="w-full flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900"
+          >
+            <div className="flex items-center gap-2 text-sm font-medium text-blue-700 dark:text-blue-300">
+              <AlertCircle className="h-4 w-4" />
+              <span>Thought Process</span>
+              
+              {toolCalls.length > 0 && (
+                <div className="flex items-center ml-2 text-yellow-600 dark:text-yellow-400 text-xs">
+                  <Wrench className="h-3 w-3 mr-1" />
+                  <span>Tools: {toolCalls.join(', ')}</span>
+                </div>
+              )}
+            </div>
+            
+            <div>
+              {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
+            </div>
+          </CollapsibleTrigger>
+          
+          <CollapsibleContent className="p-3 bg-blue-50/50 dark:bg-blue-950/50 text-sm">
+            <div className="whitespace-pre-wrap">
+              <ReactMarkdown>{modifiedContent}</ReactMarkdown>
+              {hasTestSpec && renderTestSpecPlaceholder()}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
+      );
+    }
+    
+    // For regular string content with test spec
+    if (hasTestSpec) {
+      return (
+        <div>
+          <ReactMarkdown>{modifiedContent}</ReactMarkdown>
+          {renderTestSpecPlaceholder()}
+        </div>
+      );
+    }
   }
   
-  // For ThoughtEvent with tool calls, create a collapsible section
-  if (message.type === 'ThoughtEvent') {
-    const toolCalls = hasToolCalls(message.content) ? getToolNames(message.content) : [];
-    
+  // Check if message is explicitly marked as having a test spec
+  if (message.hasTestSpec) {
     return (
-      <Collapsible 
-        open={!isCollapsed} 
-        className="w-full border border-blue-200 dark:border-blue-800 rounded-md overflow-hidden"
-      >
-        <CollapsibleTrigger 
-          onClick={() => onToggleCollapse(message.id)}
-          className="w-full flex items-center justify-between p-2 bg-blue-50 dark:bg-blue-950 hover:bg-blue-100 dark:hover:bg-blue-900"
-        >
-          <div className="flex items-center gap-2 text-sm font-medium text-blue-700 dark:text-blue-300">
-            <AlertCircle className="h-4 w-4" />
-            <span>Thought Process</span>
-            
-            {toolCalls.length > 0 && (
-              <div className="flex items-center ml-2 text-yellow-600 dark:text-yellow-400 text-xs">
-                <Wrench className="h-3 w-3 mr-1" />
-                <span>Tools: {toolCalls.join(', ')}</span>
-              </div>
-            )}
-          </div>
-          
-          <div>
-            {isCollapsed ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
-          </div>
-        </CollapsibleTrigger>
-        
-        <CollapsibleContent className="p-3 bg-blue-50/50 dark:bg-blue-950/50 text-sm">
-          <div className="whitespace-pre-wrap">
-            {typeof message.content === 'string' 
-              ? <ReactMarkdown>{message.content}</ReactMarkdown>
-              : JSON.stringify(message.content, null, 2)}
-          </div>
-        </CollapsibleContent>
-      </Collapsible>
+      <div>
+        {typeof message.content === 'string' ? <ReactMarkdown>{message.content}</ReactMarkdown> : null}
+        {renderTestSpecPlaceholder()}
+      </div>
     );
   }
   

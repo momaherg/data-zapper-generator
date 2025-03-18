@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Loader2, Code, Terminal } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -48,7 +47,7 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
     });
     
     if (!isDuplicate) {
-      // Process message to handle test specs
+      // Process message for hasTestSpec flag, but keep the original content
       if (typeof message.content === 'string') {
         const testSpecMarkers = {
           start: '<test_spec_start>',
@@ -57,13 +56,13 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
         
         // Check if message contains test specification
         if (message.content.includes(testSpecMarkers.start) && message.content.includes(testSpecMarkers.end)) {
-          // Create a modified message with a placeholder instead of the actual test spec
-          const modifiedMessage = {
+          // Mark the message as having a test spec, but keep the content intact
+          // The ChatMessage component will handle showing/hiding the test spec portion
+          const messageWithTestSpecFlag = {
             ...message,
-            content: message.content,
             hasTestSpec: true
           };
-          acc.push(modifiedMessage);
+          acc.push(messageWithTestSpecFlag);
           return acc;
         }
       }
