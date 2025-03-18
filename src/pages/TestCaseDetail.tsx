@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useOutletContext, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Copy, Download, Share, Calendar, Clock } from 'lucide-react';
@@ -10,7 +11,9 @@ import { toast } from 'sonner';
 import ChatInterface from '@/components/ChatInterface';
 import { cn } from '@/lib/utils';
 import { api, TestCase } from '@/utils/api';
+
 interface TestCaseDetailProps {}
+
 const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
   const {
     id
@@ -25,13 +28,72 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
   const navigate = useNavigate();
   const [testCase, setTestCase] = useState<TestCase | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  
+  // Extract test case text from events if needed
+  const extractTestCaseFromEvents = (events: any[]): string => {
+    if (!events || events.length === 0) return '';
+    
+    // We need to find the most recent occurrence of the test spec tags
+    let testCaseText = '';
+    const marker = {
+      start: '<test_spec_start>',
+      end: '<test_spec_end>'
+    };
+    
+    // Iterate through events in reverse to find the most recent test case
+    for (let i = events.length - 1; i >= 0; i--) {
+      const event = events[i];
+      
+      // Check if event has content property (enriched event format)
+      if ('content' in event && typeof event.content === 'string') {
+        const content = event.content;
+        const startIdx = content.indexOf(marker.start);
+        const endIdx = content.indexOf(marker.end);
+        
+        if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+          // Extract text between markers
+          testCaseText = content.substring(
+            startIdx + marker.start.length,
+            endIdx
+          ).trim();
+          break; // Found the most recent test case
+        }
+      } else if ('description' in event && typeof event.description === 'string') {
+        // Check in description field for older event format
+        const description = event.description;
+        const startIdx = description.indexOf(marker.start);
+        const endIdx = description.indexOf(marker.end);
+        
+        if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+          // Extract text between markers
+          testCaseText = description.substring(
+            startIdx + marker.start.length,
+            endIdx
+          ).trim();
+          break; // Found the most recent test case
+        }
+      }
+    }
+    
+    return testCaseText;
+  };
+
   useEffect(() => {
     const fetchTestCase = async () => {
       if (!id || !sessionId) return;
       setIsLoading(true);
       try {
-        const testCases = await api.getTestCase(sessionId, id);
-        setTestCase(testCases);
+        const fetchedTestCase = await api.getTestCase(sessionId, id);
+        
+        // If the test case doesn't have test_case_text, extract it from events
+        if (!fetchedTestCase.test_case_text && fetchedTestCase.events && fetchedTestCase.events.length > 0) {
+          const extractedText = extractTestCaseFromEvents(fetchedTestCase.events);
+          if (extractedText) {
+            fetchedTestCase.test_case_text = extractedText;
+          }
+        }
+        
+        setTestCase(fetchedTestCase);
       } catch (error) {
         console.error('Failed to fetch test case:', error);
         toast.error('Failed to load test case');
@@ -41,11 +103,13 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
     };
     fetchTestCase();
   }, [id, sessionId]);
+
   const handleCopyTestCase = () => {
     if (!testCase) return;
     navigator.clipboard.writeText(testCase.test_case_text);
     toast.success('Test case copied to clipboard');
   };
+
   const handleDownloadTestCase = () => {
     if (!testCase) return;
     const element = document.createElement('a');
@@ -59,6 +123,7 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
     document.body.removeChild(element);
     toast.success('Test case downloaded');
   };
+
   const formatDate = (dateString: string) => {
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', {
@@ -69,11 +134,13 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
       minute: '2-digit'
     }).format(date);
   };
+
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen">
         <div className="animate-pulse">Loading test case...</div>
       </div>;
   }
+
   if (!testCase) {
     return <div className="container py-8">
         <div className="text-center">
@@ -88,6 +155,7 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
         </div>
       </div>;
   }
+
   return <div className="flex h-screen overflow-hidden">
       <div className="flex-1 overflow-auto">
         <div className="container py-8 animate-fade-up">
@@ -105,14 +173,15 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
                 {formatDate(testCase.created_at)}
               </Badge>
               
-              
+              <Button variant="outline" size="sm" onClick={handleCopyTestCase} className="gap-1.5">
+                <Copy className="h-4 w-4" />
+                Copy
+              </Button>
               
               <Button variant="outline" size="sm" onClick={handleDownloadTestCase} className="gap-1.5">
                 <Download className="h-4 w-4" />
                 Download
               </Button>
-              
-              
             </div>
           </div>
           
@@ -174,4 +243,5 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
       </div>
     </div>;
 };
+
 export default TestCaseDetail;

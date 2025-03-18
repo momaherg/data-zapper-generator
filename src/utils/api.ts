@@ -1,4 +1,3 @@
-
 // Base URL for API requests
 const API_BASE_URL = 'http://localhost:5000';
 const WS_BASE_URL = 'ws://localhost:5000';
@@ -30,6 +29,10 @@ export interface TestCaseEvent {
   type: string;
   description: string;
   dataSourceId?: string;
+  content?: string;
+  source?: string;
+  timestamp?: string;
+  metadata?: any;
 }
 
 export interface TestCaseGenerationRequest {
@@ -53,6 +56,54 @@ export interface ChatMessage {
   target?: string;
   context?: any[];
 }
+
+// Helper function to extract test case from events
+export const extractTestCaseFromEvents = (events: TestCaseEvent[]): string => {
+  if (!events || events.length === 0) return '';
+  
+  let testCaseText = '';
+  const marker = {
+    start: '<test_spec_start>',
+    end: '<test_spec_end>'
+  };
+  
+  // Iterate through events in reverse to find the most recent test case
+  for (let i = events.length - 1; i >= 0; i--) {
+    const event = events[i];
+    
+    // Check if event has content property
+    if (event.content && typeof event.content === 'string') {
+      const content = event.content;
+      const startIdx = content.indexOf(marker.start);
+      const endIdx = content.indexOf(marker.end);
+      
+      if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+        // Extract text between markers
+        testCaseText = content.substring(
+          startIdx + marker.start.length,
+          endIdx
+        ).trim();
+        break; // Found the most recent test case
+      }
+    } else if (event.description && typeof event.description === 'string') {
+      // Check in description field
+      const description = event.description;
+      const startIdx = description.indexOf(marker.start);
+      const endIdx = description.indexOf(marker.end);
+      
+      if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+        // Extract text between markers
+        testCaseText = description.substring(
+          startIdx + marker.start.length,
+          endIdx
+        ).trim();
+        break; // Found the most recent test case
+      }
+    }
+  }
+  
+  return testCaseText;
+};
 
 // Helper function to add session_id parameter to URLs
 const withSession = (url: string, sessionId: string) => {
@@ -315,7 +366,7 @@ export const api = {
   },
 
   // Generate a test case
-  async generateTestCase(sessionId: string, request: TestCaseGenerationRequest): Promise<{ id: string; testCase: string; events: TestCaseEvent[] }> {
+  async generateTestCase(sessionId: string, request: TestCaseGenerationRequest): Promise<{ id: string; events: TestCaseEvent[] }> {
     const response = await fetch(withSession(`${API_BASE_URL}/api/test-cases/generate`, sessionId), {
       method: 'POST',
       headers: {
@@ -339,7 +390,14 @@ export const api = {
       throw new Error(`Failed to fetch test case: ${response.statusText}`);
     }
     
-    return response.json();
+    const testCaseData = await response.json();
+    
+    // If test_case_text is not provided, extract it from events
+    if (!testCaseData.test_case_text && testCaseData.events && testCaseData.events.length > 0) {
+      testCaseData.test_case_text = extractTestCaseFromEvents(testCaseData.events);
+    }
+    
+    return testCaseData;
   },
   
   // Delete all session data
