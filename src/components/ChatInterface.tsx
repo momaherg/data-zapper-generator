@@ -18,6 +18,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [collapsedStates, setCollapsedStates] = useState<Record<string, boolean>>({});
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [initialMessages, setInitialMessages] = useState<Message[]>([]);
+  // Track whether user has manually selected a test spec
+  const [userSelectedTestSpec, setUserSelectedTestSpec] = useState(false);
   
   // Process initial events
   useEffect(() => {
@@ -143,15 +145,25 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }));
   };
 
-  const handleTestSpecFound = (testSpec: string) => {
-    if (onTestSpecUpdated) {
+  const handleTestSpecFound = (testSpec: string, options?: { isAutomatic?: boolean }) => {
+    if (onTestSpecUpdated && (!userSelectedTestSpec || !options?.isAutomatic)) {
       onTestSpecUpdated(testSpec);
+      
+      // If this is an automatic update (not from user click), track it
+      if (options?.isAutomatic) {
+        setUserSelectedTestSpec(false);
+      }
     }
   };
 
-  const handleTestSpecClick = (testSpec: string) => {
+  const handleTestSpecClick = (testSpec: string, options?: { isUserSelected?: boolean }) => {
     if (onTestSpecUpdated) {
       onTestSpecUpdated(testSpec);
+      
+      // Mark that the user has manually selected a test spec
+      if (options?.isUserSelected) {
+        setUserSelectedTestSpec(true);
+      }
     }
   };
 

@@ -49,8 +49,9 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
             endIdx
           ).trim();
           
-          // Notify parent component about the test spec
-          onTestSpecFound(testSpecContent);
+          // Notify parent component about the latest test spec
+          // Note: We're passing an additional parameter indicating this is an automatic update
+          onTestSpecFound(testSpecContent, { isAutomatic: true });
           break;
         }
       }
@@ -76,7 +77,8 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
           endIdx
         ).trim();
         
-        onTestSpecClick(testSpecContent);
+        // When a user clicks, we'll pass the content with a flag indicating it was manually selected
+        onTestSpecClick(testSpecContent, { isUserSelected: true });
       }
     }
   };
