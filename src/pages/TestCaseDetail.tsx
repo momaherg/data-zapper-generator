@@ -37,7 +37,6 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
       end: '<test_spec_end>'
     };
     
-    // Iterate through all events to find the last occurrence of test spec markers
     for (let i = events.length - 1; i >= 0; i--) {
       const event = events[i];
       
@@ -95,6 +94,18 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
     };
     fetchTestCase();
   }, [id, sessionId]);
+
+  const handleTestSpecUpdated = (testSpec: string) => {
+    if (testCase && testSpec) {
+      setTestCase(prevTestCase => {
+        if (!prevTestCase) return null;
+        return {
+          ...prevTestCase,
+          test_case_text: testSpec
+        };
+      });
+    }
+  };
 
   const handleCopyTestCase = () => {
     if (!testCase) return;
@@ -231,7 +242,12 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
       </div>
       
       <div className="w-80 border-l border-border flex flex-col animate-slide-in-right">
-        <ChatInterface events={testCase.events} sessionId={sessionId} testCaseId={testCase.id} />
+        <ChatInterface 
+          events={testCase.events} 
+          sessionId={sessionId} 
+          testCaseId={testCase.id}
+          onTestSpecUpdated={handleTestSpecUpdated}
+        />
       </div>
     </div>;
 };
