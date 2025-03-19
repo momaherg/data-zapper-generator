@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useOutletContext, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Copy, Download, Share, Calendar, Clock } from 'lucide-react';
@@ -161,7 +162,7 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
             <div className="flex items-center gap-2">
               <Badge variant="outline" className="flex gap-1.5 items-center">
                 <Calendar className="h-3 w-3" />
-                {formatDate(testCase.created_at)}
+                {testCase && formatDate(testCase.created_at)}
               </Badge>
               
               <Button variant="outline" size="sm" onClick={handleCopyTestCase} className="gap-1.5">
@@ -180,14 +181,14 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
             <CardContent className="p-6">
               <div className="space-y-4">
                 <div>
-                  <h2 className="text-2xl font-semibold tracking-tight">{testCase.requirement}</h2>
+                  <h2 className="text-2xl font-semibold tracking-tight">{testCase?.requirement}</h2>
                   <div className="flex items-center gap-2 mt-2 text-sm text-muted-foreground">
                     <Badge className="bg-primary/10 text-primary hover:bg-primary/20 border-transparent">
                       Test Case
                     </Badge>
                     <span className="flex items-center gap-1">
                       <Clock className="h-3 w-3" />
-                      {testCase.events.length} events
+                      {testCase?.events.length} events
                     </span>
                   </div>
                 </div>
@@ -198,14 +199,14 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
                   <div>
                     <h3 className="text-sm font-medium">Format</h3>
                     <p className="text-sm text-muted-foreground">
-                      {testCase.format}
+                      {testCase?.format}
                     </p>
                   </div>
                   
-                  {testCase.notes && <div>
+                  {testCase?.notes && <div>
                       <h3 className="text-sm font-medium">Notes</h3>
                       <p className="text-sm text-muted-foreground">
-                        {testCase.notes}
+                        {testCase?.notes}
                       </p>
                     </div>}
                 </div>
@@ -220,7 +221,7 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
               <ScrollArea className="h-[calc(100vh-380px)] w-full">
                 <div className="p-6">
                   <pre className={cn("text-sm font-mono whitespace-pre-wrap", "bg-muted/30 rounded p-4", "overflow-x-auto")}>
-                    {testCase.test_case_text}
+                    {testCase?.test_case_text}
                   </pre>
                 </div>
               </ScrollArea>
@@ -230,7 +231,7 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
       </div>
       
       <div className="w-80 border-l border-border flex flex-col animate-slide-in-right">
-        <ChatInterface events={testCase.events} sessionId={sessionId} testCaseId={testCase.id} />
+        {testCase && <ChatInterface events={testCase.events} sessionId={sessionId} testCaseId={testCase.id} />}
       </div>
     </div>;
 };

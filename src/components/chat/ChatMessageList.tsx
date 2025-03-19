@@ -47,7 +47,7 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
     });
     
     if (!isDuplicate) {
-      // Process message for hasTestSpec flag, but keep the original content
+      // Process message for hasTestSpec flag
       if (typeof message.content === 'string') {
         const testSpecMarkers = {
           start: '<test_spec_start>',
@@ -57,7 +57,6 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
         // Check if message contains test specification
         if (message.content.includes(testSpecMarkers.start) && message.content.includes(testSpecMarkers.end)) {
           // Mark the message as having a test spec, but keep the content intact
-          // The ChatMessage component will handle showing/hiding the test spec portion
           const messageWithTestSpecFlag = {
             ...message,
             hasTestSpec: true

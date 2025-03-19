@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { AlertCircle, ChevronDown, ChevronUp, Wrench, Terminal, Code } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -49,6 +50,18 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   );
 };
 
+// Helper to detect if content has a test specification
+const hasTestSpec = (content: string): boolean => {
+  if (!content) return false;
+  
+  const testSpecMarkers = {
+    start: '<test_spec_start>',
+    end: '<test_spec_end>'
+  };
+  
+  return content.includes(testSpecMarkers.start) && content.includes(testSpecMarkers.end);
+};
+
 // Helper to detect if a message has tool calls
 const hasToolCalls = (content: any): boolean => {
   if (!content) return false;
@@ -69,28 +82,32 @@ const getToolNames = (content: any): string[] => {
     .map(item => item.name);
 };
 
-// Process content to replace test spec with placeholder
-const processTestSpecContent = (content: string): { modifiedContent: string, hasTestSpec: boolean } => {
+// Process content to extract test spec and separate it from the rest of the content
+const processTestSpecContent = (content: string): { modifiedContent: string, testSpec: string | null } => {
   const testSpecMarkers = {
     start: '<test_spec_start>',
     end: '<test_spec_end>'
   };
   
-  let hasTestSpec = false;
+  let testSpec: string | null = null;
   let modifiedContent = content;
   
   if (content.includes(testSpecMarkers.start) && content.includes(testSpecMarkers.end)) {
-    hasTestSpec = true;
-    
     // Find the start and end of the test spec
     const startIdx = content.indexOf(testSpecMarkers.start);
     const endIdx = content.indexOf(testSpecMarkers.end) + testSpecMarkers.end.length;
+    
+    // Extract the test spec
+    testSpec = content.substring(
+      startIdx + testSpecMarkers.start.length,
+      content.indexOf(testSpecMarkers.end)
+    ).trim();
     
     // Replace the test spec with an empty string to effectively remove it
     modifiedContent = content.substring(0, startIdx) + content.substring(endIdx);
   }
   
-  return { modifiedContent, hasTestSpec };
+  return { modifiedContent, testSpec };
 };
 
 // Render a test specification placeholder component
@@ -116,7 +133,23 @@ const formatMessage = (
 ) => {
   // For messages with string content, check and process test specifications
   if (typeof message.content === 'string') {
-    const { modifiedContent, hasTestSpec } = processTestSpecContent(message.content);
+    let modifiedContent = message.content;
+    let hasTestSpecSection = false;
+    let testSpec: string | null = null;
+    
+    // Only process for test specs if it's not a user message
+    if (!message.isUser) {
+      const processed = processTestSpecContent(message.content);
+      modifiedContent = processed.modifiedContent;
+      testSpec = processed.testSpec;
+      hasTestSpecSection = testSpec !== null;
+      
+      // Update the message's content to include the test spec information 
+      // so it can be extracted later if needed
+      if (hasTestSpecSection && message.id && !message.hasTestSpec) {
+        message.hasTestSpec = true;
+      }
+    }
     
     // For ThoughtEvent with tool calls, create a collapsible section
     if (message.type === 'ThoughtEvent') {
@@ -151,7 +184,7 @@ const formatMessage = (
           <CollapsibleContent className="p-3 bg-blue-50/50 dark:bg-blue-950/50 text-sm">
             <div className="whitespace-pre-wrap">
               <ReactMarkdown>{modifiedContent}</ReactMarkdown>
-              {hasTestSpec && renderTestSpecPlaceholder()}
+              {hasTestSpecSection && renderTestSpecPlaceholder()}
             </div>
           </CollapsibleContent>
         </Collapsible>
@@ -159,7 +192,7 @@ const formatMessage = (
     }
     
     // For regular string content with test spec
-    if (hasTestSpec) {
+    if (hasTestSpecSection) {
       return (
         <div>
           <ReactMarkdown>{modifiedContent}</ReactMarkdown>
