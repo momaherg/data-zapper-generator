@@ -67,38 +67,60 @@ const getToolNames = (content: any): string[] => {
     .map(item => item.name);
 };
 
-const processTestSpecContent = (content: string): { modifiedContent: string, hasTestSpec: boolean } => {
+const processTestSpecContent = (content: string): { modifiedContent: string, testSpecs: string[] } => {
   const testSpecMarkers = {
     start: '<test_spec_start>',
     end: '<test_spec_end>'
   };
   
-  let hasTestSpec = false;
   let modifiedContent = content;
+  const testSpecs: string[] = [];
   
-  if (content.includes(testSpecMarkers.start) && content.includes(testSpecMarkers.end)) {
-    hasTestSpec = true;
+  let startIdx = content.indexOf(testSpecMarkers.start);
+  let endIdx = content.indexOf(testSpecMarkers.end, startIdx);
+  
+  while (startIdx !== -1 && endIdx !== -1) {
+    const testSpec = content.substring(
+      startIdx + testSpecMarkers.start.length,
+      endIdx
+    ).trim();
     
-    const startIdx = content.lastIndexOf(testSpecMarkers.start);
-    const endIdx = content.lastIndexOf(testSpecMarkers.end) + testSpecMarkers.end.length;
+    testSpecs.push(testSpec);
     
-    modifiedContent = content.substring(0, startIdx) + content.substring(endIdx);
+    startIdx = content.indexOf(testSpecMarkers.start, endIdx);
+    if (startIdx !== -1) {
+      endIdx = content.indexOf(testSpecMarkers.end, startIdx);
+    } else {
+      break;
+    }
+  }
+
+  if (testSpecs.length > 0) {
+    let processedContent = '';
+    let remainingContent = content;
+    
+    for (let i = 0; i < testSpecs.length; i++) {
+      const currentStartIdx = remainingContent.indexOf(testSpecMarkers.start);
+      const currentEndIdx = remainingContent.indexOf(testSpecMarkers.end) + testSpecMarkers.end.length;
+      
+      processedContent += remainingContent.substring(0, currentStartIdx);
+      
+      processedContent += '{{TEST_SPEC_PLACEHOLDER_' + i + '}}';
+      
+      remainingContent = remainingContent.substring(currentEndIdx);
+    }
+    
+    modifiedContent = processedContent;
   }
   
-  return { modifiedContent, hasTestSpec };
+  return { modifiedContent, testSpecs };
 };
 
 const renderTestSpecPlaceholder = () => {
   return (
-    <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800 my-3">
-      <div className="flex items-center gap-2 mb-2 text-primary">
-        <Code className="h-5 w-5" />
-        <span className="font-medium">Writing Test Specification</span>
-      </div>
-      <div className="text-sm text-muted-foreground flex items-center gap-2">
-        <Terminal className="h-4 w-4" />
-        <span>AI agent is generating a detailed test specification...</span>
-      </div>
+    <div className="bg-blue-50 dark:bg-blue-950 py-1 px-2 my-1 rounded inline-flex items-center gap-1 text-xs border border-blue-100 dark:border-blue-900">
+      <Code className="h-3 w-3 text-blue-500 dark:text-blue-400" />
+      <span className="text-blue-700 dark:text-blue-300">Writing Test Specification</span>
     </div>
   );
 };
@@ -109,8 +131,6 @@ const formatMessage = (
   onToggleCollapse: (messageId: string) => void
 ) => {
   if (typeof message.content === 'string') {
-    const { modifiedContent, hasTestSpec } = processTestSpecContent(message.content);
-    
     if (message.type === 'ThoughtEvent') {
       const toolCalls = hasToolCalls(message.content) ? getToolNames(message.content) : [];
       
@@ -142,21 +162,32 @@ const formatMessage = (
           
           <CollapsibleContent className="p-3 bg-blue-50/50 dark:bg-blue-950/50 text-sm">
             <div className="whitespace-pre-wrap">
-              <ReactMarkdown>{modifiedContent}</ReactMarkdown>
-              {hasTestSpec && renderTestSpecPlaceholder()}
+              <ReactMarkdown>{message.content}</ReactMarkdown>
             </div>
           </CollapsibleContent>
         </Collapsible>
       );
     }
     
-    if (hasTestSpec) {
-      return (
-        <div>
-          <ReactMarkdown>{modifiedContent}</ReactMarkdown>
-          {renderTestSpecPlaceholder()}
-        </div>
-      );
+    const { modifiedContent, testSpecs } = processTestSpecContent(message.content);
+    
+    if (testSpecs.length > 0) {
+      const parts = modifiedContent.split(/\{\{TEST_SPEC_PLACEHOLDER_(\d+)\}\}/);
+      
+      if (parts.length > 1) {
+        return (
+          <div>
+            {parts.map((part, index) => {
+              if (index % 2 === 0) {
+                return part ? <ReactMarkdown key={index}>{part}</ReactMarkdown> : null;
+              } 
+              else {
+                return <span key={index}>{renderTestSpecPlaceholder()}</span>;
+              }
+            })}
+          </div>
+        );
+      }
     }
   }
   
