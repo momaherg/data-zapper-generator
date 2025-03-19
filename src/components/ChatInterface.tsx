@@ -56,6 +56,18 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         }
         seenContentMap.set(dedupKey, true);
         
+        // Check if message contains test specification
+        let hasTestSpec = false;
+        if (typeof content === 'string') {
+          const testSpecMarkers = {
+            start: '<test_spec_start>',
+            end: '<test_spec_end>'
+          };
+          if (content.includes(testSpecMarkers.start) && content.includes(testSpecMarkers.end)) {
+            hasTestSpec = true;
+          }
+        }
+        
         processedMessages.push({
           id: `event-${index}-${Date.now()}`,
           content: content,
@@ -64,6 +76,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
           source: enrichedEvent.source,
           metadata: enrichedEvent.metadata || {},
           timestamp: new Date(enrichedEvent.timestamp || Date.now()),
+          hasTestSpec: hasTestSpec
         });
       } else {
         // Handle the simple event format

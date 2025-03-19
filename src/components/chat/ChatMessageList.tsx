@@ -57,6 +57,30 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
     }
   }, [messages, onTestSpecFound]);
 
+  // Handle clicks on test specs in messages
+  const handleMessageTestSpecClick = (messageContent: string) => {
+    if (!onTestSpecClick) return;
+    
+    const testSpecMarkers = {
+      start: '<test_spec_start>',
+      end: '<test_spec_end>'
+    };
+    
+    if (typeof messageContent === 'string') {
+      const startIdx = messageContent.indexOf(testSpecMarkers.start);
+      const endIdx = messageContent.indexOf(testSpecMarkers.end);
+      
+      if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+        const testSpecContent = messageContent.substring(
+          startIdx + testSpecMarkers.start.length,
+          endIdx
+        ).trim();
+        
+        onTestSpecClick(testSpecContent);
+      }
+    }
+  };
+
   // Filter out the message types we want to hide and deduplicate messages
   const dedupedMessages = messages.reduce<Message[]>((acc, message, index) => {
     // Skip certain message types
@@ -120,7 +144,11 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
             message={message}
             collapsedState={collapsedStates[message.id] !== false} // Default to collapsed
             onToggleCollapse={onToggleCollapse}
-            onTestSpecClick={onTestSpecClick}
+            onTestSpecClick={() => {
+              if (typeof message.content === 'string') {
+                handleMessageTestSpecClick(message.content);
+              }
+            }}
           />
         ))}
         
