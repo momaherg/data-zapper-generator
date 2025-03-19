@@ -1,3 +1,4 @@
+
 // Base URL for API requests
 const API_BASE_URL = 'http://localhost:5000';
 const WS_BASE_URL = 'ws://localhost:5000';
@@ -74,11 +75,11 @@ export const extractTestCaseFromEvents = (events: TestCaseEvent[]): string => {
     // Check if event has content property
     if (event.content && typeof event.content === 'string') {
       const content = event.content;
-      const startIdx = content.indexOf(marker.start);
-      const endIdx = content.indexOf(marker.end);
+      const startIdx = content.lastIndexOf(marker.start);
+      const endIdx = content.lastIndexOf(marker.end);
       
       if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
-        // Extract text between markers
+        // Extract text between markers using lastIndexOf to get the last occurrence
         testCaseText = content.substring(
           startIdx + marker.start.length,
           endIdx
@@ -88,11 +89,11 @@ export const extractTestCaseFromEvents = (events: TestCaseEvent[]): string => {
     } else if (event.description && typeof event.description === 'string') {
       // Check in description field
       const description = event.description;
-      const startIdx = description.indexOf(marker.start);
-      const endIdx = description.indexOf(marker.end);
+      const startIdx = description.lastIndexOf(marker.start);
+      const endIdx = description.lastIndexOf(marker.end);
       
       if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
-        // Extract text between markers
+        // Extract text between markers using lastIndexOf to get the last occurrence
         testCaseText = description.substring(
           startIdx + marker.start.length,
           endIdx
