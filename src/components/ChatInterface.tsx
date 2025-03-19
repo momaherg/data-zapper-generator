@@ -136,6 +136,12 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }
   };
 
+  const handleTestSpecClick = (testSpec: string) => {
+    if (onTestSpecUpdated) {
+      onTestSpecUpdated(testSpec);
+    }
+  };
+
   return (
     <div className="flex flex-col h-full overflow-hidden">
       <ChatHeader 
@@ -150,6 +156,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         onToggleCollapse={toggleCollapse}
         scrollAreaRef={scrollAreaRef}
         onTestSpecFound={handleTestSpecFound}
+        onTestSpecClick={handleTestSpecClick}
       />
       
       <ConnectionAlert isConnected={isConnected} />

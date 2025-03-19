@@ -9,12 +9,14 @@ interface ChatMessageProps {
   message: Message;
   collapsedState: boolean;
   onToggleCollapse: (messageId: string) => void;
+  onTestSpecClick?: (testSpec: string) => void;
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({
   message,
   collapsedState,
   onToggleCollapse,
+  onTestSpecClick
 }) => {
   return (
     <div
@@ -35,7 +37,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             {message.type}
           </div>
         )}
-        <div>{formatMessage(message, collapsedState, onToggleCollapse)}</div>
+        <div>{formatMessage(message, collapsedState, onToggleCollapse, onTestSpecClick)}</div>
         <div className="text-[10px] opacity-70 mt-1 flex justify-between items-center">
           {message.source && (
             <span className="font-medium">{message.source}</span>
@@ -110,25 +112,29 @@ const processTestSpecContent = (content: string): { modifiedContent: string, tes
       remainingContent = remainingContent.substring(currentEndIdx);
     }
     
-    modifiedContent = processedContent;
+    modifiedContent = processedContent + remainingContent;
   }
   
   return { modifiedContent, testSpecs };
 };
 
-const renderTestSpecPlaceholder = () => {
+const renderTestSpecPlaceholder = (testSpec: string, onTestSpecClick?: (testSpec: string) => void) => {
   return (
-    <div className="bg-blue-50 dark:bg-blue-950 py-1 px-2 my-1 rounded inline-flex items-center gap-1 text-xs border border-blue-100 dark:border-blue-900">
+    <button 
+      className="bg-blue-50 dark:bg-blue-950 py-1 px-2 my-1 rounded inline-flex items-center gap-1 text-xs border border-blue-100 dark:border-blue-900 hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors cursor-pointer"
+      onClick={() => onTestSpecClick && onTestSpecClick(testSpec)}
+    >
       <Code className="h-3 w-3 text-blue-500 dark:text-blue-400" />
       <span className="text-blue-700 dark:text-blue-300">Writing Test Specification</span>
-    </div>
+    </button>
   );
 };
 
 const formatMessage = (
   message: Message, 
   isCollapsed: boolean,
-  onToggleCollapse: (messageId: string) => void
+  onToggleCollapse: (messageId: string) => void,
+  onTestSpecClick?: (testSpec: string) => void
 ) => {
   if (typeof message.content === 'string') {
     if (message.type === 'ThoughtEvent') {
@@ -182,7 +188,9 @@ const formatMessage = (
                 return part ? <ReactMarkdown key={index}>{part}</ReactMarkdown> : null;
               } 
               else {
-                return <span key={index}>{renderTestSpecPlaceholder()}</span>;
+                const specIndex = parseInt(parts[index + 1], 10);
+                const testSpec = testSpecs[specIndex] || '';
+                return <span key={index}>{renderTestSpecPlaceholder(testSpec, onTestSpecClick)}</span>;
               }
             })}
           </div>
@@ -192,10 +200,28 @@ const formatMessage = (
   }
   
   if (message.hasTestSpec) {
+    const testSpecMarkers = {
+      start: '<test_spec_start>',
+      end: '<test_spec_end>'
+    };
+    
+    let testSpec = '';
+    if (typeof message.content === 'string') {
+      const startIdx = message.content.indexOf(testSpecMarkers.start);
+      const endIdx = message.content.indexOf(testSpecMarkers.end);
+      
+      if (startIdx !== -1 && endIdx !== -1) {
+        testSpec = message.content.substring(
+          startIdx + testSpecMarkers.start.length,
+          endIdx
+        ).trim();
+      }
+    }
+    
     return (
       <div>
         {typeof message.content === 'string' ? <ReactMarkdown>{message.content}</ReactMarkdown> : null}
-        {renderTestSpecPlaceholder()}
+        {renderTestSpecPlaceholder(testSpec, onTestSpecClick)}
       </div>
     );
   }

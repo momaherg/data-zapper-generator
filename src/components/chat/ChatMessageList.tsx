@@ -12,6 +12,7 @@ interface ChatMessageListProps {
   onToggleCollapse: (messageId: string) => void;
   scrollAreaRef: React.RefObject<HTMLDivElement>;
   onTestSpecFound?: (testSpec: string) => void;
+  onTestSpecClick?: (testSpec: string) => void;
 }
 
 const ChatMessageList: React.FC<ChatMessageListProps> = ({
@@ -20,7 +21,8 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
   collapsedStates,
   onToggleCollapse,
   scrollAreaRef,
-  onTestSpecFound
+  onTestSpecFound,
+  onTestSpecClick
 }) => {
   // Extract test spec from messages when they change
   useEffect(() => {
@@ -118,6 +120,7 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
             message={message}
             collapsedState={collapsedStates[message.id] !== false} // Default to collapsed
             onToggleCollapse={onToggleCollapse}
+            onTestSpecClick={onTestSpecClick}
           />
         ))}
         
