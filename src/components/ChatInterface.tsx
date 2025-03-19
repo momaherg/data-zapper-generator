@@ -1,4 +1,3 @@
-
 import React, { useState, useRef, useEffect } from 'react';
 import { Message, ChatInterfaceProps } from './chat/types';
 import ChatHeader from './chat/ChatHeader';
@@ -20,6 +19,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   const [initialMessages, setInitialMessages] = useState<Message[]>([]);
   // Track whether user has manually selected a test spec
   const [userSelectedTestSpec, setUserSelectedTestSpec] = useState(false);
+  // Track which message ID contains the currently selected test spec
+  const [selectedTestSpecMessageId, setSelectedTestSpecMessageId] = useState<string | undefined>(undefined);
   
   // Process initial events
   useEffect(() => {
@@ -145,24 +146,30 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     }));
   };
 
-  const handleTestSpecFound = (testSpec: string, options?: { isAutomatic?: boolean }) => {
+  const handleTestSpecFound = (testSpec: string, options?: { isAutomatic?: boolean, messageId?: string }) => {
     if (onTestSpecUpdated && (!userSelectedTestSpec || !options?.isAutomatic)) {
       onTestSpecUpdated(testSpec);
       
       // If this is an automatic update (not from user click), track it
       if (options?.isAutomatic) {
         setUserSelectedTestSpec(false);
+        if (options?.messageId) {
+          setSelectedTestSpecMessageId(options.messageId);
+        }
       }
     }
   };
 
-  const handleTestSpecClick = (testSpec: string, options?: { isUserSelected?: boolean }) => {
+  const handleTestSpecClick = (testSpec: string, options?: { isUserSelected?: boolean, messageId?: string }) => {
     if (onTestSpecUpdated) {
       onTestSpecUpdated(testSpec);
       
       // Mark that the user has manually selected a test spec
       if (options?.isUserSelected) {
         setUserSelectedTestSpec(true);
+        if (options?.messageId) {
+          setSelectedTestSpecMessageId(options.messageId);
+        }
       }
     }
   };
@@ -182,6 +189,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         scrollAreaRef={scrollAreaRef}
         onTestSpecFound={handleTestSpecFound}
         onTestSpecClick={handleTestSpecClick}
+        selectedTestSpecMessageId={selectedTestSpecMessageId}
       />
       
       <ConnectionAlert isConnected={isConnected} />

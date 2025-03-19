@@ -20,4 +20,5 @@ export interface ChatInterfaceProps {
 export interface TestSpecUpdateOptions {
   isAutomatic?: boolean;
   isUserSelected?: boolean;
+  messageId?: string;
 }

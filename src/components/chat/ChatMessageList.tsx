@@ -11,8 +11,9 @@ interface ChatMessageListProps {
   collapsedStates: Record<string, boolean>;
   onToggleCollapse: (messageId: string) => void;
   scrollAreaRef: React.RefObject<HTMLDivElement>;
-  onTestSpecFound?: (testSpec: string) => void;
-  onTestSpecClick?: (testSpec: string) => void;
+  onTestSpecFound?: (testSpec: string, options?: { isAutomatic?: boolean, messageId?: string }) => void;
+  onTestSpecClick?: (testSpec: string, options?: { isUserSelected?: boolean, messageId?: string }) => void;
+  selectedTestSpecMessageId?: string;
 }
 
 const ChatMessageList: React.FC<ChatMessageListProps> = ({
@@ -22,7 +23,8 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
   onToggleCollapse,
   scrollAreaRef,
   onTestSpecFound,
-  onTestSpecClick
+  onTestSpecClick,
+  selectedTestSpecMessageId
 }) => {
   // Extract test spec from messages when they change
   useEffect(() => {
@@ -51,7 +53,10 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
           
           // Notify parent component about the latest test spec
           // Note: We're passing an additional parameter indicating this is an automatic update
-          onTestSpecFound(testSpecContent, { isAutomatic: true });
+          onTestSpecFound(testSpecContent, { 
+            isAutomatic: true,
+            messageId: message.id
+          });
           break;
         }
       }
@@ -59,7 +64,7 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
   }, [messages, onTestSpecFound]);
 
   // Handle clicks on test specs in messages
-  const handleMessageTestSpecClick = (messageContent: string) => {
+  const handleMessageTestSpecClick = (messageContent: string, messageId: string) => {
     if (!onTestSpecClick) return;
     
     const testSpecMarkers = {
@@ -78,7 +83,10 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
         ).trim();
         
         // When a user clicks, we'll pass the content with a flag indicating it was manually selected
-        onTestSpecClick(testSpecContent, { isUserSelected: true });
+        onTestSpecClick(testSpecContent, { 
+          isUserSelected: true,
+          messageId: messageId
+        });
       }
     }
   };
@@ -146,9 +154,10 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
             message={message}
             collapsedState={collapsedStates[message.id] !== false} // Default to collapsed
             onToggleCollapse={onToggleCollapse}
+            isSelected={selectedTestSpecMessageId === message.id}
             onTestSpecClick={() => {
               if (typeof message.content === 'string') {
-                handleMessageTestSpecClick(message.content);
+                handleMessageTestSpecClick(message.content, message.id);
               }
             }}
           />
