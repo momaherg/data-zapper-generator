@@ -54,16 +54,21 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
           end: '<test_spec_end>'
         };
         
-        // Check if message contains test specification
+        // Check if message contains test specification using lastIndexOf
         if (message.content.includes(testSpecMarkers.start) && message.content.includes(testSpecMarkers.end)) {
-          // Mark the message as having a test spec, but keep the content intact
-          // The ChatMessage component will handle showing/hiding the test spec portion
-          const messageWithTestSpecFlag = {
-            ...message,
-            hasTestSpec: true
-          };
-          acc.push(messageWithTestSpecFlag);
-          return acc;
+          const startIdx = message.content.lastIndexOf(testSpecMarkers.start);
+          const endIdx = message.content.lastIndexOf(testSpecMarkers.end);
+          
+          if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
+            // Mark the message as having a test spec, but keep the content intact
+            // The ChatMessage component will handle showing/hiding the test spec portion
+            const messageWithTestSpecFlag = {
+              ...message,
+              hasTestSpec: true
+            };
+            acc.push(messageWithTestSpecFlag);
+            return acc;
+          }
         }
       }
       

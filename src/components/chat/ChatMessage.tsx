@@ -49,7 +49,6 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   );
 };
 
-// Helper to detect if a message has tool calls
 const hasToolCalls = (content: any): boolean => {
   if (!content) return false;
   
@@ -60,7 +59,6 @@ const hasToolCalls = (content: any): boolean => {
   return false;
 };
 
-// Extract tool names from content
 const getToolNames = (content: any): string[] => {
   if (!content || !Array.isArray(content)) return [];
   
@@ -69,7 +67,6 @@ const getToolNames = (content: any): string[] => {
     .map(item => item.name);
 };
 
-// Process content to replace test spec with placeholder
 const processTestSpecContent = (content: string): { modifiedContent: string, hasTestSpec: boolean } => {
   const testSpecMarkers = {
     start: '<test_spec_start>',
@@ -82,18 +79,15 @@ const processTestSpecContent = (content: string): { modifiedContent: string, has
   if (content.includes(testSpecMarkers.start) && content.includes(testSpecMarkers.end)) {
     hasTestSpec = true;
     
-    // Find the start and end of the test spec
-    const startIdx = content.indexOf(testSpecMarkers.start);
-    const endIdx = content.indexOf(testSpecMarkers.end) + testSpecMarkers.end.length;
+    const startIdx = content.lastIndexOf(testSpecMarkers.start);
+    const endIdx = content.lastIndexOf(testSpecMarkers.end) + testSpecMarkers.end.length;
     
-    // Replace the test spec with an empty string to effectively remove it
     modifiedContent = content.substring(0, startIdx) + content.substring(endIdx);
   }
   
   return { modifiedContent, hasTestSpec };
 };
 
-// Render a test specification placeholder component
 const renderTestSpecPlaceholder = () => {
   return (
     <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg border border-blue-200 dark:border-blue-800 my-3">
@@ -114,11 +108,9 @@ const formatMessage = (
   isCollapsed: boolean,
   onToggleCollapse: (messageId: string) => void
 ) => {
-  // For messages with string content, check and process test specifications
   if (typeof message.content === 'string') {
     const { modifiedContent, hasTestSpec } = processTestSpecContent(message.content);
     
-    // For ThoughtEvent with tool calls, create a collapsible section
     if (message.type === 'ThoughtEvent') {
       const toolCalls = hasToolCalls(message.content) ? getToolNames(message.content) : [];
       
@@ -158,7 +150,6 @@ const formatMessage = (
       );
     }
     
-    // For regular string content with test spec
     if (hasTestSpec) {
       return (
         <div>
@@ -169,7 +160,6 @@ const formatMessage = (
     }
   }
   
-  // Check if message is explicitly marked as having a test spec
   if (message.hasTestSpec) {
     return (
       <div>
@@ -179,7 +169,6 @@ const formatMessage = (
     );
   }
   
-  // For tool call events, display a simple indicator
   if (message.type === 'ToolCallRequestEvent') {
     const toolCalls = hasToolCalls(message.content) ? getToolNames(message.content) : [];
     
@@ -197,9 +186,7 @@ const formatMessage = (
     );
   }
   
-  // Handle different content types
   if (typeof message.content !== 'string') {
-    // Handle JSON or array content
     if (Array.isArray(message.content)) {
       return (
         <div className="space-y-2 text-sm">
@@ -218,7 +205,6 @@ const formatMessage = (
     );
   }
 
-  // Handle different message sources
   switch (message.source) {
     case 'yoda':
       return (
@@ -244,17 +230,14 @@ const formatMessage = (
 };
 
 const getMessageStyle = (message: Message) => {
-  // Only user messages get the bubble style
   if (message.isUser) {
     return "bg-primary text-primary-foreground py-2 px-3 rounded-lg";
   }
   
-  // Error messages get a special style
   if (message.type === 'error') {
     return "text-destructive";
   }
   
-  // All other messages get a minimal style
   return "";
 };
 

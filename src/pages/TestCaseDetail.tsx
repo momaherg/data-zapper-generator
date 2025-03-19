@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useParams, useOutletContext, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Copy, Download, Share, Calendar, Clock } from 'lucide-react';
@@ -37,13 +38,14 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
       end: '<test_spec_end>'
     };
     
+    // Iterate through all events to find the last occurrence of test spec markers
     for (let i = events.length - 1; i >= 0; i--) {
       const event = events[i];
       
       if ('content' in event && typeof event.content === 'string') {
         const content = event.content;
-        const startIdx = content.indexOf(marker.start);
-        const endIdx = content.indexOf(marker.end);
+        const startIdx = content.lastIndexOf(marker.start);
+        const endIdx = content.lastIndexOf(marker.end);
         
         if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
           testCaseText = content.substring(
@@ -54,8 +56,8 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
         }
       } else if ('description' in event && typeof event.description === 'string') {
         const description = event.description;
-        const startIdx = description.indexOf(marker.start);
-        const endIdx = description.indexOf(marker.end);
+        const startIdx = description.lastIndexOf(marker.start);
+        const endIdx = description.lastIndexOf(marker.end);
         
         if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
           testCaseText = description.substring(
