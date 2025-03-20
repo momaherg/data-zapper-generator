@@ -6,6 +6,7 @@ import { Loader2, Users } from "lucide-react";
 import { Team } from "../components/studio/datamodel";
 import { useGalleryStore } from "../components/studio/gallery/store";
 import { teamAPI, validationAPI } from "../components/studio/api";
+import { galleryAPI } from "../components/studio/gallery/api";
 import { toast } from "sonner";
 import { useLocation } from "react-router-dom";
 
@@ -30,6 +31,7 @@ const StudioPage = () => {
       // Set the session ID for the API
       teamAPI.setSessionId(sessionId);
       validationAPI.setSessionId(sessionId);
+      galleryAPI.setSessionId(sessionId);
     }
     
     fetchTeam();
