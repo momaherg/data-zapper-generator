@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
 import { Plus, AlertTriangle, FileText, Clock, Calendar, ArrowRight, Maximize2, Copy, BookText, ScrollText } from 'lucide-react';
@@ -54,7 +55,7 @@ const TestSpecifications: React.FC<TestSpecificationsProps> = () => {
         requirement: data.requirement,
         format: data.format,
         notes: data.notes,
-        dataSourceIds: [], // Pass empty array as we no longer collect this
+        dataSourceIds: [], // Keep this empty array as we need it for the API
       });
       
       toast.success('Test case generated successfully');

@@ -1,4 +1,3 @@
-
 // Base URL for API requests
 const API_BASE_URL = 'http://localhost:5000';
 const WS_BASE_URL = 'ws://localhost:5000';
@@ -20,7 +19,6 @@ export interface TestCase {
   requirement: string;
   format: string;
   notes: string;
-  selected_data_sources: string[];
   test_case_text: string;
   events: TestCaseEvent[];
   created_at: string;
@@ -41,21 +39,6 @@ export interface TestCaseGenerationRequest {
   requirement: string;
   format: string;
   notes: string;
-}
-
-export interface ChatMessage {
-  id?: string;
-  type?: string;
-  content: string | any;
-  source?: string;
-  metadata?: any;
-  timestamp?: Date;
-  models_usage?: {
-    prompt_tokens?: number;
-    completion_tokens?: number;
-  };
-  target?: string;
-  context?: any[];
 }
 
 // Helper function to extract test case from events
@@ -356,7 +339,6 @@ export const api = {
 
   // get all test cases for a  session
   async getTestCases(sessionId: string): Promise<{ testCases: TestCase[] }> {
-
     const response = await fetch(withSession(`${API_BASE_URL}/api/test-cases`, sessionId));
 
     if (!response.ok) {
