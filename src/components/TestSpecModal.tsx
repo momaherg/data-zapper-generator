@@ -7,13 +7,11 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { DataSource } from '@/utils/api';
 
 interface TestSpecModalProps {
   isOpen: boolean;
@@ -22,10 +20,8 @@ interface TestSpecModalProps {
     requirement: string;
     format: string;
     notes: string;
-    dataSourceIds: string[];
   }) => void;
   isSubmitting: boolean;
-  dataSources: DataSource[];
 }
 
 const TestSpecModal: React.FC<TestSpecModalProps> = ({
@@ -33,12 +29,10 @@ const TestSpecModal: React.FC<TestSpecModalProps> = ({
   onClose,
   onSubmit,
   isSubmitting,
-  dataSources,
 }) => {
   const [requirement, setRequirement] = useState('');
   const [format, setFormat] = useState('');
   const [notes, setNotes] = useState('');
-  const [selectedDataSources, setSelectedDataSources] = useState<string[]>([]);
 
   // Reset form when modal is opened
   useEffect(() => {
@@ -46,7 +40,6 @@ const TestSpecModal: React.FC<TestSpecModalProps> = ({
       setRequirement('');
       setFormat('');
       setNotes('');
-      setSelectedDataSources([]);
     }
   }, [isOpen]);
 
@@ -56,16 +49,7 @@ const TestSpecModal: React.FC<TestSpecModalProps> = ({
       requirement,
       format,
       notes,
-      dataSourceIds: selectedDataSources,
     });
-  };
-
-  const toggleDataSource = (id: string) => {
-    setSelectedDataSources(prev =>
-      prev.includes(id)
-        ? prev.filter(item => item !== id)
-        : [...prev, id]
-    );
   };
 
   return (
@@ -73,6 +57,9 @@ const TestSpecModal: React.FC<TestSpecModalProps> = ({
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle className="text-xl">Create Test Specification</DialogTitle>
+          <DialogDescription>
+            Create a new test specification for your requirements.
+          </DialogDescription>
           <Button
             variant="ghost"
             size="icon"
@@ -127,49 +114,13 @@ const TestSpecModal: React.FC<TestSpecModalProps> = ({
             />
           </div>
           
-          <div className="space-y-2">
-            <Label className="text-sm font-medium">Data Sources</Label>
-            <ScrollArea className="h-[200px] border rounded-md p-4">
-              <div className="space-y-3">
-                {dataSources.length === 0 ? (
-                  <p className="text-sm text-muted-foreground italic">
-                    No data sources available. Please upload data sources first.
-                  </p>
-                ) : (
-                  dataSources.map(source => (
-                    <div key={source.id} className="flex items-start space-x-2">
-                      <Checkbox
-                        id={`source-${source.id}`}
-                        checked={selectedDataSources.includes(source.id)}
-                        onCheckedChange={() => toggleDataSource(source.id)}
-                      />
-                      <div className="grid gap-1.5 leading-none">
-                        <label
-                          htmlFor={`source-${source.id}`}
-                          className="text-sm font-medium cursor-pointer"
-                        >
-                          {source.path}
-                        </label>
-                        {source.description && (
-                          <p className="text-xs text-muted-foreground">
-                            {source.description}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
-          </div>
-          
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
             <Button 
               type="submit" 
-              disabled={isSubmitting || requirement.trim() === '' || selectedDataSources.length === 0}
+              disabled={isSubmitting || requirement.trim() === ''}
             >
               {isSubmitting ? 'Generating...' : 'Generate Test Case'}
             </Button>

@@ -18,46 +18,15 @@ interface TestSpecificationsProps {}
 const TestSpecifications: React.FC<TestSpecificationsProps> = () => {
   const { sessionId } = useOutletContext<{ sessionId: string }>();
   const navigate = useNavigate();
-  const [dataSources, setDataSources] = useState<DataSource[]>([]);
   const [testCases, setTestCases] = useState<TestCase[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isLoadingData, setIsLoadingData] = useState(true);
   const [expandedCards, setExpandedCards] = useState<Record<string, boolean>>({});
   
-  const mockTestCases: TestCase[] = [
-    {
-      id: 'tc1',
-      requirement: 'As a user, I want to reset my password so that I can regain access to my account if I forget it.',
-      format: 'Use Gherkin BDD style with Scenario and Scenario Outline formats.',
-      notes: 'This requirement is critical for user security. Consider edge cases.',
-      selected_data_sources: [],
-      test_case_text: 'Feature: Password Reset\n\nScenario: User successfully resets password\n  Given the user is on the login page\n  When they click "Forgot Password"\n  Then they should be directed to the password reset page',
-      events: [
-        { type: 'Thought', description: 'Analyzing requirement: Password reset functionality' },
-      ],
-      created_at: new Date().toISOString(),
-    },
-    {
-      id: 'tc2',
-      requirement: 'As an admin, I want to view a list of all users so that I can manage user accounts.',
-      format: 'Structured bullet points with pre-conditions and expected results',
-      notes: 'Include pagination scenarios',
-      selected_data_sources: [],
-      test_case_text: '## Test Case: Admin User List View\n\n**Pre-conditions:**\n- Admin is logged in\n- Multiple user accounts exist in the system\n\n**Steps:**\n1. Navigate to Admin Dashboard\n2. Click on "User Management"\n3. View the user list\n\n**Expected Results:**\n- User list is displayed with correct information',
-      events: [
-        { type: 'DataSourceAccess', description: 'Examining csv file at user_data.csv' },
-      ],
-      created_at: new Date(Date.now() - 86400000).toISOString(),
-    }
-  ];
-
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await api.getDataSources(sessionId);
-        setDataSources(response.dataSources);
-        
         const testCases = await api.getTestCases(sessionId)
         setTestCases(testCases.testCases);
       } catch (error) {
@@ -77,7 +46,6 @@ const TestSpecifications: React.FC<TestSpecificationsProps> = () => {
     requirement: string;
     format: string;
     notes: string;
-    dataSourceIds: string[];
   }) => {
     setIsGenerating(true);
     
@@ -86,7 +54,7 @@ const TestSpecifications: React.FC<TestSpecificationsProps> = () => {
         requirement: data.requirement,
         format: data.format,
         notes: data.notes,
-        dataSourceIds: data.dataSourceIds,
+        dataSourceIds: [], // Pass empty array as we no longer collect this
       });
       
       toast.success('Test case generated successfully');
@@ -201,15 +169,6 @@ const TestSpecifications: React.FC<TestSpecificationsProps> = () => {
         <div className="flex justify-center py-10">
           <div className="animate-pulse">Loading test specifications...</div>
         </div>
-      ) : dataSources.length === 0 ? (
-        <Alert variant="default" className="bg-amber-50 border-amber-200 dark:bg-amber-900/20 dark:border-amber-800/30">
-          <AlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-          <AlertTitle>No data sources available</AlertTitle>
-          <AlertDescription>
-            You need to upload data sources before creating test specifications.
-            Go to the Upload Data page to add some.
-          </AlertDescription>
-        </Alert>
       ) : testCases.length === 0 ? (
         <div className="text-center py-12 space-y-4">
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
@@ -285,7 +244,6 @@ const TestSpecifications: React.FC<TestSpecificationsProps> = () => {
         onClose={() => setIsModalOpen(false)}
         onSubmit={handleGenerateTestCase}
         isSubmitting={isGenerating}
-        dataSources={dataSources}
       />
     </div>
   );
