@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Message, ChatInterfaceProps } from './chat/types';
 import ChatHeader from './chat/ChatHeader';
@@ -5,12 +6,18 @@ import ChatMessageList from './chat/ChatMessageList';
 import ChatInput from './chat/ChatInput';
 import ConnectionAlert from './chat/ConnectionAlert';
 import { useChatWebSocket } from './chat/useChatWebSocket';
+import { Button } from './ui/button';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const ChatInterface: React.FC<ChatInterfaceProps> = ({
   events,
   sessionId,
   testCaseId,
   onTestSpecUpdated,
+  chatWidth,
+  onResizeChat,
+  minChatWidth,
+  maxChatWidth,
 }) => {
   const [inputValue, setInputValue] = useState('');
   // Store collapsed state for thought events with tool calls
@@ -178,8 +185,35 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     <div className="flex flex-col h-full overflow-hidden">
       <ChatHeader 
         isConnected={isConnected} 
-        onReconnect={handleReconnect} 
+        onReconnect={handleReconnect}
       />
+      
+      {/* Add resize controls below the header */}
+      {onResizeChat && (
+        <div className="flex justify-center gap-2 py-1 px-2 border-b">
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="h-7 w-7 p-0"
+            onClick={() => onResizeChat('decrease')}
+            disabled={chatWidth <= minChatWidth}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+          <span className="text-xs text-muted-foreground">
+            Width: {chatWidth}px
+          </span>
+          <Button 
+            variant="ghost" 
+            size="sm"
+            className="h-7 w-7 p-0"
+            onClick={() => onResizeChat('increase')}
+            disabled={chatWidth >= maxChatWidth}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
+      )}
       
       <ChatMessageList 
         messages={messages}

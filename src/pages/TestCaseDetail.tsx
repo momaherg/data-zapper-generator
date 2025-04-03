@@ -257,32 +257,15 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
       </div>
       
       <div className="border-l border-border flex flex-col animate-slide-in-right relative" style={{ width: `${chatWidth}px` }}>
-        <div className="absolute left-2 top-4 flex flex-col gap-1">
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="h-8 w-8 bg-background/80 backdrop-blur-sm"
-            onClick={() => handleResizeChat('decrease')}
-            disabled={chatWidth <= minChatWidth}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon"
-            className="h-8 w-8 bg-background/80 backdrop-blur-sm"
-            onClick={() => handleResizeChat('increase')}
-            disabled={chatWidth >= maxChatWidth}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-        </div>
-        
         <ChatInterface 
           events={testCase.events} 
           sessionId={sessionId} 
           testCaseId={testCase.id}
           onTestSpecUpdated={handleTestSpecUpdated}
+          chatWidth={chatWidth}
+          onResizeChat={handleResizeChat}
+          minChatWidth={minChatWidth}
+          maxChatWidth={maxChatWidth}
         />
       </div>
     </div>

@@ -29,27 +29,33 @@ const ChatView: React.FC<ChatViewProps> = ({ session }) => {
     <div className="h-full flex flex-col" style={{ width: `${chatWidth}px` }}>
       <div className="p-4 border-b flex justify-between items-center">
         <h3 className="text-lg font-medium">Chat: {session.name}</h3>
-        <div className="flex gap-1">
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => handleResize('decrease')}
-            disabled={chatWidth <= minWidth}
-            className="h-8 w-8"
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
-          <Button 
-            variant="ghost" 
-            size="icon" 
-            onClick={() => handleResize('increase')}
-            disabled={chatWidth >= maxWidth}
-            className="h-8 w-8"
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-        </div>
       </div>
+      
+      {/* Move the resize controls below the header */}
+      <div className="flex justify-center gap-2 py-1 px-2 border-b">
+        <Button 
+          variant="ghost" 
+          size="sm"
+          className="h-7 w-7 p-0"
+          onClick={() => handleResize('decrease')}
+          disabled={chatWidth <= minWidth}
+        >
+          <ChevronLeft className="h-4 w-4" />
+        </Button>
+        <span className="text-xs text-muted-foreground">
+          Width: {chatWidth}px
+        </span>
+        <Button 
+          variant="ghost" 
+          size="sm"
+          className="h-7 w-7 p-0"
+          onClick={() => handleResize('increase')}
+          disabled={chatWidth >= maxWidth}
+        >
+          <ChevronRight className="h-4 w-4" />
+        </Button>
+      </div>
+      
       <div className="flex-1 overflow-auto p-4">
         <p className="text-gray-500 text-center my-4">Chat messages will appear here</p>
       </div>
