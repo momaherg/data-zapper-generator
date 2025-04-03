@@ -1,7 +1,9 @@
+
 import React, { useState, useCallback, useRef } from "react";
 import { Button, Breadcrumb } from "antd";
 import { ChevronLeft, Code, FormInput } from "lucide-react";
 import { isTeamComponent, isAgentComponent, isModelComponent, isToolComponent, isTerminationComponent } from "../../guards";
+import { Component, ComponentConfig, AgentConfig, ModelConfig, TeamConfig, ToolConfig, TerminationConfig } from "../../datamodel";
 import { AgentFields } from "./fields/agent-fields";
 import { ModelFields } from "./fields/model-fields";
 import { TeamFields } from "./fields/team-fields";

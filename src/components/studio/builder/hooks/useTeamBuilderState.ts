@@ -1,11 +1,19 @@
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useNodesState, useEdgesState, addEdge } from "@xyflow/react";
+import { useNodesState, useEdgesState, addEdge, Connection } from "@xyflow/react";
 import { validationAPI } from "../../api";
 import { useTeamBuilderStore } from "../store";
-import { CustomNode, CustomEdge } from "../types";
-import { Component, Team } from "../../datamodel";
 import debounce from "../../../../utils/debounce";
 import { message } from "antd";
+import { CustomNode, CustomEdge } from "../types";
+import { Component, Team } from "../../datamodel";
+
+interface ValidationResponse {
+  valid: boolean;
+  errors?: Array<{
+    path: string;
+    message: string;
+  }>;
+}
 
 export function useTeamBuilderState(
   team: Team,
@@ -89,7 +97,9 @@ export function useTeamBuilderState(
 
   useEffect(() => {
     return () => {
-      handleJsonChange.cancel();
+      if (handleJsonChange.cancel) {
+        handleJsonChange.cancel();
+      }
       setValidationResults(null);
     };
   }, [handleJsonChange]);

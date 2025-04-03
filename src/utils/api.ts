@@ -1,3 +1,6 @@
+// At the top of the file, import the ChatMessage type
+import { ChatMessage } from './types';
+
 // Base URL for API requests
 const API_BASE_URL = 'http://localhost:5000';
 const WS_BASE_URL = 'ws://localhost:5000';
@@ -213,7 +216,7 @@ export class ChatWebSocket {
       return;
     }
 
-    const message = {
+    const message: ChatMessage = {
       session_id: this.sessionId,
       id: this.testCaseId,
       content,
