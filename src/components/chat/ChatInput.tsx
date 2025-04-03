@@ -25,7 +25,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = 'auto';
-      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 120)}px`;
+      textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 150)}px`;
     }
   }, [inputValue]);
   
@@ -37,7 +37,7 @@ const ChatInput: React.FC<ChatInputProps> = ({
   };
   
   return (
-    <div className="px-4 py-3 border-t">
+    <div className="px-4 py-4 border-t">
       <div className="flex gap-2">
         <Textarea 
           ref={textareaRef} 
@@ -45,8 +45,8 @@ const ChatInput: React.FC<ChatInputProps> = ({
           onChange={e => setInputValue(e.target.value)} 
           onKeyDown={handleKeyDown} 
           placeholder="Type a message... (Shift+Enter for new line)" 
-          className="resize-none min-h-[60px] max-h-[120px] flex-1" 
-          rows={2} 
+          className="resize-none min-h-[80px] max-h-[150px] flex-1" 
+          rows={3} 
           disabled={!isConnected || isLoading} 
         />
         <Button 

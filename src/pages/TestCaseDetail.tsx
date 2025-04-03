@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useParams, useOutletContext, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Copy, Download, Calendar, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -28,6 +27,9 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
   const navigate = useNavigate();
   const [testCase, setTestCase] = useState<TestCase | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [chatWidth, setChatWidth] = useState<number>(350);
+  const minChatWidth = 320;
+  const maxChatWidth = 600;
   
   const extractTestCaseFromEvents = (events: any[]): string => {
     if (!events || events.length === 0) return '';
@@ -139,6 +141,17 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
     }).format(date);
   };
 
+  const handleResizeChat = (direction: 'increase' | 'decrease') => {
+    setChatWidth(prev => {
+      const step = 50;
+      if (direction === 'increase') {
+        return Math.min(prev + step, maxChatWidth);
+      } else {
+        return Math.max(prev - step, minChatWidth);
+      }
+    });
+  };
+
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen">
         <div className="animate-pulse">Loading test case...</div>
@@ -160,7 +173,8 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
       </div>;
   }
 
-  return <div className="flex h-screen overflow-hidden">
+  return (
+    <div className="flex h-screen overflow-hidden">
       <div className="flex-1 overflow-auto">
         <div className="container py-8 animate-fade-up">
           <div className="flex items-center mb-4">
@@ -242,7 +256,28 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
         </div>
       </div>
       
-      <div className="w-80 border-l border-border flex flex-col animate-slide-in-right">
+      <div className="border-l border-border flex flex-col animate-slide-in-right relative" style={{ width: `${chatWidth}px` }}>
+        <div className="absolute left-2 top-4 flex flex-col gap-1">
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="h-8 w-8 bg-background/80 backdrop-blur-sm"
+            onClick={() => handleResizeChat('decrease')}
+            disabled={chatWidth <= minChatWidth}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            className="h-8 w-8 bg-background/80 backdrop-blur-sm"
+            onClick={() => handleResizeChat('increase')}
+            disabled={chatWidth >= maxChatWidth}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        </div>
+        
         <ChatInterface 
           events={testCase.events} 
           sessionId={sessionId} 
@@ -250,7 +285,8 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
           onTestSpecUpdated={handleTestSpecUpdated}
         />
       </div>
-    </div>;
+    </div>
+  );
 };
 
 export default TestCaseDetail;
