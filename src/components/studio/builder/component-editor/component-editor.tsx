@@ -1,20 +1,13 @@
 import React, { useState, useCallback, useRef } from "react";
 import { Button, Breadcrumb } from "antd";
 import { ChevronLeft, Code, FormInput } from "lucide-react";
-import { Component, ComponentConfig } from "../../datamodel";
-import {
-  isTeamComponent,
-  isAgentComponent,
-  isModelComponent,
-  isToolComponent,
-  isTerminationComponent,
-} from "../../guards";
+import { isTeamComponent, isAgentComponent, isModelComponent, isToolComponent, isTerminationComponent } from "../../guards";
 import { AgentFields } from "./fields/agent-fields";
 import { ModelFields } from "./fields/model-fields";
 import { TeamFields } from "./fields/team-fields";
 import { ToolFields } from "./fields/tool-fields";
 import { TerminationFields } from "./fields/termination-fields";
-import debounce from "lodash.debounce";
+import debounce from "../../../../utils/debounce";
 import { MonacoEditor } from "../monaco";
 
 export interface EditPath {
@@ -44,7 +37,6 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
 
   const editorRef = useRef(null);
 
-  // Reset working copy when component changes
   React.useEffect(() => {
     setWorkingCopy(component);
     setEditPath([]);
@@ -149,7 +141,6 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
       );
 
       setWorkingCopy(updatedComponent);
-      //   onChange(updatedComponent);
     },
     [workingCopy, editPath, updateComponentAtPath]
   );
