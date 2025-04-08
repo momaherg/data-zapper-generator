@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Input, Collapse, type CollapseProps, Button, Modal } from "antd";
 import { useDraggable } from "@dnd-kit/core";
@@ -474,7 +473,7 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
           </div>
         </div>
 
-        <div className="component-library-body overflow-auto">
+        <div className="component-library-body">
           <Collapse
             accordion
             items={items}
