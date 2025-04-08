@@ -1,6 +1,6 @@
 
 import React, { useState } from "react";
-import { Input, Collapse, type CollapseProps } from "antd";
+import { Input, Collapse, type CollapseProps, Modal, Button } from "antd";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import {
@@ -14,10 +14,15 @@ import {
   GripVertical,
   Loader2,
   AlertCircle,
+  Users,
+  PlayCircle
 } from "lucide-react";
 import Sider from "antd/es/layout/Sider";
 import { useGalleryStore } from "../gallery/store";
+import { useTeamBuilderStore } from "./store";
 import { ComponentTypes } from "../datamodel";
+import { toast } from "sonner";
+import { teamAPI } from "../api";
 
 interface ComponentConfigTypes {
   [key: string]: any;
@@ -71,6 +76,41 @@ const PresetItem: React.FC<PresetItemProps> = ({
         {icon}
         <span className="text-sm">{label}</span>
       </div>
+    </div>
+  );
+};
+
+interface TeamItemProps {
+  team: any;
+  onLoad: (team: any) => void;
+}
+
+const TeamItem: React.FC<TeamItemProps> = ({ team, onLoad }) => {
+  return (
+    <div className="p-2 text-primary mb-2 border rounded bg-white hover:bg-gray-50 transition-colors">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Users className="w-4 h-4 text-blue-500" />
+          <span className="text-sm font-medium">{team.label || "Unnamed Team"}</span>
+        </div>
+        <Button 
+          type="text" 
+          size="small"
+          onClick={() => onLoad(team)}
+          title="Load this team into the builder"
+          className="flex items-center gap-1 text-xs"
+        >
+          <PlayCircle className="w-3 h-3" />
+          Load
+        </Button>
+      </div>
+      {team.description && (
+        <div className="mt-1 text-xs text-gray-500 pl-6">
+          {team.description.length > 100 
+            ? team.description.substring(0, 100) + "..." 
+            : team.description}
+        </div>
+      )}
     </div>
   );
 };
@@ -180,7 +220,8 @@ const getDefaultComponents = () => {
           }
         }
       }
-    ]
+    ],
+    teams: []
   };
 };
 
@@ -196,12 +237,37 @@ const extractGalleryComponents = (gallery: any) => {
     models: components.models || [],
     tools: components.tools || [],
     terminations: components.terminations || [],
+    teams: components.teams || [],
   };
+};
+
+// Modal to confirm team replacement
+const TeamLoadConfirmModal = ({ team, visible, onConfirm, onCancel }) => {
+  return (
+    <Modal
+      title="Replace Current Team?"
+      open={visible}
+      onOk={() => onConfirm(team)}
+      onCancel={onCancel}
+      okText="Load Team"
+      cancelText="Cancel"
+    >
+      <p>
+        Loading "{team?.label || 'this team'}" will replace your current team configuration. 
+        Unsaved changes will be lost.
+      </p>
+      <p className="mt-2">
+        Are you sure you want to continue?
+      </p>
+    </Modal>
+  );
 };
 
 export const ComponentLibrary: React.FC<LibraryProps> = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isMinimized, setIsMinimized] = useState(false);
+  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
+  const [selectedTeam, setSelectedTeam] = useState(null);
   
   // Important: Always declare hooks at the top level, never conditionally
   const gallery = useGalleryStore((state) => state.getSelectedGallery());
@@ -211,9 +277,51 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
   // Extract components from the gallery
   const componentsData = extractGalleryComponents(gallery);
   
+  // Add a handler for loading teams
+  const handleLoadTeam = (team) => {
+    if (useTeamBuilderStore.getState().isDirty) {
+      // Show confirmation dialog if there are unsaved changes
+      setSelectedTeam(team);
+      setConfirmModalVisible(true);
+    } else {
+      // Directly load the team if no unsaved changes
+      loadTeamToBuilder(team);
+    }
+  };
+
+  const loadTeamToBuilder = async (team) => {
+    try {
+      // Reset confirmation modal
+      setConfirmModalVisible(false);
+      setSelectedTeam(null);
+      
+      // Show loading toast
+      toast.loading("Loading team template...");
+      
+      // Update the team
+      await teamAPI.updateTeam(team);
+      
+      // Show success toast and reload the page to refresh the builder
+      toast.success("Team template loaded successfully!");
+      setTimeout(() => {
+        window.location.reload();
+      }, 500);
+    } catch (error) {
+      console.error("Error loading team:", error);
+      toast.error("Failed to load team template");
+    }
+  };
+  
   // Move this useMemo out of the conditional rendering path
   const sections = React.useMemo(
     () => [
+      {
+        title: "Teams",
+        type: "team" as ComponentTypes,
+        items: componentsData.teams || [],
+        icon: <Users className="w-4 h-4" />,
+        isTeamSection: true
+      },
       {
         title: "Agents",
         type: "agent" as ComponentTypes,
@@ -302,9 +410,20 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
   }
 
   const items: CollapseProps["items"] = sections.map((section) => {
-    const filteredItems = section.items.filter((item) =>
-      item.label?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Filter items based on search term
+    let filteredItems;
+    
+    if (section.isTeamSection) {
+      // For teams section, filter directly since they already have labels
+      filteredItems = section.items.filter((item) => 
+        (item.label || "").toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    } else {
+      // For other sections, use the existing structure
+      filteredItems = section.items.filter((item) =>
+        item.label?.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
 
     return {
       key: section.title,
@@ -320,16 +439,28 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
       children: (
         <div className="space-y-2">
           {filteredItems.length > 0 ? (
-            filteredItems.map((item, itemIndex) => (
-              <PresetItem
-                key={itemIndex}
-                id={`${section.title.toLowerCase()}-${itemIndex}`}
-                type={section.type}
-                config={item.config}
-                label={item.label || ""}
-                icon={section.icon}
-              />
-            ))
+            section.isTeamSection ? (
+              // Render team items with load button
+              filteredItems.map((team, index) => (
+                <TeamItem 
+                  key={index} 
+                  team={team} 
+                  onLoad={handleLoadTeam}
+                />
+              ))
+            ) : (
+              // Render regular draggable items for other components
+              filteredItems.map((item, itemIndex) => (
+                <PresetItem
+                  key={itemIndex}
+                  id={`${section.title.toLowerCase()}-${itemIndex}`}
+                  type={section.type}
+                  config={item.config}
+                  label={item.label || ""}
+                  icon={section.icon}
+                />
+              ))
+            )
           ) : (
             <div className="py-2 text-sm text-gray-500 italic">
               No {section.title.toLowerCase()} found
@@ -341,59 +472,69 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
   });
 
   return (
-    <Sider
-      width={300}
-      className="bg-white border-r border-gray-200 shadow-sm z-10 mr-2"
-    >
-      <div className="p-4">
-        <div className="flex justify-between items-center mb-4">
-          <div className="text-lg font-medium">Component Library</div>
-          <button
-            onClick={() => setIsMinimized(true)}
-            className="p-1 hover:bg-gray-100 rounded transition-colors"
-            title="Minimize Library"
-          >
-            <Minimize2 className="w-4 h-4" />
-          </button>
-        </div>
-
-        {galleryError && (
-          <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-600 text-sm flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-            <div>
-              <p className="font-medium">Gallery couldn't be loaded</p>
-              <p className="text-xs mt-1">Using default components instead</p>
-            </div>
+    <>
+      <Sider
+        width={300}
+        className="bg-white border-r border-gray-200 shadow-sm z-10 mr-2"
+      >
+        <div className="p-4">
+          <div className="flex justify-between items-center mb-4">
+            <div className="text-lg font-medium">Component Library</div>
+            <button
+              onClick={() => setIsMinimized(true)}
+              className="p-1 hover:bg-gray-100 rounded transition-colors"
+              title="Minimize Library"
+            >
+              <Minimize2 className="w-4 h-4" />
+            </button>
           </div>
-        )}
 
-        <div className="mb-4 text-gray-500 text-sm">
-          Drag a component to add it to the team
-        </div>
+          {galleryError && (
+            <div className="mb-4 p-2 bg-yellow-50 border border-yellow-200 rounded text-yellow-600 text-sm flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+              <div>
+                <p className="font-medium">Gallery couldn't be loaded</p>
+                <p className="text-xs mt-1">Using default components instead</p>
+              </div>
+            </div>
+          )}
 
-        <div className="mb-4">
-          <Input
-            placeholder="Search components..."
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full"
-            prefix={<span className="text-gray-400">🔍</span>}
+          <div className="mb-4 text-gray-500 text-sm">
+            Drag components to add them to the team or load a pre-built team template
+          </div>
+
+          <div className="mb-4">
+            <Input
+              placeholder="Search components..."
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full"
+              prefix={<span className="text-gray-400">🔍</span>}
+            />
+          </div>
+
+          <Collapse
+            accordion
+            items={items}
+            defaultActiveKey={["Teams"]}
+            bordered={false}
+            expandIcon={({ isActive }) => (
+              <ChevronDown
+                strokeWidth={1}
+                className={(isActive ? "transform rotate-180" : "") + " w-4 h-4"}
+              />
+            )}
           />
         </div>
+      </Sider>
 
-        <Collapse
-          accordion
-          items={items}
-          defaultActiveKey={["Tools"]}
-          bordered={false}
-          expandIcon={({ isActive }) => (
-            <ChevronDown
-              strokeWidth={1}
-              className={(isActive ? "transform rotate-180" : "") + " w-4 h-4"}
-            />
-          )}
-        />
-      </div>
-    </Sider>
+      {/* Confirmation Modal */}
+      <TeamLoadConfirmModal
+        team={selectedTeam}
+        visible={confirmModalVisible}
+        onConfirm={loadTeamToBuilder}
+        onCancel={() => setConfirmModalVisible(false)}
+      />
+    </>
   );
 };
 

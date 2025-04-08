@@ -1,6 +1,17 @@
 
-// Re-export the full datamodel from studio
-export * from "../studio/datamodel";
+// Re-export everything from studio datamodel
+export type { 
+  ComponentTypes, 
+  Component, 
+  ComponentConfig,
+  Gallery,
+  GalleryConfig,
+  Team,
+  AgentConfig,
+  ModelConfig,
+  ToolConfig,
+  TerminationConfig
+} from "../studio/datamodel";
 
 // Define a Gallery type compatible with both implementations
 export interface Gallery {

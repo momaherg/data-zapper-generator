@@ -1,3 +1,4 @@
+
 import React, { useCallback, useEffect, useState, useContext } from "react";
 import { message, Modal } from "antd";
 import { ChevronRight } from "lucide-react";
@@ -17,6 +18,7 @@ export const TeamManager: React.FC = () => {
       const stored = localStorage.getItem("teamSidebar");
       return stored !== null ? JSON.parse(stored) : true;
     }
+    return true;
   });
 
   const { user } = useContext(appContext);
@@ -26,10 +28,8 @@ export const TeamManager: React.FC = () => {
   // Initialize galleries
   const fetchGalleries = useGalleryStore((state) => state.fetchGalleries);
   useEffect(() => {
-    if (user?.email) {
-      fetchGalleries(user.email);
-    }
-  }, [user?.email, fetchGalleries]);
+    fetchGalleries();
+  }, [fetchGalleries]);
 
   // Persist sidebar state
   useEffect(() => {
@@ -39,21 +39,63 @@ export const TeamManager: React.FC = () => {
   }, [isSidebarOpen]);
 
   const fetchTeams = useCallback(async () => {
-    if (!user?.email) return;
-
     try {
       setIsLoading(true);
-      const data = await teamAPI.listTeams(user.email);
-      setTeams(data);
-      if (!currentTeam && data.length > 0) {
-        setCurrentTeam(data[0]);
+      const data = await teamAPI.getTeam();
+      // Normalize the component structure to match what our UI expects
+      const normalizedTeam = {
+        ...data,
+        component: data
+      };
+      
+      // Only log in development environment
+      if (process.env.NODE_ENV === 'development') {
+        console.log("Normalized team:", normalizedTeam);
       }
+      
+      setCurrentTeam(normalizedTeam);
     } catch (error) {
-      console.error("Error fetching teams:", error);
+      console.error("Error fetching team:", error);
+      messageApi.error("Failed to load team, using default configuration");
+      
+      // Create a default empty team with initial components if we couldn't fetch one
+      setCurrentTeam({
+        component: {
+          provider: "roundrobin",
+          component_type: "team",
+          config: {
+            participants: [
+              {
+                provider: "assistant",
+                component_type: "agent",
+                config: {
+                  name: "Research Agent",
+                  description: "You are a helpful research assistant."
+                }
+              },
+              {
+                provider: "assistant",
+                component_type: "agent",
+                config: {
+                  name: "Writing Agent",
+                  description: "You are a creative writing assistant."
+                }
+              }
+            ],
+            termination_condition: {
+              provider: "maxmessage",
+              component_type: "termination",
+              config: {
+                max_messages: 10
+              }
+            }
+          }
+        }
+      });
     } finally {
       setIsLoading(false);
     }
-  }, [user?.email, currentTeam]);
+  }, [messageApi]);
 
   useEffect(() => {
     fetchTeams();
@@ -65,12 +107,15 @@ export const TeamManager: React.FC = () => {
     const teamId = params.get("teamId");
 
     if (teamId && !currentTeam) {
-      handleSelectTeam({ id: parseInt(teamId) } as Team);
+      const numTeamId = parseInt(teamId);
+      if (!isNaN(numTeamId)) {
+        handleSelectTeam({ id: numTeamId } as Team);
+      }
     }
   }, []);
 
   const handleSelectTeam = async (selectedTeam: Team) => {
-    if (!user?.email || !selectedTeam.id) return;
+    if (!selectedTeam.id) return;
 
     if (hasUnsavedChanges) {
       Modal.confirm({
@@ -88,10 +133,10 @@ export const TeamManager: React.FC = () => {
   };
 
   const switchToTeam = async (teamId: number | undefined) => {
-    if (!teamId || !user?.email) return;
+    if (!teamId) return;
     setIsLoading(true);
     try {
-      const data = await teamAPI.getTeam(teamId, user.email!);
+      const data = await teamAPI.getTeam();
       setCurrentTeam(data);
       window.history.pushState({}, "", `?teamId=${teamId}`);
     } catch (error) {
@@ -103,10 +148,8 @@ export const TeamManager: React.FC = () => {
   };
 
   const handleDeleteTeam = async (teamId: number) => {
-    if (!user?.email) return;
-
     try {
-      await teamAPI.deleteTeam(teamId, user.email);
+      await teamAPI.deleteTeam(teamId);
       setTeams(teams.filter((t) => t.id !== teamId));
       if (currentTeam?.id === teamId) {
         setCurrentTeam(null);
@@ -124,8 +167,6 @@ export const TeamManager: React.FC = () => {
   };
 
   const handleSaveTeam = async (teamData: Partial<Team>) => {
-    if (!user?.email) return;
-
     try {
       const sanitizedTeamData = {
         ...teamData,
@@ -133,7 +174,7 @@ export const TeamManager: React.FC = () => {
         updated_at: undefined,
       };
 
-      const savedTeam = await teamAPI.createTeam(sanitizedTeamData, user.email);
+      const savedTeam = await teamAPI.updateTeam(sanitizedTeamData);
       messageApi.success(
         `Team ${teamData.id ? "updated" : "created"} successfully`
       );

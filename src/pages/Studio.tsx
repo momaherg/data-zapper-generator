@@ -36,11 +36,15 @@ const StudioPage = () => {
     
     fetchTeam();
     // Load galleries for the component library
-    fetchGalleries();
+    fetchGalleries().catch(error => {
+      console.error("Error fetching galleries:", error);
+      toast.error("Failed to load component library");
+    });
   }, [fetchGalleries, location.search]);
 
   const fetchTeam = async () => {
     try {
+      setIsLoading(true);
       const data = await teamAPI.getTeam();
       // Normalize the component structure to match what our UI expects
       const normalizedTeam = {
