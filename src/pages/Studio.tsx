@@ -101,14 +101,28 @@ const StudioPage = () => {
     }
   };
 
-  const handleTeamUpdate = async (updatedTeam: Team) => {
+  const handleTeamUpdate = async (updatedTeam: Partial<Team>) => {
     try {
+      // Update locally immediately for a responsive UI
+      if (team) {
+        // Create a copy to avoid modifying state directly
+        const updatedFullTeam = {
+          ...team,
+          component: updatedTeam.component || team.component
+        };
+        setTeam(updatedFullTeam as Team);
+      }
+      
+      // Send to server
       const data = await teamAPI.updateTeam(updatedTeam);
-      setTeam(data);
       toast.success("Team saved successfully");
+      
+      // No need to refresh the page - we already updated the state above
     } catch (error) {
       console.error("Error updating team:", error);
       toast.error("Failed to save team");
+      // Refresh the team if the update fails to ensure consistency
+      fetchTeam();
     }
   };
 

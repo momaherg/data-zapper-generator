@@ -78,17 +78,15 @@ export const TeamSelectionModal: React.FC<TeamSelectionModalProps> = ({ isOpen, 
       
       // Get the default empty team
       const defaultTeam = {
-        component: {
-          provider: "roundrobin",
-          component_type: "team",
-          config: {
-            participants: [],
-            termination_condition: {
-              provider: "maxmessage",
-              component_type: "termination",
-              config: {
-                max_messages: 10
-              }
+        provider: "roundrobin",
+        component_type: "team",
+        config: {
+          participants: [],
+          termination_condition: {
+            provider: "maxmessage",
+            component_type: "termination",
+            config: {
+              max_messages: 10
             }
           }
         }

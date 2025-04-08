@@ -4,13 +4,12 @@ export type {
   ComponentTypes, 
   Component, 
   ComponentConfig,
-  GalleryConfig,
   Team,
   AgentConfig,
   ModelConfig,
   ToolConfig,
   TerminationConfig
-} from "../studio/datamodel";
+} from "../components/studio/datamodel";
 
 // Define a Gallery type compatible with both implementations
 export interface Gallery {
