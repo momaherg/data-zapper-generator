@@ -72,7 +72,10 @@ export const FlowEditor: React.FC<FlowEditorProps> = ({
           onDragOver={(event) => event.preventDefault()}
           className="rounded bg-white"
           fitView
-          fitViewOptions={{ padding: 10 }}
+          fitViewOptions={{ padding: 20, includeHiddenNodes: false }}
+          defaultViewport={{ x: 0, y: 0, zoom: 1 }}
+          minZoom={0.1}
+          maxZoom={2}
         >
           {showGrid && <Background />}
           {showMiniMap && <MiniMap className="!bottom-5 !right-5" />}

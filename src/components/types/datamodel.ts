@@ -9,7 +9,7 @@ export type {
   ModelConfig,
   ToolConfig,
   TerminationConfig
-} from "../components/studio/datamodel";
+} from "../studio/datamodel";
 
 // Define a Gallery type compatible with both implementations
 export interface Gallery {

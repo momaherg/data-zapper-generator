@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Input, Collapse, type CollapseProps, Modal, Button } from "antd";
+import { Input, Collapse, type CollapseProps, Button } from "antd";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import {
@@ -21,7 +21,6 @@ import { useGalleryStore } from "../gallery/store";
 import { useTeamBuilderStore } from "./store";
 import { ComponentTypes } from "../datamodel";
 import { toast } from "sonner";
-import { teamAPI } from "../api";
 import TeamSelectionModal from "./components/TeamSelectionModal";
 
 interface ComponentConfigTypes {
@@ -115,7 +114,6 @@ const TeamItem: React.FC<TeamItemProps> = ({ team, onLoad }) => {
   );
 };
 
-// Default components to show when gallery fails to load
 const getDefaultComponents = () => {
   return {
     agents: [
@@ -225,11 +223,9 @@ const getDefaultComponents = () => {
   };
 };
 
-// Function to extract components from the gallery
 const extractGalleryComponents = (gallery: any) => {
   if (!gallery) return getDefaultComponents();
   
-  // Handle both legacy format (config.components) and new format (components)
   const components = gallery.components || gallery.config?.components || {};
   
   return {
@@ -241,7 +237,6 @@ const extractGalleryComponents = (gallery: any) => {
   };
 };
 
-// Modal to confirm team replacement
 const TeamLoadConfirmModal = ({ team, visible, onConfirm, onCancel }) => {
   return (
     <Modal
@@ -268,15 +263,12 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
   const [isMinimized, setIsMinimized] = useState(false);
   const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
   
-  // Important: Always declare hooks at the top level, never conditionally
   const gallery = useGalleryStore((state) => state.getSelectedGallery());
   const galleryLoading = useGalleryStore((state) => state.isLoading);
   const galleryError = useGalleryStore((state) => state.error);
   
-  // Extract components from the gallery
   const componentsData = extractGalleryComponents(gallery);
   
-  // Move this useMemo out of the conditional rendering path
   const sections = React.useMemo(
     () => [
       {
@@ -346,14 +338,13 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
     );
   }
 
-  // Loading state
   if (galleryLoading) {
     return (
       <Sider
         width={300}
-        className="bg-white border-r border-gray-200 shadow-sm z-10 mr-2"
+        className="bg-white border-r border-gray-200 shadow-sm z-10 mr-2 h-full"
       >
-        <div className="p-4">
+        <div className="p-4 h-full">
           <div className="flex justify-between items-center mb-4">
             <div className="text-lg font-medium">Component Library</div>
             <button
@@ -374,11 +365,9 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
   }
 
   const items: CollapseProps["items"] = sections.map((section) => {
-    // Filter items based on search term
     let filteredItems;
     
     if (section.isTeamSection) {
-      // For teams section, we'll handle differently - just show a button to open the modal
       return {
         key: section.title,
         label: (
@@ -404,7 +393,6 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
       };
     }
     
-    // For other sections, use the existing structure
     filteredItems = section.items.filter((item) =>
       item.label?.toLowerCase().includes(searchTerm.toLowerCase())
     );
@@ -423,7 +411,6 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
       children: (
         <div className="space-y-2">
           {filteredItems.length > 0 ? (
-            // Render regular draggable items for other components
             filteredItems.map((item, itemIndex) => (
               <PresetItem
                 key={itemIndex}
@@ -448,9 +435,9 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
     <>
       <Sider
         width={300}
-        className="bg-white border-r border-gray-200 shadow-sm z-10 mr-2"
+        className="bg-white border-r border-gray-200 shadow-sm z-10 mr-2 h-full overflow-hidden flex flex-col"
       >
-        <div className="p-4">
+        <div className="p-4 flex-shrink-0">
           <div className="flex justify-between items-center mb-4">
             <div className="text-lg font-medium">Component Library</div>
             <button
@@ -484,7 +471,9 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
               prefix={<span className="text-gray-400">🔍</span>}
             />
           </div>
+        </div>
 
+        <div className="flex-grow overflow-y-auto px-4 pb-4">
           <Collapse
             accordion
             items={items}
@@ -500,7 +489,6 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
         </div>
       </Sider>
 
-      {/* Team Selection Modal */}
       <TeamSelectionModal 
         isOpen={isTeamModalOpen}
         onClose={() => setIsTeamModalOpen(false)}

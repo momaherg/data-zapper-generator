@@ -1,3 +1,4 @@
+
 .drop-target-valid {
   outline: 2px solid #4caf50;
   outline-offset: 4px;
@@ -26,5 +27,34 @@
 }
 
 .my-right-handle {
-  @apply bg-accent w-1 h-3  rounded-l-sm -mr-1 border-0 !important;
+  @apply bg-accent w-1 h-3 rounded-l-sm -mr-1 border-0 !important;
+}
+
+/* Fix component library overflow */
+.ant-layout-sider {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Fix React Flow container */
+.react-flow__container {
+  height: 100%;
+}
+
+.react-flow__viewport {
+  transform-origin: 0 0;
+}
+
+/* Make drawer properly positioned */
+.component-editor-drawer .ant-drawer-content-wrapper {
+  height: calc(100% - 20px);
+  margin: 10px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.component-editor-drawer .ant-drawer-body {
+  padding: 16px;
+  overflow-y: auto;
 }

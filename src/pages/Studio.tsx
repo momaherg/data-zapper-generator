@@ -138,12 +138,14 @@ const StudioPage = () => {
   }
 
   return (
-    <main className="h-full w-full p-4 bg-gray-50">
+    <main className="h-full w-full flex flex-col p-4 bg-gray-50">
       <div className="mb-4 flex items-center gap-2">
         <Users className="h-5 w-5 text-blue-500" />
         <h1 className="text-xl font-semibold">Agents Studio</h1>
       </div>
-      {team && <TeamBuilder team={team} onChange={handleTeamUpdate} />}
+      <div className="flex-grow min-h-0">
+        {team && <TeamBuilder team={team} onChange={handleTeamUpdate} />}
+      </div>
     </main>
   );
 };

@@ -85,7 +85,7 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
   }, [setTestDrawerVisible]);
   
   return (
-    <div>
+    <div className="flex flex-col h-full">
       <TeamBuilderHeader 
         isJsonMode={isJsonMode} 
         setIsJsonMode={setIsJsonMode} 
@@ -105,11 +105,11 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
         onDragOver={handleDragOver} 
         onDragStart={handleDragStart}
       >
-        <Layout className="relative h-[calc(100vh-239px)] rounded bg-[#6f80e6]/0">
+        <Layout className="relative h-[calc(100vh-239px)] min-h-0 flex-grow rounded bg-[#6f80e6]/0">
           {!isJsonMode && <ComponentLibrary />}
 
-          <Layout className="bg-primary rounded">
-            <Content className="relative rounded bg-tertiary">
+          <Layout className="bg-primary rounded min-h-0 flex-grow">
+            <Content className="relative rounded bg-tertiary min-h-0 flex-grow">
               <FlowEditor 
                 isJsonMode={isJsonMode} 
                 jsonValue={JSON.stringify(syncToJson(), null, 2)} 
