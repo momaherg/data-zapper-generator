@@ -1,133 +1,182 @@
-import React, { useState, useEffect } from "react";
-import { Card, Button, Popconfirm } from "antd";
-import ComponentEditor from "../builder/component-editor/component-editor";
-import { Gallery } from "../datamodel";
-import { galleryAPI } from "./api";
+
+import React, { useState, useCallback, useEffect } from "react";
+import { Tabs, Button } from "antd";
+import { Component, ComponentConfig } from "../datamodel";
+import { Gallery, GalleryConfig } from "./types";
+import debounce from "lodash/debounce";
 import { toast } from "sonner";
-import { useGalleryStore } from "./store";
-import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import MonacoEditor from "../builder/monaco";
+import { 
+  Code, ChevronLeft, Save, InfoIcon, 
+  AlertCircle, CopyCheck, Check 
+} from "lucide-react";
 
-export const GalleryDetail: React.FC = () => {
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const [gallery, setGallery] = useState<Gallery | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [isEditing, setIsEditing] = useState(false);
-  const fetchGalleries = useGalleryStore((state) => state.fetchGalleries);
+interface DetailProps {
+  gallery: Gallery;
+  onNavigateBack: () => void;
+  onSave: (updates: Partial<Gallery>) => Promise<void>;
+  onDirtyStateChange: (isDirty: boolean) => void;
+}
 
+export const GalleryDetail: React.FC<DetailProps> = ({
+  gallery,
+  onNavigateBack,
+  onSave,
+  onDirtyStateChange,
+}) => {
+  const [isJsonMode, setIsJsonMode] = useState(false);
+  const [workingCopy, setWorkingCopy] = useState<Gallery>(gallery);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
+
+  // Reset working copy when gallery changes
   useEffect(() => {
-    if (id) {
-      fetchGallery(id);
-    }
-  }, [id]);
+    setWorkingCopy(gallery);
+  }, [gallery]);
 
-  const fetchGallery = async (galleryId: string) => {
+  // Check if the gallery has been modified
+  const isDirty = useCallback(() => {
+    return JSON.stringify(gallery) !== JSON.stringify(workingCopy);
+  }, [gallery, workingCopy]);
+
+  // Notify parent of dirty state changes
+  useEffect(() => {
+    onDirtyStateChange(isDirty());
+  }, [isDirty, onDirtyStateChange]);
+
+  const handleJsonChange = useCallback(
+    debounce((value: string) => {
+      try {
+        const updatedGallery = JSON.parse(value);
+        setWorkingCopy(updatedGallery);
+      } catch (error) {
+        console.error("Invalid JSON:", error);
+      }
+    }, 500),
+    []
+  );
+
+  const handleSave = async () => {
     try {
-      setIsLoading(true);
-      const data = await galleryAPI.getGallery(galleryId);
-      setGallery(data);
+      setSaveStatus("saving");
+      setIsSaving(true);
+      await onSave(workingCopy);
+      setSaveStatus("success");
+      
+      // Reset success status after a delay
+      setTimeout(() => {
+        setSaveStatus("idle");
+      }, 2000);
     } catch (error) {
-      console.error("Error fetching gallery:", error);
-      toast.error("Failed to load gallery");
+      console.error("Error saving gallery:", error);
+      setSaveStatus("error");
+      toast.error("Failed to save gallery");
     } finally {
-      setIsLoading(false);
+      setIsSaving(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (!gallery) return;
-    
-    try {
-      await galleryAPI.deleteGallery(gallery.id);
-      toast.success("Gallery deleted successfully");
-      fetchGalleries();
-      navigate("/gallery");
-    } catch (error) {
-      console.error("Error deleting gallery:", error);
-      toast.error("Failed to delete gallery");
+  const getSaveButtonText = () => {
+    switch (saveStatus) {
+      case "saving":
+        return "Saving...";
+      case "success":
+        return "Saved";
+      case "error":
+        return "Retry Save";
+      default:
+        return "Save Changes";
     }
   };
 
-  const handleUpdate = async (updatedGallery: Gallery) => {
-    try {
-      const data = await galleryAPI.updateGallery(updatedGallery);
-      setGallery(data);
-      setIsEditing(false);
-      toast.success("Gallery updated successfully");
-      fetchGalleries();
-    } catch (error) {
-      console.error("Error updating gallery:", error);
-      toast.error("Failed to update gallery");
+  const getSaveIcon = () => {
+    switch (saveStatus) {
+      case "saving":
+        return null;
+      case "success":
+        return <Check className="w-4 h-4" />;
+      case "error":
+        return <AlertCircle className="w-4 h-4" />;
+      default:
+        return <Save className="w-4 h-4" />;
     }
   };
-
-  if (isLoading) {
-    return <div>Loading gallery...</div>;
-  }
-
-  if (!gallery) {
-    return <div>Gallery not found</div>;
-  }
 
   return (
-    <div className="p-4">
-      <div className="flex items-center justify-between mb-4">
-        <Button 
-          type="text" 
-          icon={<ArrowLeft className="h-4 w-4" />} 
-          onClick={() => navigate("/gallery")}
-        >
-          Back to Galleries
-        </Button>
-        <div className="flex gap-2">
-          <Button 
-            type="primary" 
-            onClick={() => setIsEditing(!isEditing)}
+    <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between mb-4 border-b border-gray-200 pb-4">
+        <div className="flex items-center gap-2">
+          <Button
+            type="text"
+            icon={<ChevronLeft className="w-4 h-4" />}
+            onClick={onNavigateBack}
+          />
+          <h2 className="text-lg font-medium">{gallery.name}</h2>
+        </div>
+        
+        <div className="flex items-center gap-2">
+          <Button
+            type="default"
+            onClick={() => setIsJsonMode(!isJsonMode)}
+            icon={<Code className="w-4 h-4" />}
+            className="flex items-center gap-1"
           >
-            {isEditing ? "Cancel" : "Edit"}
+            {isJsonMode ? "Switch to Visual Mode" : "Edit JSON"}
           </Button>
-          <Popconfirm
-            title="Delete this gallery?"
-            description="This action cannot be undone."
-            onConfirm={handleDelete}
-            okText="Yes"
-            cancelText="No"
+          
+          <Button
+            type="primary"
+            onClick={handleSave}
+            disabled={isSaving || !isDirty()}
+            icon={getSaveIcon()}
+            className="flex items-center gap-1"
           >
-            <Button 
-              danger 
-              icon={<Trash2 className="h-4 w-4" />}
-            >
-              Delete
-            </Button>
-          </Popconfirm>
+            {getSaveButtonText()}
+          </Button>
         </div>
       </div>
-
-      <Card title={gallery.name} className="mb-4">
-        <p className="text-gray-500">{gallery.description}</p>
-        <p className="text-xs text-gray-400">
-          Last updated: {new Date(gallery.updated_at).toLocaleString()}
-        </p>
-      </Card>
-
-      {isEditing ? (
-        <ComponentEditor
-          component={gallery.config}
-          onChange={(updatedConfig) => {
-            handleUpdate({
-              ...gallery,
-              config: updatedConfig,
-            });
-          }}
-          onClose={() => setIsEditing(false)}
-        />
+      
+      {gallery.description && (
+        <div className="mb-4 bg-blue-50 p-3 rounded-md flex items-start gap-2">
+          <InfoIcon className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
+          <p className="text-sm text-blue-700">{gallery.description}</p>
+        </div>
+      )}
+      
+      {isJsonMode ? (
+        <div className="flex-1 overflow-hidden">
+          <MonacoEditor
+            value={JSON.stringify(workingCopy, null, 2)}
+            onChange={handleJsonChange}
+            language="json"
+            minimap={true}
+          />
+        </div>
       ) : (
-        <div className="bg-white p-4 rounded shadow">
-          <h3 className="text-lg font-medium mb-2">Gallery Components</h3>
-          <pre className="bg-gray-50 p-4 rounded overflow-auto max-h-96">
-            {JSON.stringify(gallery.config, null, 2)}
-          </pre>
+        <div className="flex-1 overflow-auto">
+          <Tabs
+            defaultActiveKey="components"
+            items={[
+              {
+                key: "components",
+                label: "Components",
+                children: (
+                  <div>
+                    <p>Component editor goes here</p>
+                  </div>
+                ),
+              },
+              {
+                key: "settings",
+                label: "Gallery Settings",
+                children: (
+                  <div>
+                    <p>Settings editor goes here</p>
+                  </div>
+                ),
+              },
+            ]}
+          />
         </div>
       )}
     </div>

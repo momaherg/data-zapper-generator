@@ -56,7 +56,8 @@ const StudioPage = () => {
       };
       
       // Only log in development environment
-      if (process.env.NODE_ENV === 'development') {
+      const isDevelopment = import.meta.env.MODE === 'development';
+      if (isDevelopment) {
         console.log("Normalized team:", normalizedTeam);
       }
       

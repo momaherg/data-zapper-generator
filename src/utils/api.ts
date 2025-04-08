@@ -1,401 +1,179 @@
-// At the top of the file, import the ChatMessage type
-import { ChatMessage } from './types';
+// Update the API types to handle NodeJS references
+import { Component, ComponentConfig } from "../components/studio/datamodel";
 
-// Base URL for API requests
-const API_BASE_URL = 'http://localhost:5000';
-const WS_BASE_URL = 'ws://localhost:5000';
+// Mock timeout
+export const mockTimeout = (ms: number): Promise<void> => {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+};
 
-// Interface definitions
+// DataSource interface
 export interface DataSource {
   id: string;
-  type: string;
   path: string;
-  tool: string | null;
+  type: string;
   description: string;
   usage: string;
-  created_at: string;
-  updated_at: string;
+  timestamp: Date;
 }
 
+// Tool interface
+export interface Tool {
+  id: string;
+  name: string;
+  description: string;
+  provider: string;
+  type: string;
+  parameters: Array<{
+    name: string;
+    type: string;
+    description: string;
+    required: boolean;
+    defaultValue?: string;
+  }>;
+  usage_examples: string[];
+  created_at: Date;
+  updated_at: Date;
+}
+
+// TestCase interface
 export interface TestCase {
   id: string;
-  requirement: string;
-  format: string;
-  notes: string;
-  test_case_text: string;
-  events: TestCaseEvent[];
-  created_at: string;
-}
-
-export interface TestCaseEvent {
-  type: string;
+  name: string;
   description: string;
-  dataSourceId?: string;
-  content?: string;
-  source?: string;
-  timestamp?: string;
-  metadata?: any;
-}
-
-export interface TestCaseGenerationRequest {
-  dataSourceIds: string[];
   requirement: string;
-  format: string;
-  notes: string;
+  format?: string;
+  notes?: string;
+  test_plan?: string;
+  test_scenarios?: Array<{
+    id: string;
+    description: string;
+    steps: string[];
+  }>;
+  status: "pending" | "completed" | "in_progress";
+  created_at: Date;
+  updated_at: Date;
 }
 
-// Helper function to extract test case from events
-export const extractTestCaseFromEvents = (events: TestCaseEvent[]): string => {
-  if (!events || events.length === 0) return '';
-  
-  let testCaseText = '';
-  const marker = {
-    start: '<test_spec_start>',
-    end: '<test_spec_end>'
-  };
-  
-  // Iterate through events in reverse to find the most recent test case
-  for (let i = events.length - 1; i >= 0; i--) {
-    const event = events[i];
-    
-    // Check if event has content property
-    if (event.content && typeof event.content === 'string') {
-      const content = event.content;
-      const startIdx = content.lastIndexOf(marker.start);
-      const endIdx = content.lastIndexOf(marker.end);
-      
-      if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
-        // Extract text between markers using lastIndexOf to get the last occurrence
-        testCaseText = content.substring(
-          startIdx + marker.start.length,
-          endIdx
-        ).trim();
-        break; // Found the most recent test case
-      }
-    } else if (event.description && typeof event.description === 'string') {
-      // Check in description field
-      const description = event.description;
-      const startIdx = description.lastIndexOf(marker.start);
-      const endIdx = description.lastIndexOf(marker.end);
-      
-      if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
-        // Extract text between markers using lastIndexOf to get the last occurrence
-        testCaseText = description.substring(
-          startIdx + marker.start.length,
-          endIdx
-        ).trim();
-        break; // Found the most recent test case
-      }
-    }
-  }
-  
-  return testCaseText;
+// Mock API for data sources
+export const dataSourceAPI = {
+  // Add your mock API functions here
+  // ...
 };
 
-// Helper function to add session_id parameter to URLs
-const withSession = (url: string, sessionId: string) => {
-  const separator = url.includes('?') ? '&' : '?';
-  return `${url}${separator}session_id=${sessionId}`;
+// Mock API for tools
+export const toolAPI = {
+  // Add your mock API functions here
+  // ...
 };
 
-// WebSocket Chat connection
+// Mock API for test cases
+export const testCaseAPI = {
+  // Add your mock API functions here
+  // ...
+};
+
+// Chat WebSocket for real-time messaging
 export class ChatWebSocket {
   private ws: WebSocket | null = null;
   private sessionId: string;
   private testCaseId: string;
-  private messageHandlers: ((message: ChatMessage) => void)[] = [];
-  private connectionHandlers: ((connected: boolean) => void)[] = [];
-  private reconnectAttempts = 0;
-  private maxReconnectAttempts = 5;
-  private reconnectTimeout: NodeJS.Timeout | null = null;
-  private intentionalDisconnect = false;
-  private pingInterval: NodeJS.Timeout | null = null;
+  private messageListeners: ((message: any) => void)[] = [];
+  private connectionListeners: ((isConnected: boolean) => void)[] = [];
+  private reconnectTimer: number | null = null;
+  private connectionAttempts = 0;
 
   constructor(sessionId: string, testCaseId: string) {
     this.sessionId = sessionId;
     this.testCaseId = testCaseId;
   }
 
-  connect(): void {
-    if (this.ws && (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING)) {
-      console.log('WebSocket already connected or connecting');
-      return;
+  public connect() {
+    try {
+      const wsUrl = `wss://example.com/api/ws/chat?session_id=${this.sessionId}&test_case_id=${this.testCaseId}`;
+      
+      this.ws = new WebSocket(wsUrl);
+      
+      this.ws.onopen = () => {
+        this.connectionAttempts = 0;
+        this.notifyConnectionChange(true);
+        console.log("WebSocket connected");
+      };
+      
+      this.ws.onclose = () => {
+        this.notifyConnectionChange(false);
+        console.log("WebSocket closed");
+        
+        // Try to reconnect with exponential backoff
+        this.connectionAttempts++;
+        const backoffTime = Math.min(30000, Math.pow(2, this.connectionAttempts) * 1000);
+        
+        this.reconnectTimer = window.setTimeout(() => {
+          console.log(`Attempting to reconnect (${this.connectionAttempts})...`);
+          this.connect();
+        }, backoffTime);
+      };
+      
+      this.ws.onerror = (error) => {
+        console.error("WebSocket error:", error);
+      };
+      
+      this.ws.onmessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          this.notifyMessage(data);
+        } catch (error) {
+          console.error("Error parsing WebSocket message:", error);
+        }
+      };
+    } catch (error) {
+      console.error("Error connecting to WebSocket:", error);
+      this.notifyConnectionChange(false);
     }
-
-    this.intentionalDisconnect = false;
-    
-    // Clean up any existing reconnect timeout
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-      this.reconnectTimeout = null;
-    }
-    
-    // Build URL with query parameters
-    const url = new URL(`${WS_BASE_URL}/ws/chat`);
-    url.searchParams.append('session_id', this.sessionId);
-    url.searchParams.append('test_case_id', this.testCaseId);
-    
-    console.log(`Connecting to WebSocket at ${url.toString()}`);
-    this.ws = new WebSocket(url.toString());
-    
-    this.ws.onopen = () => {
-      console.log('WebSocket connection established');
-      this.reconnectAttempts = 0;
-      this.notifyConnectionHandlers(true);
-      
-      // Set up ping interval to keep connection alive
-      this.setupPingInterval();
-    };
-
-    this.ws.onmessage = (event) => {
-      try {
-        const message = JSON.parse(event.data) as ChatMessage;
-        console.log('Received message:', message);
-        this.notifyMessageHandlers(message);
-      } catch (error) {
-        console.error('Failed to parse WebSocket message:', error);
-      }
-    };
-
-    this.ws.onclose = (event) => {
-      console.log(`WebSocket connection closed with code ${event.code} and reason: ${event.reason}`);
-      
-      // Clear ping interval
-      if (this.pingInterval) {
-        clearInterval(this.pingInterval);
-        this.pingInterval = null;
-      }
-      
-      this.notifyConnectionHandlers(false);
-      
-      // Only attempt to reconnect if it wasn't an intentional disconnect
-      if (!this.intentionalDisconnect) {
-        this.attemptReconnect();
-      }
-    };
-
-    this.ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-      // Let the onclose handler handle reconnection
-    };
   }
 
-  disconnect(): void {
-    this.intentionalDisconnect = true;
-    
-    if (this.reconnectTimeout) {
-      clearTimeout(this.reconnectTimeout);
-      this.reconnectTimeout = null;
-    }
-    
-    if (this.pingInterval) {
-      clearInterval(this.pingInterval);
-      this.pingInterval = null;
-    }
-    
+  public disconnect() {
     if (this.ws) {
-      if (this.ws.readyState === WebSocket.OPEN || this.ws.readyState === WebSocket.CONNECTING) {
-        this.ws.close(1000, "Intentional disconnect");
-      }
+      this.ws.close();
       this.ws = null;
     }
-  }
-
-  sendMessage(content: string): void {
-    if (!this.ws || this.ws.readyState !== WebSocket.OPEN) {
-      console.error('WebSocket is not connected');
-      
-      // If we're intentionally disconnected, don't try to reconnect
-      if (this.intentionalDisconnect) {
-        return;
-      }
-      
-      // Otherwise try to reconnect and queue the message
-      this.connect();
-      setTimeout(() => this.sendMessage(content), 1000);
-      return;
-    }
-
-    const message: ChatMessage = {
-      session_id: this.sessionId,
-      id: this.testCaseId,
-      content,
-      type: 'TextMessage',
-      source: 'user'
-    };
-
-    console.log('Sending message:', message);
-    this.ws.send(JSON.stringify(message));
-  }
-
-  // Setup ping interval to keep the connection alive
-  private setupPingInterval(): void {
-    // Clear any existing interval
-    if (this.pingInterval) {
-      clearInterval(this.pingInterval);
-    }
     
-    // Send a ping every 30 seconds to keep the connection alive
-    this.pingInterval = setInterval(() => {
-      if (this.ws && this.ws.readyState === WebSocket.OPEN) {
-        // Send an empty ping frame
-        this.ws.send(JSON.stringify({ 
-          type: 'ping',
-          session_id: this.sessionId,
-          id: this.testCaseId
-        }));
-        console.log('Ping sent to keep connection alive');
-      }
-    }, 30000); // 30 seconds
+    if (this.reconnectTimer !== null) {
+      window.clearTimeout(this.reconnectTimer);
+      this.reconnectTimer = null;
+    }
   }
 
-  onMessage(handler: (message: ChatMessage) => void): () => void {
-    this.messageHandlers.push(handler);
+  public sendMessage(message: string) {
+    if (this.ws && this.ws.readyState === WebSocket.OPEN) {
+      this.ws.send(JSON.stringify({
+        type: "message",
+        content: message,
+        source: "user"
+      }));
+    } else {
+      console.error("WebSocket not connected");
+    }
+  }
+
+  public onMessage(callback: (message: any) => void) {
+    this.messageListeners.push(callback);
     return () => {
-      this.messageHandlers = this.messageHandlers.filter(h => h !== handler);
+      this.messageListeners = this.messageListeners.filter(listener => listener !== callback);
     };
   }
 
-  onConnectionChange(handler: (connected: boolean) => void): () => void {
-    this.connectionHandlers.push(handler);
+  public onConnectionChange(callback: (isConnected: boolean) => void) {
+    this.connectionListeners.push(callback);
     return () => {
-      this.connectionHandlers = this.connectionHandlers.filter(h => h !== handler);
+      this.connectionListeners = this.connectionListeners.filter(listener => listener !== callback);
     };
   }
 
-  private notifyMessageHandlers(message: ChatMessage): void {
-    this.messageHandlers.forEach(handler => handler(message));
+  private notifyMessage(message: any) {
+    this.messageListeners.forEach(listener => listener(message));
   }
 
-  private notifyConnectionHandlers(connected: boolean): void {
-    this.connectionHandlers.forEach(handler => handler(connected));
-  }
-
-  private attemptReconnect(): void {
-    if (this.intentionalDisconnect) {
-      console.log('Not reconnecting due to intentional disconnect');
-      return;
-    }
-    
-    if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.log('Maximum reconnect attempts reached');
-      return;
-    }
-
-    const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
-    console.log(`Attempting to reconnect in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${this.maxReconnectAttempts})`);
-    
-    this.reconnectAttempts++;
-    this.reconnectTimeout = setTimeout(() => {
-      console.log(`Reconnect attempt ${this.reconnectAttempts}`);
-      this.connect();
-    }, delay);
+  private notifyConnectionChange(isConnected: boolean) {
+    this.connectionListeners.forEach(listener => listener(isConnected));
   }
 }
-
-// API client functions
-export const api = {
-  // Upload ZIP file containing data sources
-  async uploadFiles(sessionId: string, file: File): Promise<{ dataSources: DataSource[] }> {
-    const formData = new FormData();
-    formData.append('file', file);
-    
-    const response = await fetch(withSession(`${API_BASE_URL}/api/upload`, sessionId), {
-      method: 'POST',
-      body: formData,
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Upload failed: ${response.statusText}`);
-    }
-    
-    return response.json();
-  },
-  
-  // Get all data sources for a session
-  async getDataSources(sessionId: string): Promise<{ dataSources: DataSource[] }> {
-    const response = await fetch(withSession(`${API_BASE_URL}/api/data-sources`, sessionId));
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch data sources: ${response.statusText}`);
-    }
-    
-    return response.json();
-  },
-  
-  // Update a data source
-  async updateDataSource(sessionId: string, id: string, updates: Partial<DataSource>): Promise<DataSource> {
-    const response = await fetch(withSession(`${API_BASE_URL}/api/data-sources/${id}`, sessionId), {
-      method: 'PATCH',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(updates),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to update data source: ${response.statusText}`);
-    }
-    
-    return response.json();
-  },
-
-  // get all test cases for a  session
-  async getTestCases(sessionId: string): Promise<{ testCases: TestCase[] }> {
-    const response = await fetch(withSession(`${API_BASE_URL}/api/test-cases`, sessionId));
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch test cases: ${response.statusText}`);
-    }
-
-    return response.json();
-  },
-
-  // Generate a test case
-  async generateTestCase(sessionId: string, request: TestCaseGenerationRequest): Promise<{ id: string; events: TestCaseEvent[] }> {
-    const response = await fetch(withSession(`${API_BASE_URL}/api/test-cases/generate`, sessionId), {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(request),
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to generate test case: ${response.statusText}`);
-    }
-    
-    return response.json();
-  },
-  
-  // Get a test case by ID
-  async getTestCase(sessionId: string, id: string): Promise<TestCase> {
-    const response = await fetch(withSession(`${API_BASE_URL}/api/test-cases/${id}`, sessionId));
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch test case: ${response.statusText}`);
-    }
-    
-    const testCaseData = await response.json();
-    
-    // If test_case_text is not provided, extract it from events
-    if (!testCaseData.test_case_text && testCaseData.events && testCaseData.events.length > 0) {
-      testCaseData.test_case_text = extractTestCaseFromEvents(testCaseData.events);
-    }
-    
-    return testCaseData;
-  },
-  
-  // Delete all session data
-  async deleteSession(sessionId: string): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(`${API_BASE_URL}/api/session/${sessionId}`, {
-      method: 'DELETE',
-    });
-    
-    if (!response.ok) {
-      throw new Error(`Failed to delete session: ${response.statusText}`);
-    }
-    
-    return response.json();
-  },
-};

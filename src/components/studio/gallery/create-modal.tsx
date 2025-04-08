@@ -1,209 +1,109 @@
-import React, { useState, useRef } from "react";
-import { Modal, Tabs, Input, Button, Alert, Upload } from "antd";
-import { Globe, Upload as UploadIcon, Code } from "lucide-react";
-import { MonacoEditor } from "../monaco";
-import type { InputRef, UploadFile, UploadProps } from "antd";
-import { defaultGallery } from "./utils";
-import { Gallery, GalleryConfig } from "../../types/datamodel";
 
-interface GalleryCreateModalProps {
-  open: boolean;
-  onCancel: () => void;
-  onCreateGallery: (gallery: Gallery) => void;
+import React, { useState } from "react";
+import { Button, Input, Modal } from "antd";
+import { Plus, X } from "lucide-react";
+import { Gallery, GalleryConfig } from "./types";
+
+const { TextArea } = Input;
+
+interface CreateGalleryModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onCreateGallery: (gallery: Gallery) => Promise<void>;
 }
 
-export const GalleryCreateModal: React.FC<GalleryCreateModalProps> = ({
-  open,
-  onCancel,
+export const CreateGalleryModal: React.FC<CreateGalleryModalProps> = ({
+  isOpen,
+  onClose,
   onCreateGallery,
 }) => {
-  const [activeTab, setActiveTab] = useState("url");
-  const [url, setUrl] = useState("");
-  const [jsonContent, setJsonContent] = useState(
-    JSON.stringify(defaultGallery, null, 2)
-  );
-  const [error, setError] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const editorRef = useRef(null);
+  const [galleryName, setGalleryName] = useState("");
+  const [galleryDescription, setGalleryDescription] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const handleUrlImport = async () => {
-    setIsLoading(true);
-    setError("");
+  const handleCreateGallery = async () => {
+    if (!galleryName.trim()) return;
+
     try {
-      const response = await fetch(url);
-      const data = (await response.json()) as GalleryConfig;
-      // TODO: Validate against Gallery schema
-      onCreateGallery({
-        config: data,
-      });
-      onCancel();
-    } catch (err) {
-      setError("Failed to fetch or parse gallery from URL");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleFileUpload = (info: { file: UploadFile }) => {
-    const { status, originFileObj } = info.file;
-    if (status === "done" && originFileObj instanceof File) {
-      const reader = new FileReader();
-      reader.onload = (e: ProgressEvent<FileReader>) => {
-        try {
-          const content = JSON.parse(
-            e.target?.result as string
-          ) as GalleryConfig;
-
-          // TODO: Validate against Gallery schema
-          onCreateGallery({
-            config: content,
-          });
-          onCancel();
-        } catch (err) {
-          setError("Invalid JSON file");
+      setIsSubmitting(true);
+      
+      const newGallery: Gallery = {
+        id: `gallery-${Date.now()}`,
+        name: galleryName.trim(),
+        description: galleryDescription.trim() || undefined,
+        config: {
+          id: `gallery-${Date.now()}`,
+          name: galleryName.trim(),
+          description: galleryDescription.trim() || undefined,
+          components: {
+            teams: [],
+            agents: [],
+            models: [],
+            tools: [],
+            terminations: []
+          }
         }
       };
-      reader.readAsText(originFileObj);
-    } else if (status === "error") {
-      setError("File upload failed");
+      
+      await onCreateGallery(newGallery);
+      setGalleryName("");
+      setGalleryDescription("");
+      onClose();
+    } catch (error) {
+      console.error("Error creating gallery:", error);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
-  const handlePasteImport = () => {
-    try {
-      const content = JSON.parse(jsonContent) as GalleryConfig;
-      // TODO: Validate against Gallery schema
-      onCreateGallery({
-        config: content,
-      });
-      onCancel();
-    } catch (err) {
-      setError("Invalid JSON format");
-    }
+  const handleCancel = () => {
+    setGalleryName("");
+    setGalleryDescription("");
+    onClose();
   };
-
-  const uploadProps: UploadProps = {
-    accept: ".json",
-    showUploadList: false,
-    customRequest: ({ file, onSuccess }) => {
-      setTimeout(() => {
-        onSuccess && onSuccess("ok");
-      }, 0);
-    },
-    onChange: handleFileUpload,
-  };
-
-  const inputRef = useRef<InputRef>(null);
-
-  const items = [
-    {
-      key: "url",
-      label: (
-        <span className="flex items-center gap-2">
-          <Globe className="w-4 h-4" /> URL Import
-        </span>
-      ),
-      children: (
-        <div className="space-y-4">
-          <Input
-            ref={inputRef}
-            placeholder="Enter gallery URL..."
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-          />
-          <div className="text-xs">
-            Sample
-            <a
-              role="button"
-              onClick={(e) => {
-                setUrl(
-                  "https://raw.githubusercontent.com/victordibia/multiagent-systems-with-autogen/refs/heads/main/research/components/gallery/base.json"
-                );
-                e.preventDefault();
-              }}
-              href="https://raw.githubusercontent.com/victordibia/multiagent-systems-with-autogen/refs/heads/main/research/components/gallery/base.json"
-              target="_blank"
-              rel="noreferrer"
-              className="text-accent"
-            >
-              {" "}
-              gallery.json{" "}
-            </a>
-          </div>
-          <Button
-            type="primary"
-            onClick={handleUrlImport}
-            disabled={!url || isLoading}
-            block
-          >
-            Import from URL
-          </Button>
-        </div>
-      ),
-    },
-    {
-      key: "file",
-      label: (
-        <span className="flex items-center gap-2">
-          <UploadIcon className="w-4 h-4" /> File Upload
-        </span>
-      ),
-      children: (
-        <div className="border-2 border-dashed rounded-lg p-8 text-center space-y-4">
-          <Upload.Dragger {...uploadProps}>
-            <p className="ant-upload-drag-icon">
-              <UploadIcon className="w-8 h-8 mx-auto text-secondary" />
-            </p>
-            <p className="ant-upload-text">
-              Click or drag JSON file to this area
-            </p>
-          </Upload.Dragger>
-        </div>
-      ),
-    },
-    {
-      key: "paste",
-      label: (
-        <span className="flex items-center gap-2">
-          <Code className="w-4 h-4" /> Paste JSON
-        </span>
-      ),
-      children: (
-        <div className="space-y-4">
-          <div className="h-64">
-            <MonacoEditor
-              value={jsonContent}
-              onChange={setJsonContent}
-              editorRef={editorRef}
-              language="json"
-              minimap={false}
-            />
-          </div>
-          <Button type="primary" onClick={handlePasteImport} block>
-            Import JSON
-          </Button>
-        </div>
-      ),
-    },
-  ];
 
   return (
     <Modal
       title="Create New Gallery"
-      open={open}
-      onCancel={onCancel}
+      open={isOpen}
+      onCancel={handleCancel}
       footer={null}
-      width={800}
+      destroyOnClose
     >
-      <div className="mt-4">
-        <Tabs activeKey={activeTab} onChange={setActiveTab} items={items} />
+      <div className="space-y-4 py-4">
+        <div>
+          <label className="block text-sm font-medium mb-1">Name</label>
+          <Input
+            value={galleryName}
+            onChange={(e) => setGalleryName(e.target.value)}
+            placeholder="Enter gallery name"
+          />
+        </div>
 
-        {error && (
-          <Alert message={error} type="error" showIcon className="mt-4" />
-        )}
+        <div>
+          <label className="block text-sm font-medium mb-1">Description (optional)</label>
+          <TextArea
+            value={galleryDescription}
+            onChange={(e) => setGalleryDescription(e.target.value)}
+            placeholder="Enter gallery description"
+            rows={3}
+          />
+        </div>
+
+        <div className="flex justify-end space-x-2 pt-4">
+          <Button onClick={handleCancel}>Cancel</Button>
+          <Button
+            type="primary"
+            onClick={handleCreateGallery}
+            loading={isSubmitting}
+            disabled={!galleryName.trim()}
+          >
+            Create
+          </Button>
+        </div>
       </div>
     </Modal>
   );
 };
 
-export default GalleryCreateModal;
+export default CreateGalleryModal;

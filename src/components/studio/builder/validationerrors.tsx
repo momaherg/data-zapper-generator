@@ -1,129 +1,157 @@
-import React from "react";
-import { AlertTriangle, XCircle, X } from "lucide-react";
-import { Tooltip } from "antd";
-import { ValidationResponse } from "../api";
 
-interface ValidationErrorViewProps {
-  validation: ValidationResponse;
+import React from "react";
+import { ExclamationTriangle, AlertTriangle } from "lucide-react";
+
+interface ValidationErrorProps {
+  validationResults: {
+    valid: boolean;
+    is_valid?: boolean;
+    errors?: Array<{
+      path: string;
+      message: string;
+    }>;
+    warnings?: Array<{
+      path: string;
+      message: string;
+    }>;
+  } | null;
+  isOpen: boolean;
   onClose: () => void;
 }
 
-const ValidationErrorView: React.FC<ValidationErrorViewProps> = ({
-  validation,
+// Helper function to extract parts from the message
+const extractMessageParts = (message: string) => {
+  // Default parts
+  const parts = {
+    field: '',
+    error: message,
+    suggestion: ''
+  };
+  
+  // Try to extract structured parts if message is formatted as "field: error. suggestion"
+  const fieldMatch = message.match(/^([^:]+):\s*(.*?)(?:\.\s*(.*))?$/);
+  if (fieldMatch) {
+    parts.field = fieldMatch[1]?.trim() || '';
+    parts.error = fieldMatch[2]?.trim() || message;
+    parts.suggestion = fieldMatch[3]?.trim() || '';
+  }
+  
+  return parts;
+};
+
+export const ValidationErrors: React.FC<ValidationErrorProps> = ({
+  validationResults,
+  isOpen,
   onClose,
-}) => (
-  <div
-    style={{ zIndex: 1000 }}
-    className="fixed inset-0 bg-black/80  flex items-center justify-center transition-opacity duration-300"
-    onClick={onClose}
-  >
-    <div
-      className="relative bg-primary w-full h-full md:w-4/5 md:h-4/5 md:rounded-lg p-8 overflow-auto"
-      style={{ opacity: 0.95 }}
-      onClick={(e) => e.stopPropagation()}
-    >
-      <Tooltip title="Close">
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 p-2 rounded-full bg-tertiary  hover:bg-secondary text-primary transition-colors"
-        >
-          <X size={24} />
-        </button>
-      </Tooltip>
-
-      <div className="space-y-4">
-        <div className="flex items-center gap-2 mb-4">
-          <XCircle size={20} className="text-red-500" />
-          <h3 className="text-lg font-medium">Validation Issues</h3>
-          <h4 className="text-sm text-secondary">
-            {validation.errors.length} errors • {validation.warnings.length}{" "}
-            warnings
-          </h4>
-        </div>
-
-        {/* Errors Section */}
-        {validation.errors.length > 0 && (
-          <div className="space-y-2">
-            <h4 className="text-sm font-medium">Errors</h4>
-            {validation.errors.map((error, idx) => (
-              <div key={idx} className="p-4 bg-tertiary rounded-lg">
-                <div className="flex gap-3">
-                  <XCircle className="h-4 w-4 text-red-500 shrink-0 mt-1" />
-                  <div>
-                    <div className="text-xs font-medium uppercase text-secondary mb-1">
-                      {error.field}
-                    </div>
-                    <div className="text-sm">{error.error}</div>
-                    {error.suggestion && (
-                      <div className="text-sm mt-2 text-secondary">
-                        Suggestion: {error.suggestion}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* Warnings Section */}
-        {validation.warnings.length > 0 && (
-          <div className="space-y-2 mt-6">
-            <h4 className="text-sm font-medium">Warnings</h4>
-            {validation.warnings.map((warning, idx) => (
-              <div key={idx} className="p-4 bg-tertiary rounded-lg">
-                <div className="flex gap-3">
-                  <AlertTriangle className="h-4 w-4 text-yellow-500 shrink-0 mt-1" />
-                  <div>
-                    <div className="text-xs font-medium uppercase text-secondary mb-1">
-                      {warning.field}
-                    </div>
-                    <div className="text-sm">{warning.error}</div>
-                    {warning.suggestion && (
-                      <div className="text-sm mt-2 text-secondary">
-                        Suggestion: {warning.suggestion}
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-);
-
-interface ValidationErrorsProps {
-  validation: ValidationResponse;
-}
-
-export const ValidationErrors: React.FC<ValidationErrorsProps> = ({
-  validation,
 }) => {
-  const [showFullView, setShowFullView] = React.useState(false);
+  if (!isOpen || !validationResults) return null;
+
+  const { errors = [], warnings = [] } = validationResults;
+  const hasIssues = (errors && errors.length > 0) || (warnings && warnings.length > 0);
+
+  if (!hasIssues) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="bg-white p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold text-green-600">Validation Successful</h2>
+            <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+              &times;
+            </button>
+          </div>
+          <p className="text-gray-700 mb-4">No validation errors or warnings found. Your team configuration is valid!</p>
+          <div className="flex justify-end mt-4">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <>
-      <div
-        className="flex items-center gap-2 py-2   px-3 bg-secondary rounded  text-sm text-secondary hover:text-primary transition-colors group cursor-pointer"
-        onClick={() => setShowFullView(true)}
-      >
-        <XCircle size={14} className="text-red-500" />
-        <span className="flex-1">
-          {validation.errors.length} errors • {validation.warnings.length}{" "}
-          warnings
-        </span>
-        <AlertTriangle size={14} className="group-hover:text-accent" />
-      </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="bg-white p-6 rounded-lg shadow-xl max-w-2xl w-full max-h-[80vh] overflow-y-auto">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold text-red-600">Validation Issues</h2>
+          <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
+            &times;
+          </button>
+        </div>
 
-      {showFullView && (
-        <ValidationErrorView
-          validation={validation}
-          onClose={() => setShowFullView(false)}
-        />
-      )}
-    </>
+        {errors.length > 0 && (
+          <div className="mb-6">
+            <h3 className="text-lg font-medium mb-3 text-red-600 flex items-center">
+              <ExclamationTriangle className="h-5 w-5 mr-2" />
+              Errors
+            </h3>
+            <ul className="space-y-3">
+              {errors.map((error, index) => {
+                const { field, error: errorText, suggestion } = extractMessageParts(error.message);
+                return (
+                  <li key={index} className="bg-red-50 p-3 rounded-md">
+                    <div className="flex items-start">
+                      <ExclamationTriangle className="h-5 w-5 text-red-600 mt-0.5 mr-2 flex-shrink-0" />
+                      <div>
+                        {field && <p className="font-medium text-red-800">{field}</p>}
+                        <p className="text-red-700">{errorText}</p>
+                        {suggestion && (
+                          <p className="text-gray-600 text-sm mt-1">Suggestion: {suggestion}</p>
+                        )}
+                        <p className="text-gray-500 text-xs mt-1">Path: {error.path}</p>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        {warnings.length > 0 && (
+          <div>
+            <h3 className="text-lg font-medium mb-3 text-yellow-600 flex items-center">
+              <AlertTriangle className="h-5 w-5 mr-2" />
+              Warnings
+            </h3>
+            <ul className="space-y-3">
+              {warnings.map((warning, index) => {
+                const { field, error: warningText, suggestion } = extractMessageParts(warning.message);
+                return (
+                  <li key={index} className="bg-yellow-50 p-3 rounded-md">
+                    <div className="flex items-start">
+                      <AlertTriangle className="h-5 w-5 text-yellow-600 mt-0.5 mr-2 flex-shrink-0" />
+                      <div>
+                        {field && <p className="font-medium text-yellow-800">{field}</p>}
+                        <p className="text-yellow-700">{warningText}</p>
+                        {suggestion && (
+                          <p className="text-gray-600 text-sm mt-1">Suggestion: {suggestion}</p>
+                        )}
+                        <p className="text-gray-500 text-xs mt-1">Path: {warning.path}</p>
+                      </div>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+        )}
+
+        <div className="flex justify-end mt-6 pt-3 border-t">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 mr-2"
+          >
+            Close
+          </button>
+        </div>
+      </div>
+    </div>
   );
 };
+
+export default ValidationErrors;
