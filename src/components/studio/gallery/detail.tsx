@@ -1,186 +1,212 @@
 
-import React, { useState, useCallback, useEffect } from "react";
-import { Tabs, Button } from "antd";
-import { Component, ComponentConfig } from "../datamodel";
-import { Gallery, GalleryConfig } from "./types";
-import debounce from "lodash/debounce";
-import { toast } from "sonner";
-import MonacoEditor from "../builder/monaco";
-import { 
-  Code, ChevronLeft, Save, InfoIcon, 
-  AlertCircle, CopyCheck, Check 
-} from "lucide-react";
+import React, { useState, useCallback, useEffect } from 'react';
+import { Badge } from '../../ui/badge';
+import { Button } from '../../ui/button';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '../../ui/card';
+import { Separator } from '../../ui/separator';
+import { toast } from 'sonner';
+import { Gallery } from './types';
+import { MonacoEditor } from '../builder/monaco';
+import { Save, Copy, Download, ChevronRight, ChevronDown } from 'lucide-react';
+import { formatDate, truncateText } from './utils';
 
-interface DetailProps {
+interface GalleryDetailProps {
   gallery: Gallery;
-  onNavigateBack: () => void;
   onSave: (updates: Partial<Gallery>) => Promise<void>;
-  onDirtyStateChange: (isDirty: boolean) => void;
+  onDirtyStateChange: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
-export const GalleryDetail: React.FC<DetailProps> = ({
+export default function GalleryDetail({
   gallery,
-  onNavigateBack,
   onSave,
   onDirtyStateChange,
-}) => {
-  const [isJsonMode, setIsJsonMode] = useState(false);
-  const [workingCopy, setWorkingCopy] = useState<Gallery>(gallery);
-  const [isSaving, setIsSaving] = useState(false);
-  const [saveStatus, setSaveStatus] = useState<"idle" | "saving" | "success" | "error">("idle");
+}: GalleryDetailProps) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [code, setCode] = useState('');
+  const [isExpanded, setIsExpanded] = useState(false);
 
-  // Reset working copy when gallery changes
   useEffect(() => {
-    setWorkingCopy(gallery);
+    if (gallery && gallery.config) {
+      setCode(JSON.stringify(gallery.config, null, 2));
+    }
   }, [gallery]);
 
-  // Check if the gallery has been modified
-  const isDirty = useCallback(() => {
-    return JSON.stringify(gallery) !== JSON.stringify(workingCopy);
-  }, [gallery, workingCopy]);
-
-  // Notify parent of dirty state changes
-  useEffect(() => {
-    onDirtyStateChange(isDirty());
-  }, [isDirty, onDirtyStateChange]);
-
-  const handleJsonChange = useCallback(
-    debounce((value: string) => {
-      try {
-        const updatedGallery = JSON.parse(value);
-        setWorkingCopy(updatedGallery);
-      } catch (error) {
-        console.error("Invalid JSON:", error);
-      }
-    }, 500),
-    []
+  const handleCodeChange = useCallback(
+    (value: string) => {
+      setCode(value);
+      onDirtyStateChange(true);
+    },
+    [onDirtyStateChange]
   );
 
   const handleSave = async () => {
     try {
-      setSaveStatus("saving");
-      setIsSaving(true);
-      await onSave(workingCopy);
-      setSaveStatus("success");
-      
-      // Reset success status after a delay
-      setTimeout(() => {
-        setSaveStatus("idle");
-      }, 2000);
+      const configObj = JSON.parse(code);
+      await onSave({ config: configObj });
+      toast.success('Gallery saved successfully');
+      onDirtyStateChange(false);
     } catch (error) {
-      console.error("Error saving gallery:", error);
-      setSaveStatus("error");
-      toast.error("Failed to save gallery");
-    } finally {
-      setIsSaving(false);
+      console.error('Failed to save gallery:', error);
+      toast.error(
+        error instanceof SyntaxError
+          ? 'Invalid JSON: ' + error.message
+          : 'Failed to save gallery'
+      );
     }
   };
 
-  const getSaveButtonText = () => {
-    switch (saveStatus) {
-      case "saving":
-        return "Saving...";
-      case "success":
-        return "Saved";
-      case "error":
-        return "Retry Save";
-      default:
-        return "Save Changes";
-    }
+  const handleCopyConfig = () => {
+    navigator.clipboard.writeText(code);
+    toast.success('Config copied to clipboard');
   };
 
-  const getSaveIcon = () => {
-    switch (saveStatus) {
-      case "saving":
-        return null;
-      case "success":
-        return <Check className="w-4 h-4" />;
-      case "error":
-        return <AlertCircle className="w-4 h-4" />;
-      default:
-        return <Save className="w-4 h-4" />;
-    }
+  const downloadConfig = () => {
+    const element = document.createElement('a');
+    const file = new Blob([code], { type: 'application/json' });
+    element.href = URL.createObjectURL(file);
+    element.download = `${gallery.id.toString()}-config.json`;
+    document.body.appendChild(element);
+    element.click();
+    document.body.removeChild(element);
   };
+
+  if (!gallery) return null;
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4 border-b border-gray-200 pb-4">
-        <div className="flex items-center gap-2">
-          <Button
-            type="text"
-            icon={<ChevronLeft className="w-4 h-4" />}
-            onClick={onNavigateBack}
-          />
-          <h2 className="text-lg font-medium">{gallery.name}</h2>
-        </div>
-        
-        <div className="flex items-center gap-2">
-          <Button
-            type="default"
-            onClick={() => setIsJsonMode(!isJsonMode)}
-            icon={<Code className="w-4 h-4" />}
-            className="flex items-center gap-1"
-          >
-            {isJsonMode ? "Switch to Visual Mode" : "Edit JSON"}
-          </Button>
-          
-          <Button
-            type="primary"
-            onClick={handleSave}
-            disabled={isSaving || !isDirty()}
-            icon={getSaveIcon()}
-            className="flex items-center gap-1"
-          >
-            {getSaveButtonText()}
-          </Button>
-        </div>
-      </div>
-      
-      {gallery.description && (
-        <div className="mb-4 bg-blue-50 p-3 rounded-md flex items-start gap-2">
-          <InfoIcon className="w-5 h-5 text-blue-500 mt-0.5 flex-shrink-0" />
-          <p className="text-sm text-blue-700">{gallery.description}</p>
-        </div>
-      )}
-      
-      {isJsonMode ? (
-        <div className="flex-1 overflow-hidden">
-          <MonacoEditor
-            value={JSON.stringify(workingCopy, null, 2)}
-            onChange={handleJsonChange}
-            language="json"
-            minimap={true}
-          />
-        </div>
-      ) : (
-        <div className="flex-1 overflow-auto">
-          <Tabs
-            defaultActiveKey="components"
-            items={[
-              {
-                key: "components",
-                label: "Components",
-                children: (
-                  <div>
-                    <p>Component editor goes here</p>
-                  </div>
-                ),
-              },
-              {
-                key: "settings",
-                label: "Gallery Settings",
-                children: (
-                  <div>
-                    <p>Settings editor goes here</p>
-                  </div>
-                ),
-              },
-            ]}
-          />
-        </div>
-      )}
+    <div className="animate-fade-in">
+      <Card className="border-none shadow-none bg-transparent">
+        <CardHeader className="px-0">
+          <div className="flex items-start justify-between">
+            <div>
+              <CardTitle className="text-xl mb-2">{gallery.name}</CardTitle>
+              <div className="flex items-center gap-2">
+                <Badge variant="outline">ID: {gallery.id.toString()}</Badge>
+                {gallery.description && (
+                  <Badge variant="outline" className="bg-primary/5">
+                    {truncateText(gallery.description, 30)}
+                  </Badge>
+                )}
+              </div>
+            </div>
+          </div>
+        </CardHeader>
+
+        <CardContent className="px-0 space-y-4">
+          <div className="flex items-center justify-between">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="font-medium"
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              {isExpanded ? (
+                <ChevronDown className="h-4 w-4 mr-1.5" />
+              ) : (
+                <ChevronRight className="h-4 w-4 mr-1.5" />
+              )}
+              Details
+            </Button>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopyConfig}
+                className="text-xs"
+              >
+                <Copy className="h-3.5 w-3.5 mr-1" />
+                Copy
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={downloadConfig}
+                className="text-xs"
+              >
+                <Download className="h-3.5 w-3.5 mr-1" />
+                Download
+              </Button>
+            </div>
+          </div>
+
+          {isExpanded && (
+            <div className="bg-muted/50 rounded-md p-3 text-xs space-y-2 animate-fade-down">
+              <div>
+                <span className="font-medium">ID:</span> {gallery.id.toString()}
+              </div>
+              {gallery.description && (
+                <div>
+                  <span className="font-medium">Description:</span> {gallery.description}
+                </div>
+              )}
+              {gallery.config && gallery.config.metadata && (
+                <>
+                  {Object.entries(gallery.config.metadata).map(([key, value]) => (
+                    <div key={key}>
+                      <span className="font-medium">{key}:</span>{' '}
+                      {typeof value === 'object'
+                        ? JSON.stringify(value)
+                        : value?.toString()}
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+
+          <Separator />
+
+          <div className="rounded-md overflow-hidden border bg-background">
+            <div className="flex items-center justify-between bg-muted/80 px-3 py-1.5">
+              <span className="text-xs font-medium">Configuration</span>
+              {!isEditing && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-6 px-2 text-xs"
+                  onClick={() => setIsEditing(true)}
+                >
+                  Edit
+                </Button>
+              )}
+            </div>
+            <div className="h-[400px]">
+              <MonacoEditor
+                value={code}
+                language="json"
+                onChange={handleCodeChange}
+                options={{
+                  minimap: { enabled: false },
+                  lineNumbers: 'on',
+                  scrollBeyondLastLine: false,
+                  readOnly: !isEditing,
+                }}
+              />
+            </div>
+          </div>
+        </CardContent>
+
+        {isEditing && (
+          <CardFooter className="px-0 flex justify-end">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setIsEditing(false);
+                // Reset code to original value
+                setCode(JSON.stringify(gallery.config, null, 2));
+                onDirtyStateChange(false);
+              }}
+              className="mr-2"
+            >
+              Cancel
+            </Button>
+            <Button size="sm" onClick={handleSave}>
+              <Save className="h-4 w-4 mr-1.5" />
+              Save Changes
+            </Button>
+          </CardFooter>
+        )}
+      </Card>
     </div>
   );
-};
-
-export default GalleryDetail;
+}

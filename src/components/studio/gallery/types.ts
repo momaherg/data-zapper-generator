@@ -1,6 +1,14 @@
 
 import { Component, ComponentConfig } from "../datamodel";
 
+export interface GalleryMetadata {
+  author?: string;
+  created_at?: string;
+  updated_at?: string;
+  version?: string;
+  [key: string]: any;
+}
+
 export interface GalleryConfig {
   id: string;
   name: string;
@@ -28,6 +36,6 @@ export interface Gallery {
     tools?: Component<any>[];
     terminations?: Component<any>[];
   };
-  metadata?: Record<string, any>;
+  metadata?: GalleryMetadata;
   url?: string;
 }
