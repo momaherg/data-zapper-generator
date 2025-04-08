@@ -22,6 +22,7 @@ import { useTeamBuilderStore } from "./store";
 import { ComponentTypes } from "../datamodel";
 import { toast } from "sonner";
 import TeamSelectionModal from "./components/TeamSelectionModal";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface ComponentConfigTypes {
   [key: string]: any;
@@ -409,7 +410,7 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
         </div>
       ),
       children: (
-        <div className="space-y-2">
+        <div className="space-y-2 max-h-60 overflow-visible">
           {filteredItems.length > 0 ? (
             filteredItems.map((item, itemIndex) => (
               <PresetItem
@@ -474,18 +475,20 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
         </div>
 
         <div className="component-library-body">
-          <Collapse
-            accordion
-            items={items}
-            defaultActiveKey={["Teams"]}
-            bordered={false}
-            expandIcon={({ isActive }) => (
-              <ChevronDown
-                strokeWidth={1}
-                className={(isActive ? "transform rotate-180" : "") + " w-4 h-4"}
-              />
-            )}
-          />
+          <ScrollArea className="h-full pr-2">
+            <Collapse
+              accordion
+              items={items}
+              defaultActiveKey={["Teams"]}
+              bordered={false}
+              expandIcon={({ isActive }) => (
+                <ChevronDown
+                  strokeWidth={1}
+                  className={(isActive ? "transform rotate-180" : "") + " w-4 h-4"}
+                />
+              )}
+            />
+          </ScrollArea>
         </div>
       </Sider>
 

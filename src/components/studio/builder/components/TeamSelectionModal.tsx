@@ -9,7 +9,8 @@ import { toast } from "sonner";
 import { useGalleryStore } from "../../gallery/store";
 import { useTeamBuilderStore } from "../store";
 import { teamAPI } from "../../api";
-import { Team } from "../../datamodel";
+import { Team, ComponentTypes } from "../../datamodel";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface TeamSelectionModalProps {
   isOpen: boolean;
@@ -57,9 +58,11 @@ export const TeamSelectionModal: React.FC<TeamSelectionModalProps> = ({ isOpen, 
       setIsLoading(true);
       
       // Update the team - convert to proper Team object format
-      // This fixes the TS2559 error
       await teamAPI.updateTeam({
-        component: team
+        component: {
+          ...team,
+          component_type: team.component_type as ComponentTypes
+        }
       });
       
       // Show success toast and close modal
@@ -87,12 +90,12 @@ export const TeamSelectionModal: React.FC<TeamSelectionModalProps> = ({ isOpen, 
       const defaultTeam = {
         component: {
           provider: "roundrobin",
-          component_type: "team",
+          component_type: "team" as ComponentTypes,
           config: {
             participants: [],
             termination_condition: {
               provider: "maxmessage",
-              component_type: "termination",
+              component_type: "termination" as ComponentTypes,
               config: {
                 max_messages: 10
               }
@@ -138,7 +141,7 @@ export const TeamSelectionModal: React.FC<TeamSelectionModalProps> = ({ isOpen, 
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[600px] max-h-[80vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <span>Team Templates</span>
@@ -168,40 +171,42 @@ export const TeamSelectionModal: React.FC<TeamSelectionModalProps> = ({ isOpen, 
             <Search className="w-4 h-4 absolute left-2.5 top-1/2 transform -translate-y-1/2 text-gray-400" />
           </div>
           
-          {filteredTeams.length > 0 ? (
-            <div className="space-y-3">
-              {filteredTeams.map((team: any, index: number) => (
-                <div key={index} className="border p-3 rounded-md hover:bg-gray-50 transition-colors">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium">{team.label || "Unnamed Team"}</h3>
-                      {team.description && (
-                        <p className="text-sm text-gray-500 mt-1">
-                          {team.description.length > 120 
-                            ? team.description.substring(0, 120) + "..." 
-                            : team.description}
-                        </p>
-                      )}
+          <ScrollArea className="h-[calc(100vh-300px)]">
+            {filteredTeams.length > 0 ? (
+              <div className="space-y-3 pr-4">
+                {filteredTeams.map((team: any, index: number) => (
+                  <div key={index} className="border p-3 rounded-md hover:bg-gray-50 transition-colors">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h3 className="font-medium">{team.label || "Unnamed Team"}</h3>
+                        {team.description && (
+                          <p className="text-sm text-gray-500 mt-1">
+                            {team.description.length > 120 
+                              ? team.description.substring(0, 120) + "..." 
+                              : team.description}
+                          </p>
+                        )}
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleLoadTeam(team)}
+                        disabled={isLoading}
+                        className="flex items-center gap-1"
+                      >
+                        <PlayCircle className="w-4 h-4" />
+                        Load
+                      </Button>
                     </div>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleLoadTeam(team)}
-                      disabled={isLoading}
-                      className="flex items-center gap-1"
-                    >
-                      <PlayCircle className="w-4 h-4" />
-                      Load
-                    </Button>
                   </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="py-8 text-center text-gray-500">
-              {searchTerm ? "No teams matching your search" : "No teams available"}
-            </div>
-          )}
+                ))}
+              </div>
+            ) : (
+              <div className="py-8 text-center text-gray-500">
+                {searchTerm ? "No teams matching your search" : "No teams available"}
+              </div>
+            )}
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
