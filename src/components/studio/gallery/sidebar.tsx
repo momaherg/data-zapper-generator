@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Button, Tooltip } from "antd";
 import {
@@ -10,7 +11,7 @@ import {
   Globe,
   Info,
 } from "lucide-react";
-import type { Gallery } from "../../types/datamodel";
+import type { Gallery } from "../datamodel";
 import { getRelativeTimeString } from "../atoms";
 
 interface GallerySidebarProps {
@@ -20,8 +21,8 @@ interface GallerySidebarProps {
   onToggle: () => void;
   onSelectGallery: (gallery: Gallery) => void;
   onCreateGallery: () => void;
-  onDeleteGallery: (galleryId: number) => void;
-  onSyncGallery: (galleryId: number) => void;
+  onDeleteGallery: (galleryId: string) => void;
+  onSyncGallery: (galleryId: string) => void;
   isLoading?: boolean;
 }
 
@@ -124,7 +125,7 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
                 currentGallery?.id === gallery.id ? "bg-accent" : "bg-tertiary"
               }`}
             />
-            {gallery && gallery.config && gallery.config.components && (
+            {gallery && gallery.config && (
               <div
                 className={`group ml-1 flex flex-col p-3 rounded-l cursor-pointer hover:bg-secondary ${
                   currentGallery?.id === gallery.id
@@ -137,7 +138,7 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
                 <div className="flex items-center justify-between min-w-0">
                   <div className="flex items-center gap-2 min-w-0 flex-1">
                     <div className="truncate flex-1">
-                      <span className="font-medium">{gallery.config.name}</span>
+                      <span className="font-medium">{gallery.name}</span>
                     </div>
                     {gallery.config.url && (
                       <Tooltip title="Remote Gallery">
@@ -155,7 +156,7 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
                           icon={<RefreshCw className="w-4 h-4" />}
                           onClick={(e) => {
                             e.stopPropagation();
-                            onSyncGallery(gallery.id!);
+                            onSyncGallery(gallery.id!.toString());
                           }}
                         />
                       </Tooltip>
@@ -176,7 +177,7 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
                         icon={<Trash2 className="w-4 h-4 text-red-500" />}
                         onClick={(e) => {
                           e.stopPropagation();
-                          onDeleteGallery(gallery.id!);
+                          onDeleteGallery(gallery.id!.toString());
                         }}
                       />
                     </Tooltip>
@@ -186,15 +187,15 @@ export const GallerySidebar: React.FC<GallerySidebarProps> = ({
                 {/* Gallery Metadata */}
                 <div className="mt-1 flex items-center gap-2 text-xs text-secondary">
                   <span className="bg-secondary/20 truncate rounded px-1">
-                    v{gallery.config.metadata.version}
+                    v{gallery.config.metadata?.version || "1.0.0"}
                   </span>
                   <div className="flex items-center gap-1">
                     <Package className="w-3 h-3" />
                     <span>
-                      {Object.values(gallery.config.components).reduce(
-                        (sum, arr) => sum + arr.length,
+                      {gallery.config.components ? Object.values(gallery.config.components).reduce(
+                        (sum, arr) => sum + (arr?.length || 0),
                         0
-                      )}{" "}
+                      ) : 0}{" "}
                       components
                     </span>
                   </div>

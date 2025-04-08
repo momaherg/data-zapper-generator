@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { Card, Button, Popconfirm } from "antd";
 import ComponentEditor from "../builder/component-editor/component-editor";
@@ -8,19 +9,34 @@ import { useGalleryStore } from "./store";
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, Trash2 } from "lucide-react";
 
-export const GalleryDetail: React.FC = () => {
+interface GalleryDetailProps {
+  gallery?: Gallery;
+  onSave?: (updates: Partial<Gallery>) => void;
+  onDirtyStateChange?: (isDirty: boolean) => void;
+}
+
+export const GalleryDetail: React.FC<GalleryDetailProps> = ({ 
+  gallery: propGallery,
+  onSave,
+  onDirtyStateChange
+}) => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [gallery, setGallery] = useState<Gallery | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [gallery, setGallery] = useState<Gallery | null>(propGallery || null);
+  const [isLoading, setIsLoading] = useState(!propGallery);
   const [isEditing, setIsEditing] = useState(false);
   const fetchGalleries = useGalleryStore((state) => state.fetchGalleries);
 
   useEffect(() => {
+    if (propGallery) {
+      setGallery(propGallery);
+      return;
+    }
+    
     if (id) {
       fetchGallery(id);
     }
-  }, [id]);
+  }, [id, propGallery]);
 
   const fetchGallery = async (galleryId: string) => {
     try {
@@ -36,10 +52,10 @@ export const GalleryDetail: React.FC = () => {
   };
 
   const handleDelete = async () => {
-    if (!gallery) return;
+    if (!gallery || !gallery.id) return;
     
     try {
-      await galleryAPI.deleteGallery(gallery.id);
+      await galleryAPI.deleteGallery(gallery.id.toString());
       toast.success("Gallery deleted successfully");
       fetchGalleries();
       navigate("/gallery");
@@ -51,11 +67,16 @@ export const GalleryDetail: React.FC = () => {
 
   const handleUpdate = async (updatedGallery: Gallery) => {
     try {
-      const data = await galleryAPI.updateGallery(updatedGallery);
-      setGallery(data);
+      if (onSave) {
+        onSave(updatedGallery);
+        onDirtyStateChange?.(false);
+      } else {
+        const data = await galleryAPI.updateGallery(updatedGallery);
+        setGallery(data);
+        fetchGalleries();
+      }
       setIsEditing(false);
       toast.success("Gallery updated successfully");
-      fetchGalleries();
     } catch (error) {
       console.error("Error updating gallery:", error);
       toast.error("Failed to update gallery");
@@ -107,17 +128,17 @@ export const GalleryDetail: React.FC = () => {
       <Card title={gallery.name} className="mb-4">
         <p className="text-gray-500">{gallery.description}</p>
         <p className="text-xs text-gray-400">
-          Last updated: {new Date(gallery.updated_at).toLocaleString()}
+          Last updated: {gallery.updated_at ? new Date(gallery.updated_at).toLocaleString() : "Not available"}
         </p>
       </Card>
 
       {isEditing ? (
         <ComponentEditor
-          component={gallery.config}
+          component={gallery}
           onChange={(updatedConfig) => {
             handleUpdate({
               ...gallery,
-              config: updatedConfig,
+              ...updatedConfig
             });
           }}
           onClose={() => setIsEditing(false)}

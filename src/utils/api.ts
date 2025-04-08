@@ -1,3 +1,4 @@
+
 // Base URL for API requests
 const API_BASE_URL = 'http://localhost:5000';
 const WS_BASE_URL = 'ws://localhost:5000';
@@ -32,6 +33,15 @@ export interface TestCaseEvent {
   source?: string;
   timestamp?: string;
   metadata?: any;
+}
+
+export interface ChatMessage {
+  session_id: string;
+  id: string;
+  content: string;
+  type: string;
+  source: string;
+  timestamp?: string;
 }
 
 export interface TestCaseGenerationRequest {

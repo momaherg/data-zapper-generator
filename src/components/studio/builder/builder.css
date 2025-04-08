@@ -95,3 +95,7 @@
   overflow: visible !important;
 }
 
+/* Make sure the collapse section can be scrolled properly */
+.ant-collapse {
+  overflow: visible !important;
+}

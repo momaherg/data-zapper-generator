@@ -229,8 +229,8 @@ export const GalleryManager: React.FC = () => {
           onToggle={() => setIsSidebarOpen(!isSidebarOpen)}
           onSelectGallery={(gallery) => handleSelectGallery(gallery.id!)}
           onCreateGallery={() => setIsCreateModalOpen(true)}
-          onDeleteGallery={handleDeleteGallery}
-          onSyncGallery={handleSyncGallery}
+          onDeleteGallery={(id) => handleDeleteGallery(id.toString())}
+          onSyncGallery={(id) => handleSyncGallery(id.toString())}
           isLoading={isLoading}
         />
       </div>
@@ -249,7 +249,7 @@ export const GalleryManager: React.FC = () => {
               <>
                 <ChevronRight className="w-4 h-4 text-secondary" />
                 <span className="text-secondary">
-                  {currentGallery.config.name}
+                  {currentGallery.name}
                 </span>
               </>
             )}

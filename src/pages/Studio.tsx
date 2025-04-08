@@ -3,7 +3,7 @@ import * as React from "react";
 import { useState, useEffect, useRef } from "react";
 import { TeamBuilder } from "../components/studio/builder/builder";
 import { Loader2, Users } from "lucide-react";
-import { Team } from "../components/studio/datamodel";
+import { Team, Component, TeamConfig } from "../components/studio/datamodel";
 import { useGalleryStore } from "../components/studio/gallery/store";
 import { teamAPI, validationAPI } from "../components/studio/api";
 import { galleryAPI } from "../components/studio/gallery/api";
@@ -46,23 +46,24 @@ const StudioPage = () => {
     try {
       setIsLoading(true);
       const data = await teamAPI.getTeam();
-      // Normalize the component structure to match what our UI expects
-      const normalizedTeam = {
+      
+      // Create a proper Team object with the expected structure
+      setTeam({
         ...data,
-        component: data
-      };
-      
-      // Only log in development environment
-      if (process.env.NODE_ENV === 'development') {
-        console.log("Normalized team:", normalizedTeam);
-      }
-      
-      setTeam(normalizedTeam);
+        component: {
+          provider: data.provider || "roundrobin",
+          component_type: "team",
+          config: data.config || {
+            participants: [],
+            termination_condition: null
+          }
+        }
+      });
     } catch (error) {
       console.error("Error fetching team:", error);
       toast.error("Failed to load team, using default configuration");
       
-      // Create a default empty team with initial components if we couldn't fetch one
+      // Create a default empty team with initial components
       setTeam({
         component: {
           provider: "roundrobin",

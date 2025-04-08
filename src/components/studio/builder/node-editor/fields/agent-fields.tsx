@@ -1,15 +1,15 @@
 
 import { Form, Input } from "antd";
-import { DetailGroup } from "./detailgroup";
-import { AgentComponent } from "../../../datamodel";
-import { Component } from "../../../datamodel";
+import DetailGroup from "../../component-editor/detailgroup";
+import { Component, AgentConfig } from "../../../datamodel";
 
 interface AgentFieldsProps {
-  component: AgentComponent;
-  onChange: (updateData: Partial<Component<any>>) => void;
+  component: Component<AgentConfig>;
+  onChange: (updateData: Partial<Component<AgentConfig>>) => void;
+  onNavigate?: (componentType: string, id: string, parentField: string) => void;
 }
 
-export const AgentFields = ({ component, onChange }: AgentFieldsProps) => {
+export const AgentFields = ({ component, onChange, onNavigate }: AgentFieldsProps) => {
   return (
     <>
       <Form.Item label="Name" name="name" className="mb-4">
@@ -66,3 +66,5 @@ export const AgentFields = ({ component, onChange }: AgentFieldsProps) => {
     </>
   );
 };
+
+export default AgentFields;

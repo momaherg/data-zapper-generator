@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useState, useContext } from "react";
 import { message, Modal } from "antd";
 import { ChevronRight } from "lucide-react";
@@ -6,7 +5,7 @@ import { appContext } from "../../hooks/provider";
 import { teamAPI } from "./api";
 import { useGalleryStore } from "./gallery/store";
 // import { TeamSidebar } from "./sidebar";
-import type { Team } from "./datamodel";
+import type { Team, Component, TeamConfig } from "./datamodel";
 import { TeamBuilder } from "./builder/builder";
 
 export const TeamManager: React.FC = () => {
@@ -42,23 +41,24 @@ export const TeamManager: React.FC = () => {
     try {
       setIsLoading(true);
       const data = await teamAPI.getTeam();
-      // Normalize the component structure to match what our UI expects
-      const normalizedTeam = {
+      
+      // Create a proper Team object with the expected structure
+      setCurrentTeam({
         ...data,
-        component: data
-      };
-      
-      // Only log in development environment
-      if (process.env.NODE_ENV === 'development') {
-        console.log("Normalized team:", normalizedTeam);
-      }
-      
-      setCurrentTeam(normalizedTeam);
+        component: {
+          provider: data.provider || "roundrobin",
+          component_type: "team",
+          config: data.config || {
+            participants: [],
+            termination_condition: null
+          }
+        }
+      });
     } catch (error) {
       console.error("Error fetching team:", error);
       messageApi.error("Failed to load team, using default configuration");
       
-      // Create a default empty team with initial components if we couldn't fetch one
+      // Create a default empty team with initial components
       setCurrentTeam({
         component: {
           provider: "roundrobin",
@@ -137,7 +137,20 @@ export const TeamManager: React.FC = () => {
     setIsLoading(true);
     try {
       const data = await teamAPI.getTeam();
-      setCurrentTeam(data);
+      
+      // Create a proper Team object with the expected structure
+      setCurrentTeam({
+        ...data,
+        component: {
+          provider: data.provider || "roundrobin",
+          component_type: "team",
+          config: data.config || {
+            participants: [],
+            termination_condition: null
+          }
+        }
+      });
+      
       window.history.pushState({}, "", `?teamId=${teamId}`);
     } catch (error) {
       console.error("Error loading team:", error);

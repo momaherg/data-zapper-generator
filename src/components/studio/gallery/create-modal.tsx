@@ -1,10 +1,11 @@
+
 import React, { useState, useRef } from "react";
 import { Modal, Tabs, Input, Button, Alert, Upload } from "antd";
 import { Globe, Upload as UploadIcon, Code } from "lucide-react";
 import { MonacoEditor } from "../monaco";
 import type { InputRef, UploadFile, UploadProps } from "antd";
 import { defaultGallery } from "./utils";
-import { Gallery, GalleryConfig } from "../../types/datamodel";
+import { Gallery, GalleryConfig } from "../datamodel";
 
 interface GalleryCreateModalProps {
   open: boolean;
@@ -32,9 +33,14 @@ export const GalleryCreateModal: React.FC<GalleryCreateModalProps> = ({
     try {
       const response = await fetch(url);
       const data = (await response.json()) as GalleryConfig;
-      // TODO: Validate against Gallery schema
+      // Create a proper Gallery object
       onCreateGallery({
+        id: "",
+        name: data.name || "Imported Gallery",
+        description: data.metadata?.description || "",
         config: data,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       });
       onCancel();
     } catch (err) {
@@ -54,9 +60,13 @@ export const GalleryCreateModal: React.FC<GalleryCreateModalProps> = ({
             e.target?.result as string
           ) as GalleryConfig;
 
-          // TODO: Validate against Gallery schema
           onCreateGallery({
+            id: "",
+            name: content.name || "Uploaded Gallery",
+            description: content.metadata?.description || "",
             config: content,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
           });
           onCancel();
         } catch (err) {
@@ -72,9 +82,13 @@ export const GalleryCreateModal: React.FC<GalleryCreateModalProps> = ({
   const handlePasteImport = () => {
     try {
       const content = JSON.parse(jsonContent) as GalleryConfig;
-      // TODO: Validate against Gallery schema
       onCreateGallery({
+        id: "",
+        name: content.name || "Pasted Gallery",
+        description: content.metadata?.description || "",
         config: content,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
       });
       onCancel();
     } catch (err) {

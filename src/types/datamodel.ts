@@ -6,6 +6,7 @@ export type {
   ComponentConfig,
   Gallery,
   GalleryConfig,
+  GalleryMetadata,
   Team,
   AgentConfig,
   ModelConfig,
