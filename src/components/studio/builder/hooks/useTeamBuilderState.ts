@@ -2,14 +2,19 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import { useNodesState, useEdgesState, addEdge, Connection } from "@xyflow/react";
 import { validationAPI } from "../../api";
 import { useTeamBuilderStore } from "../store";
-import debounce from "../../../../utils/debounce";
+import debounce from "../../../utils/debounce";
 import { message } from "antd";
 import { CustomNode, CustomEdge } from "../types";
 import { Component, Team } from "../../datamodel";
 
 interface ValidationResponse {
   valid: boolean;
+  is_valid?: boolean;
   errors?: Array<{
+    path: string;
+    message: string;
+  }>;
+  warnings?: Array<{
     path: string;
     message: string;
   }>;
@@ -121,7 +126,11 @@ export function useTeamBuilderState(
     try {
       setValidationLoading(true);
       const validationResult = await validationAPI.validateComponent(component);
-      setValidationResults(validationResult);
+      const normalizedResult: ValidationResponse = {
+        ...validationResult,
+        valid: validationResult.valid || validationResult.is_valid || false,
+      };
+      setValidationResults(normalizedResult);
     } catch (error) {
       console.error("Validation error:", error);
       message.error("Validation failed");
