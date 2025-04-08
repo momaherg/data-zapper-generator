@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Input, Collapse, type CollapseProps, Modal, Button } from "antd";
 import { useDraggable } from "@dnd-kit/core";
@@ -23,6 +22,7 @@ import { useTeamBuilderStore } from "./store";
 import { ComponentTypes } from "../datamodel";
 import { toast } from "sonner";
 import { teamAPI } from "../api";
+import TeamSelectionModal from "./components/TeamSelectionModal";
 
 interface ComponentConfigTypes {
   [key: string]: any;
@@ -266,8 +266,7 @@ const TeamLoadConfirmModal = ({ team, visible, onConfirm, onCancel }) => {
 export const ComponentLibrary: React.FC<LibraryProps> = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isMinimized, setIsMinimized] = useState(false);
-  const [confirmModalVisible, setConfirmModalVisible] = useState(false);
-  const [selectedTeam, setSelectedTeam] = useState(null);
+  const [isTeamModalOpen, setIsTeamModalOpen] = useState(false);
   
   // Important: Always declare hooks at the top level, never conditionally
   const gallery = useGalleryStore((state) => state.getSelectedGallery());
@@ -276,41 +275,6 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
   
   // Extract components from the gallery
   const componentsData = extractGalleryComponents(gallery);
-  
-  // Add a handler for loading teams
-  const handleLoadTeam = (team) => {
-    if (useTeamBuilderStore.getState().isDirty) {
-      // Show confirmation dialog if there are unsaved changes
-      setSelectedTeam(team);
-      setConfirmModalVisible(true);
-    } else {
-      // Directly load the team if no unsaved changes
-      loadTeamToBuilder(team);
-    }
-  };
-
-  const loadTeamToBuilder = async (team) => {
-    try {
-      // Reset confirmation modal
-      setConfirmModalVisible(false);
-      setSelectedTeam(null);
-      
-      // Show loading toast
-      toast.loading("Loading team template...");
-      
-      // Update the team
-      await teamAPI.updateTeam(team);
-      
-      // Show success toast and reload the page to refresh the builder
-      toast.success("Team template loaded successfully!");
-      setTimeout(() => {
-        window.location.reload();
-      }, 500);
-    } catch (error) {
-      console.error("Error loading team:", error);
-      toast.error("Failed to load team template");
-    }
-  };
   
   // Move this useMemo out of the conditional rendering path
   const sections = React.useMemo(
@@ -414,16 +378,36 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
     let filteredItems;
     
     if (section.isTeamSection) {
-      // For teams section, filter directly since they already have labels
-      filteredItems = section.items.filter((item) => 
-        (item.label || "").toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    } else {
-      // For other sections, use the existing structure
-      filteredItems = section.items.filter((item) =>
-        item.label?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      // For teams section, we'll handle differently - just show a button to open the modal
+      return {
+        key: section.title,
+        label: (
+          <div className="flex items-center gap-2 font-medium">
+            {section.icon}
+            <span>{section.title}</span>
+            <span className="text-xs text-gray-500">
+              ({componentsData.teams?.length || 0})
+            </span>
+          </div>
+        ),
+        children: (
+          <div className="space-y-2">
+            <button
+              onClick={() => setIsTeamModalOpen(true)}
+              className="w-full p-3 text-primary border rounded cursor-pointer bg-white hover:bg-gray-50 transition-colors flex items-center justify-center gap-2"
+            >
+              <Users className="w-4 h-4" />
+              <span>Select a Team Template</span>
+            </button>
+          </div>
+        ),
+      };
     }
+    
+    // For other sections, use the existing structure
+    filteredItems = section.items.filter((item) =>
+      item.label?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
 
     return {
       key: section.title,
@@ -439,28 +423,17 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
       children: (
         <div className="space-y-2">
           {filteredItems.length > 0 ? (
-            section.isTeamSection ? (
-              // Render team items with load button
-              filteredItems.map((team, index) => (
-                <TeamItem 
-                  key={index} 
-                  team={team} 
-                  onLoad={handleLoadTeam}
-                />
-              ))
-            ) : (
-              // Render regular draggable items for other components
-              filteredItems.map((item, itemIndex) => (
-                <PresetItem
-                  key={itemIndex}
-                  id={`${section.title.toLowerCase()}-${itemIndex}`}
-                  type={section.type}
-                  config={item.config}
-                  label={item.label || ""}
-                  icon={section.icon}
-                />
-              ))
-            )
+            // Render regular draggable items for other components
+            filteredItems.map((item, itemIndex) => (
+              <PresetItem
+                key={itemIndex}
+                id={`${section.title.toLowerCase()}-${itemIndex}`}
+                type={section.type}
+                config={item.config}
+                label={item.label || ""}
+                icon={section.icon}
+              />
+            ))
           ) : (
             <div className="py-2 text-sm text-gray-500 italic">
               No {section.title.toLowerCase()} found
@@ -527,12 +500,10 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
         </div>
       </Sider>
 
-      {/* Confirmation Modal */}
-      <TeamLoadConfirmModal
-        team={selectedTeam}
-        visible={confirmModalVisible}
-        onConfirm={loadTeamToBuilder}
-        onCancel={() => setConfirmModalVisible(false)}
+      {/* Team Selection Modal */}
+      <TeamSelectionModal 
+        isOpen={isTeamModalOpen}
+        onClose={() => setIsTeamModalOpen(false)}
       />
     </>
   );

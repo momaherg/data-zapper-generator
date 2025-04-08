@@ -1,3 +1,4 @@
+
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNodesState, useEdgesState, Connection, addEdge } from "@xyflow/react";
 import { ValidationResponse, validationAPI } from "../../api";
@@ -6,6 +7,9 @@ import { CustomNode, CustomEdge } from "../types";
 import { Component, Team } from "../../datamodel";
 import debounce from "lodash.debounce";
 import { message } from "antd";
+
+// Create a cache to store team changes
+const teamChangeCache = new Map<string, { nodes: CustomNode[]; edges: CustomEdge[] }>();
 
 export function useTeamBuilderState(
   team: Team,
@@ -22,6 +26,7 @@ export function useTeamBuilderState(
   const [validationLoading, setValidationLoading] = useState(false);
   const [testDrawerVisible, setTestDrawerVisible] = useState(false);
   const editorRef = useRef(null);
+  const currentTeamId = useRef<string | null>(null);
 
   const {
     loadFromJson,
@@ -35,9 +40,9 @@ export function useTeamBuilderState(
     setSelectedNode,
     currentHistoryIndex,
     history,
+    isDirty
   } = useTeamBuilderStore();
 
-  const isDirty = currentHistoryIndex > 0;
   const canUndo = currentHistoryIndex > 0;
   const canRedo = currentHistoryIndex < history.length - 1;
 
@@ -47,11 +52,11 @@ export function useTeamBuilderState(
   );
 
   useEffect(() => {
-    onDirtyStateChange?.(isDirty);
+    onDirtyStateChange?.(isDirty());
   }, [isDirty, onDirtyStateChange]);
 
   useEffect(() => {
-    if (isDirty) {
+    if (isDirty()) {
       const handleBeforeUnload = (e: BeforeUnloadEvent) => {
         e.preventDefault();
         e.returnValue = "";
@@ -61,18 +66,58 @@ export function useTeamBuilderState(
     }
   }, [isDirty]);
 
+  // Generate a team identifier
+  const getTeamId = useCallback((teamData: Team): string => {
+    if (teamData?.component?.provider && teamData?.component?.config) {
+      return `${teamData.component.provider}-${JSON.stringify(teamData.component.config).slice(0, 50)}`;
+    }
+    return 'default-team';
+  }, []);
+
+  // Save current state to cache when team changes
+  useEffect(() => {
+    return () => {
+      if (currentTeamId.current) {
+        // Save current state to cache when unmounting
+        teamChangeCache.set(currentTeamId.current, {
+          nodes: useTeamBuilderStore.getState().nodes,
+          edges: useTeamBuilderStore.getState().edges
+        });
+      }
+    };
+  }, []);
+
+  // Load team state, either from cache or from the team data
   useEffect(() => {
     if (team?.component) {
-      const { nodes: initialNodes, edges: initialEdges } = loadFromJson(team.component);
-      setNodes(initialNodes);
-      setEdges(initialEdges);
+      const teamId = getTeamId(team);
+      currentTeamId.current = teamId;
+
+      // Check if we have cached state
+      const cachedState = teamChangeCache.get(teamId);
+      
+      if (cachedState) {
+        // Load from cache
+        setNodes(cachedState.nodes);
+        setEdges(cachedState.edges);
+        useTeamBuilderStore.setState({ 
+          nodes: cachedState.nodes, 
+          edges: cachedState.edges 
+        });
+      } else {
+        // Load from team data
+        const { nodes: initialNodes, edges: initialEdges } = loadFromJson(team.component);
+        setNodes(initialNodes);
+        setEdges(initialEdges);
+      }
     }
+    
     handleValidate();
 
     return () => {
       setValidationResults(null);
     };
-  }, [team, setNodes, setEdges]);
+  }, [team, setNodes, setEdges, loadFromJson, getTeamId]);
 
   const handleJsonChange = useCallback(
     debounce((value: string) => {
@@ -138,6 +183,11 @@ export function useTeamBuilderState(
           : { component };
         await onChange(teamData);
         resetHistory();
+        
+        // Save to cache after successful save
+        if (currentTeamId.current) {
+          teamChangeCache.delete(currentTeamId.current);
+        }
       }
     } catch (error) {
       message.error(
@@ -189,7 +239,7 @@ export function useTeamBuilderState(
     testDrawerVisible,
     setTestDrawerVisible,
     editorRef,
-    isDirty,
+    isDirty: isDirty(),
     canUndo,
     canRedo,
     onNodesChange,

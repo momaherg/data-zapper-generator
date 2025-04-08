@@ -1,3 +1,4 @@
+
 import React, { useCallback } from "react";
 import { DndContext, useSensor, useSensors, PointerSensor, DragOverlay } from "@dnd-kit/core";
 import { Layout, Drawer } from "antd";
@@ -14,15 +15,18 @@ import { FlowEditor } from "./components/FlowEditor";
 import { DragOverlayContent } from "./components/DragOverlayContent";
 import { useTeamBuilderDnd } from "./hooks/useTeamBuilderDnd";
 import { useTeamBuilderState } from "./hooks/useTeamBuilderState";
+
 const {
   Sider,
   Content
 } = Layout;
+
 interface TeamBuilderProps {
   team: Team;
   onChange?: (team: Partial<Team>) => void;
   onDirtyStateChange?: (isDirty: boolean) => void;
 }
+
 export const TeamBuilder: React.FC<TeamBuilderProps> = ({
   team,
   onChange,
@@ -62,55 +66,125 @@ export const TeamBuilder: React.FC<TeamBuilderProps> = ({
     updateNode,
     syncToJson
   } = useTeamBuilderState(team, onChange, onDirtyStateChange);
+  
   const {
     activeDragItem,
     handleDragStart,
     handleDragOver,
     handleDragEnd
   } = useTeamBuilderDnd(nodes);
+  
   const sensors = useSensors(useSensor(PointerSensor, {
     activationConstraint: {
       distance: 8
     }
   }));
+  
   const handleTestDrawerClose = useCallback(() => {
     setTestDrawerVisible(false);
   }, [setTestDrawerVisible]);
-  return <div>
-      <TeamBuilderHeader isJsonMode={isJsonMode} setIsJsonMode={setIsJsonMode} validationResults={validationResults} validationLoading={validationLoading} isDirty={isDirty} onValidate={handleValidate} onSave={handleSave} onExport={handleExport} onTestRun={() => setTestDrawerVisible(true)} syncToJson={syncToJson} />
+  
+  return (
+    <div>
+      <TeamBuilderHeader 
+        isJsonMode={isJsonMode} 
+        setIsJsonMode={setIsJsonMode} 
+        validationResults={validationResults} 
+        validationLoading={validationLoading} 
+        isDirty={isDirty} 
+        onValidate={handleValidate} 
+        onSave={handleSave} 
+        onExport={handleExport} 
+        onTestRun={() => setTestDrawerVisible(true)} 
+        syncToJson={syncToJson} 
+      />
       
-      <DndContext sensors={sensors} onDragEnd={handleDragEnd} onDragOver={handleDragOver} onDragStart={handleDragStart}>
+      <DndContext 
+        sensors={sensors} 
+        onDragEnd={handleDragEnd} 
+        onDragOver={handleDragOver} 
+        onDragStart={handleDragStart}
+      >
         <Layout className="relative h-[calc(100vh-239px)] rounded bg-[#6f80e6]/0">
           {!isJsonMode && <ComponentLibrary />}
 
           <Layout className="bg-primary rounded">
             <Content className="relative rounded bg-tertiary">
-              <FlowEditor isJsonMode={isJsonMode} jsonValue={JSON.stringify(syncToJson(), null, 2)} editorRef={editorRef} handleJsonChange={handleJsonChange} nodes={nodes} edges={edges} onNodesChange={onNodesChange} onEdgesChange={onEdgesChange} onConnect={onConnect} nodeTypes={nodeTypes} edgeTypes={edgeTypes} showGrid={showGrid} showMiniMap={showMiniMap} isFullscreen={isFullscreen} />
+              <FlowEditor 
+                isJsonMode={isJsonMode} 
+                jsonValue={JSON.stringify(syncToJson(), null, 2)} 
+                editorRef={editorRef} 
+                handleJsonChange={handleJsonChange} 
+                nodes={nodes} 
+                edges={edges} 
+                onNodesChange={onNodesChange} 
+                onEdgesChange={onEdgesChange} 
+                onConnect={onConnect} 
+                nodeTypes={nodeTypes} 
+                edgeTypes={edgeTypes} 
+                showGrid={showGrid} 
+                showMiniMap={showMiniMap} 
+                isFullscreen={isFullscreen} 
+              />
               
               {isFullscreen && <div className="fixed inset-0 -z-10 bg-background bg-opacity-80 backdrop-blur-sm" onClick={handleToggleFullscreen} />}
               
-              <TeamBuilderToolbar isJsonMode={isJsonMode} isFullscreen={isFullscreen} showGrid={showGrid} onToggleMiniMap={() => setShowMiniMap(!showMiniMap)} canUndo={canUndo} canRedo={canRedo} isDirty={isDirty} onToggleView={() => setIsJsonMode(!isJsonMode)} onUndo={undo} onRedo={redo} onSave={handleSave} onToggleGrid={() => !showGrid} onToggleFullscreen={handleToggleFullscreen} onAutoLayout={layoutNodes} />
+              <TeamBuilderToolbar 
+                isJsonMode={isJsonMode} 
+                isFullscreen={isFullscreen} 
+                showGrid={showGrid} 
+                onToggleMiniMap={() => setShowMiniMap(!showMiniMap)} 
+                canUndo={canUndo} 
+                canRedo={canRedo} 
+                isDirty={isDirty} 
+                onToggleView={() => setIsJsonMode(!isJsonMode)} 
+                onUndo={undo} 
+                onRedo={redo} 
+                onSave={handleSave} 
+                onToggleGrid={() => !showGrid} 
+                onToggleFullscreen={handleToggleFullscreen} 
+                onAutoLayout={layoutNodes} 
+              />
             </Content>
           </Layout>
 
-          {selectedNodeId && <Drawer title="Edit Component" placement="right" size="large" onClose={() => setSelectedNode(null)} open={!!selectedNodeId} className="component-editor-drawer">
-              {nodes.find(n => n.id === selectedNodeId)?.data.component && <ComponentEditor component={nodes.find(n => n.id === selectedNodeId)!.data.component} onChange={updatedComponent => {
-            if (selectedNodeId) {
-              updateNode(selectedNodeId, {
-                component: updatedComponent
-              });
-              handleSave();
-            }
-          }} onClose={() => setSelectedNode(null)} navigationDepth={true} />}
-            </Drawer>}
+          {selectedNodeId && (
+            <Drawer 
+              title="Edit Component" 
+              placement="right" 
+              size="large" 
+              onClose={() => setSelectedNode(null)} 
+              open={!!selectedNodeId} 
+              className="component-editor-drawer"
+            >
+              {nodes.find(n => n.id === selectedNodeId)?.data.component && (
+                <ComponentEditor 
+                  component={nodes.find(n => n.id === selectedNodeId)!.data.component} 
+                  onChange={updatedComponent => {
+                    if (selectedNodeId) {
+                      updateNode(selectedNodeId, {
+                        component: updatedComponent
+                      });
+                      handleSave();
+                    }
+                  }} 
+                  onClose={() => setSelectedNode(null)} 
+                  navigationDepth={true} 
+                />
+              )}
+            </Drawer>
+          )}
         </Layout>
         
-        <DragOverlay dropAnimation={{
-        duration: 250,
-        easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)"
-      }}>
+        <DragOverlay 
+          dropAnimation={{
+            duration: 250,
+            easing: "cubic-bezier(0.18, 0.67, 0.6, 1.22)"
+          }}
+        >
           <DragOverlayContent activeDragItem={activeDragItem} />
         </DragOverlay>
       </DndContext>
-    </div>;
+    </div>
+  );
 };

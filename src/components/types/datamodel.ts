@@ -4,7 +4,6 @@ export type {
   ComponentTypes, 
   Component, 
   ComponentConfig,
-  Gallery,
   GalleryConfig,
   Team,
   AgentConfig,

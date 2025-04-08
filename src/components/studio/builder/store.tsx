@@ -37,11 +37,10 @@ export interface TeamBuilderState {
   nodes: CustomNode[];
   edges: CustomEdge[];
   selectedNodeId: string | null;
-  history: Array<{ nodes: CustomNode[]; edges: CustomEdge[] }>;
+  history: GraphState[];
   currentHistoryIndex: number;
   originalComponent: Component<TeamConfig> | null;
 
-  // Simplified actions
   addNode: (
     position: Position,
     component: Component<ComponentConfig>,
@@ -59,7 +58,6 @@ export interface TeamBuilderState {
   undo: () => void;
   redo: () => void;
 
-  // Sync with JSON
   syncToJson: () => Component<TeamConfig> | null;
   loadFromJson: (
     config: Component<TeamConfig>,
@@ -68,6 +66,8 @@ export interface TeamBuilderState {
   layoutNodes: () => void;
   resetHistory: () => void;
   addToHistory: () => void;
+
+  isDirty: () => boolean;
 }
 
 const buildTeamComponent = (
@@ -99,8 +99,8 @@ export const useTeamBuilderStore = create<TeamBuilderState>((set, get) => ({
   nodes: [],
   edges: [],
   selectedNodeId: null,
-  history: [],
-  currentHistoryIndex: -1,
+  history: [{ nodes: [], edges: [] }],
+  currentHistoryIndex: 0,
   originalComponent: null,
 
   addNode: (
@@ -578,4 +578,6 @@ export const useTeamBuilderStore = create<TeamBuilderState>((set, get) => ({
       currentHistoryIndex: state.currentHistoryIndex + 1,
     }));
   },
+
+  isDirty: () => get().currentHistoryIndex > 0,
 }));
