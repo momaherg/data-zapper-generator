@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useOutletContext, useNavigate } from 'react-router-dom';
-import { ArrowLeft, Copy, Download, Calendar, Clock, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, Copy, Download, Calendar, Clock } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -27,9 +27,6 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
   const navigate = useNavigate();
   const [testCase, setTestCase] = useState<TestCase | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [chatWidth, setChatWidth] = useState<number>(350);
-  const minChatWidth = 320;
-  const maxChatWidth = 600;
   
   const extractTestCaseFromEvents = (events: any[]): string => {
     if (!events || events.length === 0) return '';
@@ -141,17 +138,6 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
     }).format(date);
   };
 
-  const handleResizeChat = (direction: 'increase' | 'decrease') => {
-    setChatWidth(prev => {
-      const step = 50;
-      if (direction === 'increase') {
-        return Math.min(prev + step, maxChatWidth);
-      } else {
-        return Math.max(prev - step, minChatWidth);
-      }
-    });
-  };
-
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen">
         <div className="animate-pulse">Loading test case...</div>
@@ -173,8 +159,7 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
       </div>;
   }
 
-  return (
-    <div className="flex h-screen overflow-hidden">
+  return <div className="flex h-screen overflow-hidden">
       <div className="flex-1 overflow-auto">
         <div className="container py-8 animate-fade-up">
           <div className="flex items-center mb-4">
@@ -256,20 +241,15 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
         </div>
       </div>
       
-      <div className="border-l border-border flex flex-col animate-slide-in-right relative" style={{ width: `${chatWidth}px` }}>
+      <div className="w-80 border-l border-border flex flex-col animate-slide-in-right">
         <ChatInterface 
           events={testCase.events} 
           sessionId={sessionId} 
           testCaseId={testCase.id}
           onTestSpecUpdated={handleTestSpecUpdated}
-          chatWidth={chatWidth}
-          onResizeChat={handleResizeChat}
-          minChatWidth={minChatWidth}
-          maxChatWidth={maxChatWidth}
         />
       </div>
-    </div>
-  );
+    </div>;
 };
 
 export default TestCaseDetail;

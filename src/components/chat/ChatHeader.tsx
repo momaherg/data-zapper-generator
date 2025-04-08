@@ -1,7 +1,5 @@
 
 import React from 'react';
-import { Wifi, WifiOff } from 'lucide-react';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 interface ChatHeaderProps {
@@ -11,24 +9,24 @@ interface ChatHeaderProps {
 
 const ChatHeader: React.FC<ChatHeaderProps> = ({ isConnected, onReconnect }) => {
   return (
-    <div className="px-4 py-3 border-b flex items-center justify-between bg-card">
-      <h3 className="text-sm font-medium">Assistant</h3>
-      <div className="flex items-center gap-2">
+    <div className="px-4 py-3 border-b">
+      <div className="flex items-center justify-between">
+        <h3 className="font-medium">AI Assistant</h3>
         {isConnected ? (
-          <Badge variant="outline" className="bg-green-100 text-green-700 border-green-200 flex gap-1 items-center">
-            <Wifi className="h-3 w-3" />
-            <span>Connected</span>
-          </Badge>
+          <div className="flex items-center text-xs text-green-600 dark:text-green-400">
+            <span className="relative flex h-2 w-2 mr-1">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+            </span>
+            Connected
+          </div>
         ) : (
           <div className="flex items-center gap-2">
-            <Badge variant="outline" className="bg-red-100 text-red-700 border-red-200 flex gap-1 items-center">
-              <WifiOff className="h-3 w-3" />
-              <span>Disconnected</span>
-            </Badge>
+            <span className="text-xs text-red-600 dark:text-red-400">Disconnected</span>
             <Button 
               variant="outline" 
               size="sm" 
-              className="h-7 px-2 py-1 text-xs" 
+              className="h-6 text-xs" 
               onClick={onReconnect}
             >
               Reconnect
@@ -36,6 +34,9 @@ const ChatHeader: React.FC<ChatHeaderProps> = ({ isConnected, onReconnect }) => 
           </div>
         )}
       </div>
+      <p className="text-xs text-muted-foreground">
+        Ask questions or request changes to the test case
+      </p>
     </div>
   );
 };

@@ -2,24 +2,18 @@
 import * as React from "react";
 import { useState, useEffect, useRef } from "react";
 import { TeamBuilder } from "../components/studio/builder/builder";
-import { Loader2, Users, BookTemplate } from "lucide-react";
-import { Component, Team, TeamConfig } from "../components/studio/datamodel";
+import { Loader2, Users } from "lucide-react";
+import { Team } from "../components/studio/datamodel";
 import { useGalleryStore } from "../components/studio/gallery/store";
 import { teamAPI, validationAPI } from "../components/studio/api";
 import { galleryAPI } from "../components/studio/gallery/api";
 import { toast } from "sonner";
 import { useLocation } from "react-router-dom";
-import { Button } from "antd";
-import { TeamSelectorModal } from "../components/studio/team-selector-modal";
 
 const StudioPage = () => {
   const [team, setTeam] = useState<Team | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSelectorOpen, setIsSelectorOpen] = useState(false);
-  
   const fetchGalleries = useGalleryStore((state) => state.fetchGalleries);
-  const galleries = useGalleryStore((state) => state.galleries);
-  
   const location = useLocation();
   const initializationRef = useRef(false);
 
@@ -47,17 +41,15 @@ const StudioPage = () => {
 
   const fetchTeam = async () => {
     try {
-      setIsLoading(true);
       const data = await teamAPI.getTeam();
-      // Create a proper Team object with the Component structure
-      const normalizedTeam: Team = {
+      // Normalize the component structure to match what our UI expects
+      const normalizedTeam = {
         ...data,
-        component: data as unknown as Component<TeamConfig>
+        component: data
       };
       
       // Only log in development environment
-      const isDevelopment = import.meta.env.MODE === 'development';
-      if (isDevelopment) {
+      if (process.env.NODE_ENV === 'development') {
         console.log("Normalized team:", normalizedTeam);
       }
       
@@ -66,8 +58,8 @@ const StudioPage = () => {
       console.error("Error fetching team:", error);
       toast.error("Failed to load team, using default configuration");
       
-      // Create a default empty team with initial components
-      const defaultTeam: Team = {
+      // Create a default empty team with initial components if we couldn't fetch one
+      setTeam({
         component: {
           provider: "roundrobin",
           component_type: "team",
@@ -98,10 +90,8 @@ const StudioPage = () => {
               }
             }
           }
-        } as unknown as Component<TeamConfig>
-      };
-      
-      setTeam(defaultTeam);
+        }
+      });
     } finally {
       setIsLoading(false);
     }
@@ -118,21 +108,6 @@ const StudioPage = () => {
     }
   };
 
-  const handleLoadTeamTemplate = (teamTemplate: Component<TeamConfig>) => {
-    // Create a new team object with the selected template
-    const newTeam: Team = {
-      ...team,
-      component: teamTemplate
-    };
-    
-    // Update the team
-    setTeam(newTeam);
-    toast.success(`Loaded team template: ${teamTemplate.label || "Unnamed team"}`);
-    
-    // Save the new team configuration
-    handleTeamUpdate(newTeam);
-  };
-
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
@@ -146,29 +121,11 @@ const StudioPage = () => {
 
   return (
     <main className="h-full w-full p-4 bg-gray-50">
-      <div className="mb-4 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Users className="h-5 w-5 text-blue-500" />
-          <h1 className="text-xl font-semibold">Agents Studio</h1>
-        </div>
-        
-        <Button 
-          type="default"
-          onClick={() => setIsSelectorOpen(true)}
-          icon={<BookTemplate className="h-4 w-4" />}
-        >
-          Load Team Template
-        </Button>
+      <div className="mb-4 flex items-center gap-2">
+        <Users className="h-5 w-5 text-blue-500" />
+        <h1 className="text-xl font-semibold">Agents Studio</h1>
       </div>
-      
       {team && <TeamBuilder team={team} onChange={handleTeamUpdate} />}
-      
-      <TeamSelectorModal 
-        galleries={galleries}
-        open={isSelectorOpen}
-        onClose={() => setIsSelectorOpen(false)}
-        onSelectTeam={handleLoadTeamTemplate}
-      />
     </main>
   );
 };

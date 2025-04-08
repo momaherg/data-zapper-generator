@@ -1,3 +1,4 @@
+
 export interface Message {
   id: string;
   content: string | any;
@@ -14,10 +15,6 @@ export interface ChatInterfaceProps {
   sessionId: string;
   testCaseId: string;
   onTestSpecUpdated?: (testSpec: string) => void;
-  chatWidth?: number;
-  onResizeChat?: (direction: 'increase' | 'decrease') => void;
-  minChatWidth?: number;
-  maxChatWidth?: number;
 }
 
 export interface TestSpecUpdateOptions {

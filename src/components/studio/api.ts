@@ -1,3 +1,4 @@
+
 import { Team, Component, ComponentConfig } from "./datamodel";
 import { getServerUrl } from "./utils";
 
@@ -8,16 +9,9 @@ export interface ValidationError {
 }
 
 export interface ValidationResponse {
-  valid: boolean;
-  is_valid?: boolean; // For backward compatibility
-  errors?: Array<{
-    path: string;
-    message: string;
-  }>;
-  warnings?: Array<{
-    path: string;
-    message: string;
-  }>;
+  is_valid: boolean;
+  errors: ValidationError[];
+  warnings: ValidationError[];
 }
 
 export class TeamAPI {

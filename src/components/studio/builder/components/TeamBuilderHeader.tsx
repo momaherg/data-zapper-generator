@@ -1,11 +1,23 @@
-import React, { useState } from "react";
-import { Button, Tooltip, message } from "antd";
-import { Info, Code, Layout, Check, X, Play, Save, Book, BookTemplate } from "lucide-react";
+
+import React from "react";
+import { Button, Tooltip, Switch, message } from "antd";
+import {
+  Cable,
+  CheckCircle,
+  CircleX,
+  Code2,
+  Download,
+  ListCheck,
+  PlayCircle,
+  Save,
+} from "lucide-react";
 import { ValidationResponse } from "../../api";
+import { ValidationErrors } from "../validationerrors";
+import { Component, Team } from "../../datamodel";
 
 interface TeamBuilderHeaderProps {
   isJsonMode: boolean;
-  setIsJsonMode: (isJsonMode: boolean) => void;
+  setIsJsonMode: (isJson: boolean) => void;
   validationResults: ValidationResponse | null;
   validationLoading: boolean;
   isDirty: boolean;
@@ -13,7 +25,7 @@ interface TeamBuilderHeaderProps {
   onSave: () => void;
   onExport: () => void;
   onTestRun: () => void;
-  syncToJson: () => any;
+  syncToJson: () => Component<any> | null;
 }
 
 export const TeamBuilderHeader: React.FC<TeamBuilderHeaderProps> = ({
@@ -28,112 +40,115 @@ export const TeamBuilderHeader: React.FC<TeamBuilderHeaderProps> = ({
   onTestRun,
   syncToJson,
 }) => {
-  const [teamSelectorOpen, setTeamSelectorOpen] = useState(false);
-
-  const handleCopy = () => {
-    try {
-      const json = JSON.stringify(syncToJson(), null, 2);
-      navigator.clipboard.writeText(json);
-      message.success("Copied to clipboard!");
-    } catch (error) {
-      message.error("Failed to copy to clipboard");
-    }
-  };
+  const teamValidated = validationResults && validationResults.is_valid;
 
   return (
-    <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between">
-      <div className="flex items-center gap-4">
-        <Tooltip title="Toggle JSON View">
+    <div className="flex gap-2 text-xs rounded border-dashed border p-2 mb-4 items-center bg-white shadow-sm">
+      <div className="flex-1">
+        <Switch
+          onChange={() => {
+            setIsJsonMode(!isJsonMode);
+          }}
+          className="mr-2"
+          defaultChecked={!isJsonMode}
+          checkedChildren={
+            <div className="text-xs">
+              <Cable className="w-3 h-3 inline-block mr-1" />
+            </div>
+          }
+          unCheckedChildren={
+            <div className="text-xs">
+              <Code2 className="w-3 h-3 inline-block mr-1" />
+            </div>
+          }
+        />
+        {isJsonMode ? "JSON Editor" : "Visual Builder"}
+      </div>
+
+      <div>
+        {validationResults && !validationResults.is_valid && (
+          <div className="inline-block mr-2">
+            <ValidationErrors validation={validationResults} />
+          </div>
+        )}
+        <Tooltip title="Download Team">
           <Button
             type="text"
-            icon={<Code className="h-4 w-4" />}
-            onClick={() => setIsJsonMode(!isJsonMode)}
-          >
-            {isJsonMode ? "Visual Editor" : "JSON Editor"}
-          </Button>
+            icon={<Download size={18} />}
+            className="p-1.5 hover:bg-primary/10 rounded-md text-primary/75 hover:text-primary"
+            onClick={onExport}
+          />
         </Tooltip>
 
-        <Tooltip title="Toggle Layout">
-          <Button type="text" icon={<Layout className="h-4 w-4" />}>
-            Auto Layout
-          </Button>
-        </Tooltip>
-      </div>
-
-      <div className="flex items-center gap-2">
-        {validationResults && (
-          <Tooltip
-            title={
-              validationResults.valid
-                ? "No validation issues"
-                : "Validation issues found"
+        <Tooltip title="Save Changes">
+          <Button
+            type="text"
+            icon={
+              <div className="relative">
+                <Save size={18} />
+                {isDirty && (
+                  <div className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full"></div>
+                )}
+              </div>
             }
-          >
-            <span className="flex items-center gap-1">
-              {validationLoading ? (
-                <Loader className="h-4 w-4 animate-spin" />
-              ) : validationResults.valid ? (
-                <Check className="h-4 w-4 text-green-500" />
-              ) : (
-                <X className="h-4 w-4 text-red-500" />
+            className="p-1.5 hover:bg-primary/10 rounded-md text-primary/75 hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={onSave}
+          />
+        </Tooltip>
+
+        <Tooltip
+          title={
+            <div>
+              Validate Team
+              {validationResults && (
+                <div className="text-xs text-center my-1">
+                  {teamValidated ? (
+                    <span>
+                      <CheckCircle className="w-3 h-3 text-green-500 inline-block mr-1" />
+                      Success
+                    </span>
+                  ) : (
+                    <div>
+                      <CircleX className="w-3 h-3 text-red-500 inline-block mr-1" />
+                      Errors
+                    </div>
+                  )}
+                </div>
               )}
-              <span className="text-sm">
-                {validationLoading
-                  ? "Validating..."
-                  : validationResults.valid
-                  ? "Valid"
-                  : "Invalid"}
-              </span>
-            </span>
-          </Tooltip>
-        )}
-
-        <Button
-          type="default"
-          icon={<BookTemplate className="h-4 w-4" />}
-          onClick={() => setTeamSelectorOpen(true)}
+            </div>
+          }
         >
-          Load Template
-        </Button>
+          <Button
+            type="text"
+            loading={validationLoading}
+            icon={
+              <div className="relative">
+                <ListCheck size={18} />
+                {validationResults && (
+                  <div
+                    className={`${
+                      teamValidated ? "bg-green-500" : "bg-red-500"
+                    } absolute top-0 right-0 w-2 h-2 rounded-full`}
+                  ></div>
+                )}
+              </div>
+            }
+            className="p-1.5 hover:bg-primary/10 rounded-md text-primary/75 hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed"
+            onClick={onValidate}
+          />
+        </Tooltip>
 
-        <Button type="text" icon={<Play className="h-4 w-4" />} onClick={onTestRun}>
-          Test Run
-        </Button>
-
-        <Button type="text" icon={<Save className="h-4 w-4" />} onClick={onSave} disabled={!isDirty}>
-          Save
-        </Button>
-
-        <Button type="text" icon={<Book className="h-4 w-4" />} onClick={onExport}>
-          Export
-        </Button>
-
-        <Button type="text" icon={<Info className="h-4 w-4" />} onClick={handleCopy}>
-          Copy
-        </Button>
+        <Tooltip title="Run Team">
+          <Button
+            type="primary"
+            icon={<PlayCircle size={18} />}
+            className="p-1.5 ml-2 px-3 hover:bg-blue-600 rounded-md bg-blue-500 text-white"
+            onClick={onTestRun}
+          >
+            Run
+          </Button>
+        </Tooltip>
       </div>
-    </header>
+    </div>
   );
 };
-
-const Loader = ({ className }: { className?: string }) => (
-  <svg
-    className={className}
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="none"
-    xmlns="http://www.w3.org/2000/svg"
-  >
-    <path
-      d="M12 2C6.477 2 2 6.477 2 12C2 17.523 6.477 22 12 22C17.523 22 22 17.523 22 12C22 6.477 17.523 2 12 2ZM12 18C8.686 18 6 15.314 6 12C6 8.686 8.686 6 12 6C15.314 6 18 8.686 18 12C18 15.314 15.314 18 12 18Z"
-      fill="currentColor"
-    />
-    <path
-      d="M2 12C2 6.477 6.477 2 12 2V6C8.686 6 6 8.686 6 12H2Z"
-      fill="currentColor"
-    />
-  </svg>
-);
-
-export default TeamBuilderHeader;

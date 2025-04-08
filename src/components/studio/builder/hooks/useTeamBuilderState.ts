@@ -1,25 +1,11 @@
-
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useNodesState, useEdgesState, addEdge, Connection } from "@xyflow/react";
-import { validationAPI } from "../../api";
+import { useNodesState, useEdgesState, Connection, addEdge } from "@xyflow/react";
+import { ValidationResponse, validationAPI } from "../../api";
 import { useTeamBuilderStore } from "../store";
-import debounce from "lodash/debounce";
-import { message } from "antd";
 import { CustomNode, CustomEdge } from "../types";
 import { Component, Team } from "../../datamodel";
-
-interface ValidationResponse {
-  valid: boolean;
-  is_valid?: boolean;
-  errors?: Array<{
-    path: string;
-    message: string;
-  }>;
-  warnings?: Array<{
-    path: string;
-    message: string;
-  }>;
-}
+import debounce from "lodash.debounce";
+import { message } from "antd";
 
 export function useTeamBuilderState(
   team: Team,
@@ -103,9 +89,7 @@ export function useTeamBuilderState(
 
   useEffect(() => {
     return () => {
-      if (handleJsonChange.cancel) {
-        handleJsonChange.cancel();
-      }
+      handleJsonChange.cancel();
       setValidationResults(null);
     };
   }, [handleJsonChange]);
@@ -127,11 +111,7 @@ export function useTeamBuilderState(
     try {
       setValidationLoading(true);
       const validationResult = await validationAPI.validateComponent(component);
-      const normalizedResult: ValidationResponse = {
-        ...validationResult,
-        valid: validationResult.valid || validationResult.is_valid || false,
-      };
-      setValidationResults(normalizedResult);
+      setValidationResults(validationResult);
     } catch (error) {
       console.error("Validation error:", error);
       message.error("Validation failed");

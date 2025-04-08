@@ -401,18 +401,10 @@ export interface GalleryConfig {
 }
 
 export interface Gallery {
-  id: string | number;
+  id: string;
   name: string;
   description?: string;
+  config: GalleryConfig;
   created_at?: string;
   updated_at?: string;
-  user_id?: string;
-  config?: GalleryConfig;
-  components?: {
-    agents?: Component<AgentConfig>[];
-    models?: Component<ModelConfig>[];
-    tools?: Component<ToolConfig>[];
-    terminations?: Component<TerminationConfig>[];
-    teams?: Component<TeamConfig>[];
-  };
 }
