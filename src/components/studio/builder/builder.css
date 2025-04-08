@@ -1,4 +1,3 @@
-
 .drop-target-valid {
   outline: 2px solid #4caf50;
   outline-offset: 4px;
@@ -40,9 +39,10 @@
 
 /* Component library body scrolling */
 .component-library-body {
-  overflow-y: auto !important;
+  overflow: auto !important;
   flex-grow: 1 !important;
   padding: 0 16px 16px 16px !important;
+  max-height: calc(100vh - 200px) !important;
 }
 
 /* Component library header (non-scrolling) */
@@ -71,4 +71,14 @@
 .component-editor-drawer .ant-drawer-body {
   padding: 16px;
   overflow-y: auto;
+}
+
+/* Fix scrolling in component library sections */
+.ant-collapse-content {
+  overflow: visible !important;
+}
+
+.component-library-section {
+  max-height: none !important;
+  overflow: visible !important;
 }

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Search, PlayCircle, ArrowLeft, RefreshCcw } from "lucide-react";
@@ -29,7 +29,7 @@ export const TeamSelectionModal: React.FC<TeamSelectionModalProps> = ({ isOpen, 
   
   // Safely extract teams from the gallery
   const teams = gallery?.config?.components?.teams || 
-               gallery?.components?.teams || 
+               (gallery as any)?.components?.teams || 
                [];
   
   // Filter teams based on search term
@@ -141,7 +141,7 @@ export const TeamSelectionModal: React.FC<TeamSelectionModalProps> = ({ isOpen, 
   return (
     <>
       <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-[600px] max-h-[80vh]">
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh]">
           <DialogHeader>
             <DialogTitle className="flex items-center justify-between">
               <span>Team Templates</span>
