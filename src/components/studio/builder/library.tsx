@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Input, Collapse, type CollapseProps, Button } from "antd";
+import { Input, Collapse, type CollapseProps, Button, Modal } from "antd";
 import { useDraggable } from "@dnd-kit/core";
 import { CSS } from "@dnd-kit/utilities";
 import {
@@ -437,7 +437,7 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
         width={300}
         className="bg-white border-r border-gray-200 shadow-sm z-10 mr-2 h-full overflow-hidden flex flex-col"
       >
-        <div className="p-4 flex-shrink-0">
+        <div className="component-library-header">
           <div className="flex justify-between items-center mb-4">
             <div className="text-lg font-medium">Component Library</div>
             <button
@@ -473,7 +473,7 @@ export const ComponentLibrary: React.FC<LibraryProps> = () => {
           </div>
         </div>
 
-        <div className="flex-grow overflow-y-auto px-4 pb-4">
+        <div className="component-library-body">
           <Collapse
             accordion
             items={items}

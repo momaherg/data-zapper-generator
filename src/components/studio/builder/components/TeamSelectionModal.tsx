@@ -25,7 +25,11 @@ export const TeamSelectionModal: React.FC<TeamSelectionModalProps> = ({ isOpen, 
   const gallery = useGalleryStore((state) => state.getSelectedGallery());
   const galleryLoading = useGalleryStore((state) => state.isLoading);
   const isDirty = useTeamBuilderStore(state => state.isDirty());
-  const teams = gallery?.components?.teams || [];
+  
+  // Safely extract teams from the gallery
+  const teams = gallery?.config?.components?.teams || 
+               gallery?.components?.teams || 
+               [];
   
   // Filter teams based on search term
   const filteredTeams = teams.filter((team: any) => 
@@ -52,8 +56,11 @@ export const TeamSelectionModal: React.FC<TeamSelectionModalProps> = ({ isOpen, 
       // Show loading toast
       setIsLoading(true);
       
-      // Update the team
-      await teamAPI.updateTeam(team);
+      // Update the team - convert to proper Team object format
+      // This fixes the TS2559 error
+      await teamAPI.updateTeam({
+        component: team
+      });
       
       // Show success toast and close modal
       toast.success("Team template loaded successfully!");
@@ -78,15 +85,17 @@ export const TeamSelectionModal: React.FC<TeamSelectionModalProps> = ({ isOpen, 
       
       // Get the default empty team
       const defaultTeam = {
-        provider: "roundrobin",
-        component_type: "team",
-        config: {
-          participants: [],
-          termination_condition: {
-            provider: "maxmessage",
-            component_type: "termination",
-            config: {
-              max_messages: 10
+        component: {
+          provider: "roundrobin",
+          component_type: "team",
+          config: {
+            participants: [],
+            termination_condition: {
+              provider: "maxmessage",
+              component_type: "termination",
+              config: {
+                max_messages: 10
+              }
             }
           }
         }

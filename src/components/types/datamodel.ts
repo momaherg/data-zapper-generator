@@ -40,6 +40,14 @@ export interface Gallery {
     terminations?: any[];
     teams?: any[];
   };
-  config?: any;
+  config?: {
+    components?: {
+      agents?: any[];
+      models?: any[];
+      tools?: any[];
+      terminations?: any[];
+      teams?: any[];
+    };
+  };
   items?: any[];
 }
