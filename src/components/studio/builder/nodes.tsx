@@ -11,13 +11,12 @@ import {
   LucideIcon,
   Users,
   Wrench,
+  Settings,
   Brain,
   Timer,
   Trash2Icon,
   Edit,
   Bot,
-  ArrowRightLeft,
-  CheckCircle2,
 } from "lucide-react";
 import { NodeData, CustomNode } from "./types";
 import {
@@ -41,7 +40,6 @@ import {
   isOpenAIModel,
   isOrTermination,
   isSelectorTeam,
-  isRoundRobinTeam,
   isTextMentionTermination,
   isWebSurferAgent,
 } from "../guards";
@@ -214,86 +212,57 @@ export const TeamNode = memo<NodeProps<CustomNode>>((props) => {
   const component = props.data.component as Component<TeamConfig>;
   const hasModel = isSelectorTeam(component) && !!component.config.model_client;
   const participantCount = component.config.participants?.length || 0;
-  const hasTermination = !!component.config.termination_condition;
-  const teamType = isSelectorTeam(component) ? "Selector Team" : "Round Robin Team";
-  const maxTurns = component.config.max_turns || "Not set";
-  
+
   return (
     <BaseNode
       {...props}
       icon={iconMap.team}
       headerContent={
-        <div className="flex flex-wrap gap-2 mt-2">
-          <ConnectionBadge 
-            connected={hasModel} 
-            label={isSelectorTeam(component) ? "Model" : "No Model Needed"} 
-          />
+        <div className="flex gap-2 mt-2">
+          <ConnectionBadge connected={hasModel} label="Model" />
           <ConnectionBadge
             connected={participantCount > 0}
             label={`${participantCount} Agent${
               participantCount > 1 ? "s" : ""
             }`}
           />
-          <ConnectionBadge 
-            connected={hasTermination} 
-            label="Termination" 
-          />
         </div>
       }
       descriptionContent={
-        <div className="space-y-2">
-          <div className="flex items-center gap-1 text-xs text-gray-500">
-            <span className="font-medium">{teamType}</span>
-            {isSelectorTeam(component) ? (
-              <CheckCircle2 className="w-3 h-3 text-green-500" />
-            ) : (
-              <ArrowRightLeft className="w-3 h-3 text-blue-500" />
-            )}
-          </div>
-          
+        <div>
           <div>
             <TruncatableText
-              content={component.description || "No description provided"}
+              content={component.description || component.label || ""}
               textThreshold={150}
               showFullscreen={false}
             />
           </div>
-          
-          <div className="text-xs space-y-1">
-            <div className="flex justify-between">
-              <span className="font-medium">Max Turns:</span>
-              <span>{maxTurns}</span>
+          {isSelectorTeam(component) && component.config.selector_prompt && (
+            <div className="mt-1 text-xs">
+              Selector:{" "}
+              <TruncatableText
+                content={component.config.selector_prompt}
+                textThreshold={150}
+                showFullscreen={false}
+              />
             </div>
-            
-            {isSelectorTeam(component) && (
-              <>
-                <div className="flex justify-between">
-                  <span className="font-medium">Allow Repeated Speaker:</span>
-                  <span>{component.config.allow_repeated_speaker ? "Yes" : "No"}</span>
-                </div>
-                {component.config.selector_prompt && (
-                  <div>
-                    <span className="font-medium">Selector Prompt:</span>
-                    <TruncatableText
-                      content={component.config.selector_prompt}
-                      textThreshold={100}
-                      showFullscreen={false}
-                    />
-                  </div>
-                )}
-              </>
-            )}
-          </div>
+          )}
         </div>
       }
     >
       {isSelectorTeam(component) && (
         <NodeSection title="Model">
+          {/* <Handle
+            type="target"
+            position={Position.Left}
+            id={`${props.id}-model-input-handle`}
+            className="my-left-handle"
+          /> */}
+
           <div className="relative">
             {hasModel && (
-              <div className="text-sm py-1 px-2 bg-white rounded flex items-center gap-2">
-                <Brain className="w-4 h-4 text-gray-500" />
-                <span>{component.config.model_client.config.model}</span>
+              <div className="text-sm">
+                {component.config.model_client.config.model}
               </div>
             )}
             <DroppableZone id={`${props.id}@@@model-zone`} accepts={["model"]}>
@@ -325,7 +294,7 @@ export const TeamNode = memo<NodeProps<CustomNode>>((props) => {
               key={index}
               className="relative text-sm py-1 px-2 bg-white rounded flex items-center gap-2"
             >
-              <Bot className="w-4 h-4 text-gray-500" />
+              <Brain className="w-4 h-4 text-gray-500" />
               <span>{participant.config.name}</span>
             </div>
           ))}
@@ -338,6 +307,14 @@ export const TeamNode = memo<NodeProps<CustomNode>>((props) => {
       </NodeSection>
 
       <NodeSection title="Terminations">
+        {/* {
+          <Handle
+            type="target"
+            position={Position.Left}
+            id={`${props.id}-termination-input-handle`}
+            className="my-left-handle"
+          />
+        } */}
         <div className="space-y-1">
           {component.config.termination_condition && (
             <div className="text-sm py-1 px-2 bg-white rounded flex items-center gap-2">
@@ -524,3 +501,4 @@ export const edgeTypes = {
   "agent-connection": CustomEdge,
   "termination-connection": CustomEdge,
 };
+

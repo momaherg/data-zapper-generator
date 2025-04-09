@@ -1,3 +1,4 @@
+
 .drop-target-valid {
   outline: 2px solid #4caf50;
   outline-offset: 4px;
@@ -14,7 +15,6 @@
   border: 2px dashed #ccc;
   border-radius: 4px;
   margin: 8px 0;
-  transition: all 0.2s ease;
 }
 
 .droppable-zone.can-drop {
@@ -30,6 +30,7 @@
   @apply bg-accent w-1 h-3 rounded-l-sm -mr-1 border-0 !important;
 }
 
+/* Fix component library overflow */
 .ant-layout-sider {
   overflow: hidden !important;
   display: flex !important;
@@ -37,6 +38,7 @@
   height: 100% !important;
 }
 
+/* Component library body scrolling */
 .component-library-body {
   overflow: auto !important;
   flex-grow: 1 !important;
@@ -44,11 +46,13 @@
   height: calc(100vh - 200px) !important;
 }
 
+/* Component library header (non-scrolling) */
 .component-library-header {
   flex-shrink: 0 !important;
   padding: 16px 16px 0 16px !important;
 }
 
+/* Fix React Flow container */
 .react-flow__container {
   height: 100% !important;
 }
@@ -57,6 +61,7 @@
   transform-origin: 0 0 !important;
 }
 
+/* Make drawer properly positioned */
 .component-editor-drawer .ant-drawer-content-wrapper {
   height: calc(100% - 20px);
   margin: 10px;
@@ -69,6 +74,7 @@
   overflow-y: auto;
 }
 
+/* Fix scrolling in component library sections */
 .ant-collapse-content {
   overflow: visible !important;
 }
@@ -78,60 +84,18 @@
   overflow: visible !important;
 }
 
+/* Fix Ant Design collapse panel height */
 .ant-collapse-content-box {
   max-height: none !important;
   overflow: visible !important;
 }
 
+/* Ensure items don't get cut off */
 .ant-collapse-item {
   overflow: visible !important;
 }
 
+/* Make sure the collapse section can be scrolled properly */
 .ant-collapse {
   overflow: visible !important;
-}
-
-.react-flow__node {
-  font-size: 12px;
-}
-
-.truncatable-text {
-  line-height: 1.4;
-  word-break: break-word;
-}
-
-.rounded-full {
-  border-radius: 9999px;
-}
-
-.truncate {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.space-y-2 > * + * {
-  margin-top: 0.5rem;
-}
-
-.space-y-1 > * + * {
-  margin-top: 0.25rem;
-}
-
-.bg-gray-50 {
-  background-color: #f9fafb;
-}
-
-.rounded {
-  border-radius: 0.25rem;
-}
-
-.text-xs {
-  font-size: 0.75rem;
-  line-height: 1rem;
-}
-
-.text-sm {
-  font-size: 0.875rem;
-  line-height: 1.25rem;
 }

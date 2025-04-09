@@ -11,6 +11,10 @@ import {
   ModelConfig,
   ToolConfig,
   TerminationConfig,
+  ChatCompletionContextConfig,
+  OrTerminationConfig,
+  MaxMessageTerminationConfig,
+  TextMentionTerminationConfig,
   SelectorGroupChatConfig,
   RoundRobinGroupChatConfig,
   MultimodalWebSurferConfig,
@@ -19,10 +23,7 @@ import {
   OpenAIClientConfig,
   AzureOpenAIClientConfig,
   AnthropicClientConfig,
-  FunctionToolConfig,
-  OrTerminationConfig,
-  MaxMessageTerminationConfig,
-  TextMentionTerminationConfig
+  FunctionToolConfig
 } from "../components/studio/datamodel";
 
 // Type guard functions for component types

@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useRef } from "react";
+
+import * as React from "react";
+import { useState, useEffect, useRef } from "react";
 import { TeamBuilder } from "../components/studio/builder/builder";
 import { Loader2, Users } from "lucide-react";
 import { Team, Component, TeamConfig } from "../components/studio/datamodel";
@@ -45,8 +47,9 @@ const StudioPage = () => {
       setIsLoading(true);
       const data = await teamAPI.getTeam();
       
-      // Create a Team object with the expected structure
+      // Create a proper Team object with the expected structure
       setTeam({
+        ...data,
         component: {
           provider: data.provider || "roundrobin",
           component_type: "team",
@@ -115,6 +118,7 @@ const StudioPage = () => {
       const data = await teamAPI.updateTeam(updatedTeam);
       toast.success("Team saved successfully");
       
+      // No need to refresh the page - we already updated the state above
     } catch (error) {
       console.error("Error updating team:", error);
       toast.error("Failed to save team");
