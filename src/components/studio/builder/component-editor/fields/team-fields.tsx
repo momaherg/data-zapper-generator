@@ -1,18 +1,19 @@
 
 import React, { useCallback } from "react";
-import { Input, Button, InputNumber, Switch } from "antd";
-import { Edit, Timer } from "lucide-react";
+import { Input, Switch, Button } from "antd";
 import {
   Component,
   TeamConfig,
   ComponentConfig,
-  RoundRobinGroupChatConfig,
   SelectorGroupChatConfig,
+  RoundRobinGroupChatConfig,
 } from "../../../datamodel";
-import { isSelectorTeam, isRoundRobinTeam } from "../../../guards";
+import {
+  isSelectorTeam,
+  isRoundRobinTeam,
+} from "../../../guards";
 import DetailGroup from "../detailgroup";
-
-const { TextArea } = Input;
+import { Textarea } from "@/components/ui/textarea";
 
 interface TeamFieldsProps {
   component: Component<TeamConfig>;
@@ -25,8 +26,6 @@ export const TeamFields: React.FC<TeamFieldsProps> = ({
   onChange,
   onNavigate,
 }) => {
-  if (!isSelectorTeam(component) && !isRoundRobinTeam(component)) return null;
-
   const handleComponentUpdate = useCallback(
     (updates: Partial<Component<ComponentConfig>>) => {
       onChange({
@@ -41,33 +40,85 @@ export const TeamFields: React.FC<TeamFieldsProps> = ({
     [component, onChange]
   );
 
-  const handleConfigUpdate = useCallback(
-    (field: string, value: unknown) => {
-      if (isSelectorTeam(component)) {
-        handleComponentUpdate({
-          config: {
-            ...component.config,
-            [field]: value,
-          } as SelectorGroupChatConfig,
-        });
-      } else if (isRoundRobinTeam(component)) {
-        handleComponentUpdate({
-          config: {
-            ...component.config,
-            [field]: value,
-          } as RoundRobinGroupChatConfig,
-        });
-      }
-    },
-    [component, handleComponentUpdate]
-  );
+  const renderSelectorFields = () => {
+    if (!isSelectorTeam(component)) return null;
+    
+    const config = component.config as SelectorGroupChatConfig;
+    
+    return (
+      <DetailGroup title="Selector Configuration">
+        <div className="space-y-4">
+          <label className="block">
+            <span className="text-sm font-medium text-primary">Selector Prompt</span>
+            <Textarea
+              value={config.selector_prompt || ""}
+              onChange={(e) =>
+                handleComponentUpdate({
+                  config: { ...config, selector_prompt: e.target.value },
+                })
+              }
+              placeholder="Prompt for selecting the next agent"
+              rows={4}
+              className="mt-1"
+            />
+          </label>
+          
+          <div className="space-y-2">
+            <h3 className="text-sm font-medium text-primary">Model</h3>
+            {config.model_client ? (
+              <div className="border border-gray-200 p-3 rounded">
+                <div className="flex justify-between items-center">
+                  <span>{config.model_client.label || "Model"}</span>
+                  <Button 
+                    type="link" 
+                    onClick={() => onNavigate && onNavigate(
+                      "model", 
+                      config.model_client.label || "model", 
+                      "model_client"
+                    )}
+                  >
+                    Edit
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="text-sm text-gray-500 text-center p-4 border border-dashed rounded-md">
+                No model configured
+              </div>
+            )}
+          </div>
+        </div>
+      </DetailGroup>
+    );
+  };
 
-  // Get the participant count
-  const participantCount = component.config.participants?.length || 0;
+  const renderRoundRobinFields = () => {
+    if (!isRoundRobinTeam(component)) return null;
+    
+    const config = component.config as RoundRobinGroupChatConfig;
+    
+    return (
+      <DetailGroup title="Round Robin Configuration">
+        <div className="space-y-4">
+          <label className="flex items-center justify-between">
+            <span className="text-sm font-medium text-primary">Allow Repeated Speaker</span>
+            <Switch
+              checked={config.allow_repeated_speaker}
+              onChange={(checked) =>
+                handleComponentUpdate({
+                  config: { ...config, allow_repeated_speaker: checked },
+                })
+              }
+            />
+          </label>
+        </div>
+      </DetailGroup>
+    );
+  };
 
   return (
-    <div className=" ">
-      <DetailGroup title="Component Details">
+    <div className="space-y-6">
+      <DetailGroup title="Team Details">
         <div className="space-y-4">
           <label className="block">
             <span className="text-sm font-medium text-primary">Name</span>
@@ -80,10 +131,8 @@ export const TeamFields: React.FC<TeamFieldsProps> = ({
           </label>
 
           <label className="block">
-            <span className="text-sm font-medium text-primary">
-              Description
-            </span>
-            <TextArea
+            <span className="text-sm font-medium text-primary">Description</span>
+            <Textarea
               value={component.description || ""}
               onChange={(e) =>
                 handleComponentUpdate({ description: e.target.value })
@@ -96,153 +145,84 @@ export const TeamFields: React.FC<TeamFieldsProps> = ({
         </div>
       </DetailGroup>
 
-      <DetailGroup title="Configuration">
-        {isSelectorTeam(component) && (
-          <div className="space-y-4">
-            <label className="block">
-              <span className="text-sm font-medium text-primary">
-                Selector Prompt
-              </span>
-              <TextArea
-                value={component.config.selector_prompt || ""}
-                onChange={(e) =>
-                  handleConfigUpdate("selector_prompt", e.target.value)
-                }
-                placeholder="Prompt for the selector"
-                rows={4}
-                className="mt-1"
-              />
-            </label>
+      {renderSelectorFields()}
+      {renderRoundRobinFields()}
 
-            <div className="flex items-center gap-2 mt-3">
-              <Switch
-                checked={component.config.allow_repeated_speaker || false}
-                onChange={(checked) => 
-                  handleConfigUpdate("allow_repeated_speaker", checked)
-                }
-              />
-              <span className="text-sm font-medium text-primary">
-                Allow Repeated Speaker
-              </span>
-            </div>
-
-            <div className="space-y-2">
-              <h3 className="text-sm font-medium text-primary">Model</h3>
-              <div className="bg-secondary p-4 rounded-md">
-                {component.config.model_client ? (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">
-                      {component.config.model_client.config.model}
-                    </span>
-                    {onNavigate && (
-                      <Button
-                        type="text"
-                        icon={<Edit className="w-4 h-4" />}
-                        onClick={() =>
-                          onNavigate(
-                            "model",
-                            component.config.model_client?.label || "",
-                            "model_client"
-                          )
-                        }
-                      />
+      <DetailGroup title="Participants">
+        <div className="space-y-2">
+          {component.config.participants && component.config.participants.length > 0 ? (
+            component.config.participants.map((agent, index) => (
+              <div key={index} className="border border-gray-200 p-3 rounded">
+                <div className="flex justify-between items-center">
+                  <span>{agent.config.name || agent.label || `Agent ${index + 1}`}</span>
+                  <Button 
+                    type="link" 
+                    onClick={() => onNavigate && onNavigate(
+                      "agent", 
+                      agent.label || `agent-${index}`, 
+                      "participants"
                     )}
-                  </div>
-                ) : (
-                  <div className="text-sm text-secondary text-center">
-                    No model configured
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Common configuration for both team types */}
-        <div className="mt-4">
-          <label className="block">
-            <span className="text-sm font-medium text-primary">Max Turns</span>
-            <InputNumber
-              value={component.config.max_turns || 0}
-              onChange={(value) => handleConfigUpdate("max_turns", value)}
-              placeholder="Maximum number of turns"
-              className="mt-1 w-full"
-              min={0}
-            />
-          </label>
-        </div>
-
-        <div className="space-y-2 mt-4">
-          <h3 className="text-sm font-medium text-primary">
-            Participants ({participantCount})
-          </h3>
-          <div className="bg-secondary p-4 rounded-md max-h-40 overflow-y-auto">
-            {participantCount > 0 ? (
-              <div className="space-y-2">
-                {component.config.participants?.map((participant, idx) => (
-                  <div key={idx} className="flex justify-between items-center">
-                    <span className="text-sm">
-                      {participant.config.name || `Agent ${idx + 1}`}
-                    </span>
-                    {onNavigate && (
-                      <Button
-                        type="text"
-                        size="small"
-                        icon={<Edit className="w-3 h-3" />}
-                        onClick={() => 
-                          onNavigate(
-                            "agent", 
-                            participant.label || participant.config.name || "", 
-                            "participants"
-                          )
-                        }
-                      />
-                    )}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-sm text-secondary text-center">
-                No participants configured
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-2 mt-4">
-          <h3 className="text-sm font-medium text-primary">
-            Termination Condition
-          </h3>
-          <div className="bg-secondary p-4 rounded-md">
-            {component.config.termination_condition ? (
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <Timer className="w-4 h-4 text-secondary" />
-                  <span className="text-sm">
-                    {component.config.termination_condition.label ||
-                      component.config.termination_condition.provider}
-                  </span>
+                  >
+                    Edit
+                  </Button>
                 </div>
-                {onNavigate && (
-                  <Button
-                    type="text"
-                    icon={<Edit className="w-4 h-4" />}
-                    onClick={() =>
-                      onNavigate(
-                        "termination",
-                        component.config.termination_condition?.label || "",
-                        "termination_condition"
-                      )
-                    }
-                  />
-                )}
               </div>
-            ) : (
-              <div className="text-sm text-secondary text-center">
-                No termination condition configured
+            ))
+          ) : (
+            <div className="text-sm text-gray-500 text-center p-4 border border-dashed rounded-md">
+              No participants added
+            </div>
+          )}
+          
+          <Button 
+            type="dashed" 
+            className="w-full mt-2"
+            onClick={() => {
+              // Handle adding a new agent
+              console.log("Add agent clicked");
+            }}
+          >
+            Add Agent
+          </Button>
+        </div>
+      </DetailGroup>
+
+      <DetailGroup title="Termination">
+        <div className="space-y-2">
+          {component.config.termination_condition ? (
+            <div className="border border-gray-200 p-3 rounded">
+              <div className="flex justify-between items-center">
+                <span>{component.config.termination_condition.label || "Termination"}</span>
+                <Button 
+                  type="link" 
+                  onClick={() => onNavigate && onNavigate(
+                    "termination", 
+                    component.config.termination_condition.label || "termination", 
+                    "termination_condition"
+                  )}
+                >
+                  Edit
+                </Button>
               </div>
-            )}
-          </div>
+            </div>
+          ) : (
+            <div className="text-sm text-gray-500 text-center p-4 border border-dashed rounded-md">
+              No termination condition configured
+            </div>
+          )}
+          
+          {!component.config.termination_condition && (
+            <Button 
+              type="dashed" 
+              className="w-full mt-2"
+              onClick={() => {
+                // Handle adding a termination condition
+                console.log("Add termination clicked");
+              }}
+            >
+              Add Termination Condition
+            </Button>
+          )}
         </div>
       </DetailGroup>
     </div>

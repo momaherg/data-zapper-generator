@@ -1,5 +1,7 @@
+
 import React, { useCallback } from "react";
 import { Input, Select, InputNumber, Form } from "antd";
+import { HelpCircle } from "lucide-react";
 import {
   Component,
   ModelConfig,
@@ -11,6 +13,8 @@ import {
   isAnthropicModel,
 } from "../../../guards";
 import DetailGroup from "../detailgroup";
+import { Tooltip } from "antd";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ModelFieldsProps {
   component: Component<ModelConfig>;
@@ -411,7 +415,7 @@ export const ModelFields: React.FC<ModelFieldsProps> = ({
             <span className="text-sm font-medium text-primary">
               Description
             </span>
-            <TextArea
+            <Textarea
               value={component.description || ""}
               onChange={(e) =>
                 handleComponentUpdate({ description: e.target.value })
@@ -442,7 +446,7 @@ export const ModelFields: React.FC<ModelFieldsProps> = ({
         (component.config as any).tool_choice === "custom" && (
           <DetailGroup title="Custom Tool Choice">
             <div className="space-y-4">
-              <TextArea
+              <Textarea
                 value={JSON.stringify(
                   (component.config as any).tool_choice,
                   null,

@@ -15,8 +15,16 @@ export type {
   TerminationConfig,
   SelectorGroupChatConfig,
   RoundRobinGroupChatConfig,
-  AssistantAgentConfig,
-  UserProxyAgentConfig,
-  MultimodalWebSurferConfig,
-  ChatMessage
+  MaxMessageTerminationConfig,
+  TextMentionTerminationConfig,
+  OrTerminationConfig
 } from "../components/studio/datamodel";
+
+// Define ChatMessage interface that was missing
+export interface ChatMessage {
+  message_id?: string;
+  role: string;
+  content: string;
+  metadata?: Record<string, any>;
+  created_at?: string;
+}

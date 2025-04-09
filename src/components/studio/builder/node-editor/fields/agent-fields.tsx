@@ -3,11 +3,6 @@ import { Form, Input } from "antd";
 import DetailGroup from "../detailgroup";
 import { Component, AgentConfig } from "../../../datamodel";
 
-interface DetailGroupProps {
-  title: string;
-  children: React.ReactNode;
-}
-
 interface AgentFieldsProps {
   component: Component<AgentConfig>;
   onChange: (updateData: Partial<Component<AgentConfig>>) => void;

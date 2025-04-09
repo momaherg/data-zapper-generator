@@ -33,6 +33,10 @@ export const Fields: React.FC<FieldsProps> = ({
   onChange,
   onNavigate,
 }) => {
+  if (!component) {
+    return <div>No component selected</div>;
+  }
+
   if (isTeamComponent(component)) {
     return (
       <TeamFields
@@ -81,7 +85,7 @@ export const Fields: React.FC<FieldsProps> = ({
     );
   }
 
-  return <div>Unknown component type: {component.component_type}</div>;
+  return <div>Unknown component type: {component?.component_type || 'undefined'}</div>;
 };
 
 export default Fields;
