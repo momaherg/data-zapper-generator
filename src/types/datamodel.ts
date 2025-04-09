@@ -8,6 +8,7 @@ export type {
   GalleryConfig,
   GalleryMetadata,
   Team,
+  TeamConfig,
   AgentConfig,
   ModelConfig,
   ToolConfig,
