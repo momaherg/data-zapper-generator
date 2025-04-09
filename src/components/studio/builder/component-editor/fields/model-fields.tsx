@@ -12,7 +12,7 @@ import {
   isAnthropicModel,
 } from "../../../guards";
 import DetailGroup from "../detailgroup";
-import TextArea from "antd/es/input/TextArea";
+import { Textarea } from "@/components/ui/textarea";
 
 interface ModelFieldsProps {
   component: Component<ModelConfig>;
@@ -35,7 +35,6 @@ const InputWithTooltip: React.FC<{
   </label>
 );
 
-// Define possible field names to ensure type safety
 type FieldName =
   | "temperature"
   | "max_tokens"
@@ -59,7 +58,6 @@ type FieldName =
   | "tool_choice"
   | "metadata";
 
-// Define the field specification type
 interface FieldSpec {
   label: string;
   tooltip: string;
@@ -71,9 +69,7 @@ interface FieldSpec {
   };
 }
 
-// Field specifications for all possible model parameters
 const fieldSpecs: Record<FieldName, FieldSpec> = {
-  // Common fields
   temperature: {
     label: "Temperature",
     tooltip:
@@ -142,7 +138,6 @@ const fieldSpecs: Record<FieldName, FieldSpec> = {
     props: { required: true },
   },
 
-  // OpenAI specific
   api_key: {
     label: "API Key",
     tooltip: "Your API key",
@@ -174,7 +169,6 @@ const fieldSpecs: Record<FieldName, FieldSpec> = {
     props: { min: 0, className: "w-full" },
   },
 
-  // Azure OpenAI specific
   azure_endpoint: {
     label: "Azure Endpoint",
     tooltip: "Your Azure OpenAI service endpoint URL",
@@ -200,11 +194,10 @@ const fieldSpecs: Record<FieldName, FieldSpec> = {
     props: {},
   },
 
-  // Anthropic specific
   tools: {
     label: "Tools",
     tooltip: "JSON definition of tools the model can use",
-    component: TextArea,
+    component: Textarea,
     props: { rows: 4, placeholder: "Enter tools JSON definition" },
     transform: {
       fromConfig: (value: any) => (value ? JSON.stringify(value, null, 2) : ""),
@@ -246,7 +239,7 @@ const fieldSpecs: Record<FieldName, FieldSpec> = {
   metadata: {
     label: "Metadata",
     tooltip: "Optional: Custom metadata to include with the request",
-    component: TextArea,
+    component: Textarea,
     props: { rows: 2, placeholder: "Enter metadata as JSON" },
     transform: {
       fromConfig: (value: any) => (value ? JSON.stringify(value, null, 2) : ""),
@@ -261,7 +254,6 @@ const fieldSpecs: Record<FieldName, FieldSpec> = {
   },
 };
 
-// Define provider field mapping type
 type ProviderType = "openai" | "azure" | "anthropic";
 
 interface ProviderFields {
@@ -269,7 +261,6 @@ interface ProviderFields {
   modelParams: FieldName[];
 }
 
-// Define which fields each provider uses
 const providerFields: Record<ProviderType, ProviderFields> = {
   openai: {
     modelConfig: [
@@ -328,7 +319,6 @@ export const ModelFields: React.FC<ModelFieldsProps> = ({
   component,
   onChange,
 }) => {
-  // Determine which provider we're dealing with
   let providerType: ProviderType | null = null;
   if (isOpenAIModel(component)) {
     providerType = "openai";
@@ -338,7 +328,6 @@ export const ModelFields: React.FC<ModelFieldsProps> = ({
     providerType = "anthropic";
   }
 
-  // Return null if we don't recognize the provider
   if (!providerType) return null;
 
   const handleComponentUpdate = useCallback(
@@ -357,7 +346,6 @@ export const ModelFields: React.FC<ModelFieldsProps> = ({
 
   const handleConfigUpdate = useCallback(
     (field: FieldName, value: unknown) => {
-      // Check if this field has a transform function
       const spec = fieldSpecs[field];
       const transformedValue = spec.transform?.toConfig
         ? spec.transform.toConfig(value, (component.config as any)[field])
@@ -373,12 +361,10 @@ export const ModelFields: React.FC<ModelFieldsProps> = ({
     [component, handleComponentUpdate]
   );
 
-  // Function to render a single field
   const renderField = (fieldName: FieldName) => {
     const spec = fieldSpecs[fieldName];
     if (!spec) return null;
 
-    // Get the current value, applying any transformation
     const value = spec.transform?.fromConfig
       ? spec.transform.fromConfig((component.config as any)[fieldName])
       : (component.config as any)[fieldName];
@@ -393,7 +379,6 @@ export const ModelFields: React.FC<ModelFieldsProps> = ({
           {...spec.props}
           value={value}
           onChange={(val: any) => {
-            // For some components like Input, the value is in e.target.value
             const newValue = val && val.target ? val.target.value : val;
             handleConfigUpdate(fieldName, newValue);
           }}
@@ -402,7 +387,6 @@ export const ModelFields: React.FC<ModelFieldsProps> = ({
     );
   };
 
-  // Function to render a group of fields
   const renderFieldGroup = (fields: FieldName[]) => {
     return (
       <div className="space-y-4">
@@ -429,7 +413,7 @@ export const ModelFields: React.FC<ModelFieldsProps> = ({
             <span className="text-sm font-medium text-primary">
               Description
             </span>
-            <TextArea
+            <Textarea
               value={component.description || ""}
               onChange={(e) =>
                 handleComponentUpdate({ description: e.target.value })
@@ -456,12 +440,11 @@ export const ModelFields: React.FC<ModelFieldsProps> = ({
         {renderFieldGroup(providerFields[providerType].modelParams)}
       </DetailGroup>
 
-      {/* Only render tool configuration if it's an Anthropic model and has tools */}
       {providerType === "anthropic" &&
         (component.config as any).tool_choice === "custom" && (
           <DetailGroup title="Custom Tool Choice">
             <div className="space-y-4">
-              <TextArea
+              <Textarea
                 value={JSON.stringify(
                   (component.config as any).tool_choice,
                   null,
@@ -472,7 +455,6 @@ export const ModelFields: React.FC<ModelFieldsProps> = ({
                     const value = JSON.parse(e.target.value);
                     handleConfigUpdate("tool_choice" as FieldName, value);
                   } catch (err) {
-                    // Handle invalid JSON
                     console.error("Invalid JSON for tool_choice");
                   }
                 }}

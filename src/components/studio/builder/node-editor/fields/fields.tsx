@@ -33,6 +33,10 @@ export const Fields: React.FC<FieldsProps> = ({
   onChange,
   onNavigate,
 }) => {
+  if (!component || !component.component_type) {
+    return <div>Invalid component</div>;
+  }
+  
   if (isTeamComponent(component)) {
     return (
       <TeamFields

@@ -2,10 +2,7 @@
 import { 
   Component, 
   ComponentTypes, 
-  ComponentConfig 
-} from "./datamodel";
-
-import {
+  ComponentConfig,
   TeamConfig,
   AgentConfig,
   ModelConfig,
@@ -24,26 +21,26 @@ import {
   AzureOpenAIClientConfig,
   AnthropicClientConfig,
   FunctionToolConfig
-} from "../components/studio/datamodel";
+} from "./datamodel";
 
 // Type guard functions for component types
-export function isTeam(component: Component<ComponentConfig>): component is Component<TeamConfig> {
+export function isTeamComponent(component: Component<ComponentConfig>): component is Component<TeamConfig> {
   return component.component_type === "team";
 }
 
-export function isAgent(component: Component<ComponentConfig>): component is Component<AgentConfig> {
+export function isAgentComponent(component: Component<ComponentConfig>): component is Component<AgentConfig> {
   return component.component_type === "agent";
 }
 
-export function isModel(component: Component<ComponentConfig>): component is Component<ModelConfig> {
+export function isModelComponent(component: Component<ComponentConfig>): component is Component<ModelConfig> {
   return component.component_type === "model";
 }
 
-export function isTool(component: Component<ComponentConfig>): component is Component<ToolConfig> {
+export function isToolComponent(component: Component<ComponentConfig>): component is Component<ToolConfig> {
   return component.component_type === "tool";
 }
 
-export function isTermination(component: Component<ComponentConfig>): component is Component<TerminationConfig> {
+export function isTerminationComponent(component: Component<ComponentConfig>): component is Component<TerminationConfig> {
   return component.component_type === "termination";
 }
 
@@ -68,16 +65,16 @@ export function isUserProxyAgent(config: AgentConfig): config is UserProxyAgentC
   return !('reflect_on_tool_use' in config) && !('browser_channel' in config);
 }
 
-export function isOpenAIClient(config: ModelConfig): config is OpenAIClientConfig {
-  return 'model' in config && !('azure_endpoint' in config) && !('top_k' in config);
+export function isOpenAIModel(component: Component<ModelConfig>): component is Component<OpenAIClientConfig> {
+  return component.provider === "openai";
 }
 
-export function isAzureOpenAIClient(config: ModelConfig): config is AzureOpenAIClientConfig {
-  return 'azure_endpoint' in config;
+export function isAzureOpenAIModel(component: Component<ModelConfig>): component is Component<AzureOpenAIClientConfig> {
+  return component.provider === "azure";
 }
 
-export function isAnthropicClient(config: ModelConfig): config is AnthropicClientConfig {
-  return 'top_k' in config || ('model' in config && config.model.includes('claude'));
+export function isAnthropicModel(component: Component<ModelConfig>): component is Component<AnthropicClientConfig> {
+  return component.provider === "anthropic";
 }
 
 export function isFunctionTool(config: ToolConfig): config is FunctionToolConfig {
