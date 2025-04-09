@@ -1,6 +1,7 @@
 
+import React from "react";
 import { Form, Input } from "antd";
-import DetailGroup from "../../component-editor/detailgroup";
+import DetailGroup from "../detailgroup";
 import { Component, AgentConfig } from "../../../datamodel";
 
 interface AgentFieldsProps {
@@ -37,13 +38,13 @@ export const AgentFields = ({ component, onChange, onNavigate }: AgentFieldsProp
       </Form.Item>
 
       <DetailGroup title="Prompt" defaultOpen={true}>
-        <Form.Item label="System Prompt" name="system_prompt" className="mb-4">
+        <Form.Item label="System Message" name="system_message" className="mb-4">
           <Input.TextArea
             placeholder="Instructions for the agent"
-            defaultValue={component.config?.system_prompt || ""}
+            defaultValue={(component.config as any).system_message || ""}
             rows={4}
             onChange={(e) => onChange({
-              config: { ...component.config, system_prompt: e.target.value },
+              config: { ...component.config, system_message: e.target.value },
             })}
           />
         </Form.Item>
@@ -56,7 +57,7 @@ export const AgentFields = ({ component, onChange, onNavigate }: AgentFieldsProp
             min={0}
             max={1}
             step={0.1}
-            defaultValue={component.config?.temperature || 0.7}
+            defaultValue={(component.config as any).temperature || 0.7}
             onChange={(e) => onChange({
               config: { ...component.config, temperature: parseFloat(e.target.value) },
             })}

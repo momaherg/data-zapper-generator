@@ -10,9 +10,9 @@ import {
 } from "../../../datamodel";
 import { Component } from "../../../datamodel";
 import { isOpenAIModel, isAzureOpenAIModel, isAnthropicModel } from "../../../guards";
+import { Textarea } from "@/components/ui/textarea";
 
 const { Option } = Select;
-const { TextArea } = Input; // Note: Here we're using Ant Design's TextArea
 
 export interface ModelFieldsProps extends NodeEditorFieldsProps {
   component: Component<ModelConfig>;

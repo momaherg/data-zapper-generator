@@ -27,9 +27,7 @@ export const TerminationFields: React.FC<TerminationFieldsProps> = ({
   onChange,
   onNavigate,
 }) => {
-  if (!component || !component.config) {
-    return null;
-  }
+  if (!component) return null;
 
   const handleComponentUpdate = useCallback(
     (updates: Partial<Component<ComponentConfig>>) => {
@@ -47,58 +45,43 @@ export const TerminationFields: React.FC<TerminationFieldsProps> = ({
     [component, onChange]
   );
 
-  // Render OrTermination fields
-  if (isOrTermination(component.config)) {
+  if (isOrTermination(component)) {
     return (
       <div className="space-y-4">
         <DetailGroup title="OR Termination Conditions" defaultOpen={true}>
-          <p className="text-sm text-gray-500 mb-4">
-            Terminates when any of the conditions are met
-          </p>
           <div className="space-y-2">
-            {component.config.conditions?.map((condition, index) => (
-              <div 
-                key={index}
-                className="p-3 border border-gray-200 rounded-md hover:bg-gray-50 cursor-pointer"
-                onClick={() => onNavigate && onNavigate(condition.component_type, condition.label || `Condition ${index + 1}`, "conditions")}
-              >
-                <div className="font-medium">{condition.label || `Condition ${index + 1}`}</div>
-                <div className="text-xs text-gray-500">Click to edit condition</div>
-              </div>
-            ))}
+            <h3 className="text-sm font-medium">Conditions</h3>
+            <p className="text-xs text-gray-500">
+              Terminates when any of the conditions are met
+            </p>
+            <div className="space-y-2">
+              {(component.config as OrTerminationConfig).conditions?.map((condition, index) => (
+                <div 
+                  key={index} 
+                  className="p-3 border rounded cursor-pointer hover:bg-gray-50"
+                  onClick={() => onNavigate && onNavigate(condition.component_type, condition.label || "", "conditions")}
+                >
+                  <h4 className="font-medium">{condition.label || `Condition ${index + 1}`}</h4>
+                  <p className="text-xs text-gray-500">Click to edit condition</p>
+                </div>
+              ))}
+            </div>
+            <Button 
+              type="dashed" 
+              className="w-full mt-2"
+              onClick={() => {
+                // Handle adding a new condition
+              }}
+            >
+              Add Condition
+            </Button>
           </div>
-          <Button 
-            type="dashed" 
-            className="w-full mt-4"
-            onClick={() => {
-              // Handle adding a new condition
-              const newConditions = [...(component.config as OrTerminationConfig).conditions];
-              newConditions.push({
-                provider: "maxmessage",
-                component_type: "termination",
-                label: `Condition ${newConditions.length + 1}`,
-                config: {
-                  max_messages: 10
-                }
-              });
-              
-              handleComponentUpdate({
-                config: {
-                  ...component.config,
-                  conditions: newConditions
-                }
-              });
-            }}
-          >
-            Add Condition
-          </Button>
         </DetailGroup>
       </div>
     );
   }
 
-  // Render MaxMessageTermination fields
-  if (isMaxMessageTermination(component.config)) {
+  if (isMaxMessageTermination(component)) {
     return (
       <div className="space-y-4">
         <DetailGroup title="Max Messages Termination" defaultOpen={true}>
@@ -106,13 +89,10 @@ export const TerminationFields: React.FC<TerminationFieldsProps> = ({
             <span className="text-sm font-medium">Max Messages</span>
             <InputNumber
               min={1}
-              value={component.config.max_messages}
+              value={(component.config as MaxMessageTerminationConfig).max_messages}
               onChange={(value) =>
                 handleComponentUpdate({
-                  config: { 
-                    ...component.config,
-                    max_messages: value as number 
-                  },
+                  config: { max_messages: value as number },
                 })
               }
               className="w-full mt-1"
@@ -123,21 +103,17 @@ export const TerminationFields: React.FC<TerminationFieldsProps> = ({
     );
   }
 
-  // Render TextMentionTermination fields
-  if (isTextMentionTermination(component.config)) {
+  if (isTextMentionTermination(component)) {
     return (
       <div className="space-y-4">
         <DetailGroup title="Text Mention Termination" defaultOpen={true}>
           <label className="block">
             <span className="text-sm font-medium">Termination Text</span>
             <Input
-              value={component.config.text}
+              value={(component.config as TextMentionTerminationConfig).text}
               onChange={(e) =>
                 handleComponentUpdate({
-                  config: { 
-                    ...component.config,
-                    text: e.target.value 
-                  },
+                  config: { text: e.target.value },
                 })
               }
               placeholder="Text that triggers termination"
@@ -149,11 +125,7 @@ export const TerminationFields: React.FC<TerminationFieldsProps> = ({
     );
   }
 
-  return (
-    <div>
-      <p>Unknown termination type</p>
-    </div>
-  );
+  return null;
 };
 
 export default React.memo(TerminationFields);

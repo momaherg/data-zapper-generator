@@ -52,7 +52,7 @@ export const TerminationFields: React.FC<TerminationFieldsProps> = ({
           Terminates when any of the conditions are met
         </p>
         <div className="space-y-2">
-          {component.config.conditions?.map((condition, index) => (
+          {(component.config as OrTerminationConfig).conditions?.map((condition, index) => (
             <NestedComponentButton
               key={index}
               label={condition.label || `Condition ${index + 1}`}
@@ -82,7 +82,7 @@ export const TerminationFields: React.FC<TerminationFieldsProps> = ({
           <span className="text-sm font-medium">Max Messages</span>
           <InputNumber
             min={1}
-            value={component.config.max_messages}
+            value={(component.config as MaxMessageTerminationConfig).max_messages}
             onChange={(value) =>
               handleComponentUpdate({
                 config: { max_messages: value as number },
@@ -102,7 +102,7 @@ export const TerminationFields: React.FC<TerminationFieldsProps> = ({
         <label className="block">
           <span className="text-sm font-medium">Termination Text</span>
           <Input
-            value={component.config.text}
+            value={(component.config as TextMentionTerminationConfig).text}
             onChange={(e) =>
               handleComponentUpdate({
                 config: { text: e.target.value },

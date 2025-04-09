@@ -31,5 +31,22 @@ export type {
   SelectorGroupChatConfig,
   RoundRobinGroupChatConfig,
   // Context configs
-  ChatCompletionContextConfig
+  ChatCompletionContextConfig,
+  UnboundedChatCompletionContextConfig
 } from "../components/studio/datamodel";
+
+// Define a Gallery type compatible with both implementations
+export interface GalleryConfig {
+  id?: number | string;
+  name: string;
+  description?: string;
+  metadata?: GalleryMetadata;
+  components?: {
+    agents?: any[];
+    models?: any[];
+    tools?: any[];
+    terminations?: any[];
+    teams?: any[];
+  };
+}
+
