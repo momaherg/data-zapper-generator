@@ -118,40 +118,6 @@ export interface RoundRobinGroupChatConfig {
   max_turns?: number;
 }
 
-export interface MultimodalWebSurferConfig {
-  name: string;
-  model_client: Component<ModelConfig>;
-  downloads_folder?: string;
-  description?: string;
-  debug_dir?: string;
-  headless?: boolean;
-  start_page?: string;
-  animate_actions?: boolean;
-  to_save_screenshots?: boolean;
-  use_ocr?: boolean;
-  browser_channel?: string;
-  browser_data_dir?: string;
-  to_resize_viewport?: boolean;
-}
-
-export interface AssistantAgentConfig {
-  name: string;
-  model_client: Component<ModelConfig>;
-  tools?: Component<ToolConfig>[];
-  handoffs?: any[]; // HandoffBase | str equivalent
-  model_context?: Component<ChatCompletionContextConfig>;
-  description: string;
-  system_message?: string;
-  reflect_on_tool_use: boolean;
-  tool_call_summary_format: string;
-  model_client_stream: boolean;
-}
-
-export interface UserProxyAgentConfig {
-  name: string;
-  description: string;
-}
-
 // Model Configs
 export interface ModelInfo {
   vision: boolean;

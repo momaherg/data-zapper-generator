@@ -1,3 +1,4 @@
+
 import {
   Component,
   AgentConfig,
@@ -5,7 +6,7 @@ import {
   ModelConfig,
   ToolConfig,
   TerminationConfig,
-} from "../datamodel";
+} from "./datamodel";
 
 // Agent Guards
 export function isAgentComponent(component: any): component is Component<AgentConfig> {
@@ -14,6 +15,10 @@ export function isAgentComponent(component: any): component is Component<AgentCo
 
 export function isAssistantAgent(component: any): boolean {
   return isAgentComponent(component) && component.provider === "assistant";
+}
+
+export function isUserProxyAgent(component: any): boolean {
+  return isAgentComponent(component) && component.provider === "user_proxy";
 }
 
 export function isWebSurferAgent(component: any): boolean {
@@ -31,6 +36,10 @@ export function isOpenAIModel(component: any): boolean {
 
 export function isAzureOpenAIModel(component: any): boolean {
   return isModelComponent(component) && component.provider === "azureopenai";
+}
+
+export function isAnthropicModel(component: any): boolean {
+  return isModelComponent(component) && component.provider === "anthropic";
 }
 
 // Tool Guards
@@ -71,3 +80,12 @@ export function isSelectorTeam(component: any): boolean {
 export function isRoundRobinTeam(component: any): boolean {
   return isTeamComponent(component) && component.provider === "roundrobin";
 }
+
+// Provider constants
+export const PROVIDERS = {
+  TERMINATION: {
+    OR: "or",
+    MAX_MESSAGE: "maxmessage",
+    TEXT_MENTION: "textmention"
+  }
+};

@@ -12,5 +12,11 @@ export type {
   AgentConfig,
   ModelConfig,
   ToolConfig,
-  TerminationConfig
+  TerminationConfig,
+  SelectorGroupChatConfig,
+  RoundRobinGroupChatConfig,
+  AssistantAgentConfig,
+  UserProxyAgentConfig,
+  MultimodalWebSurferConfig,
+  ChatMessage
 } from "../components/studio/datamodel";

@@ -1,7 +1,12 @@
 
 import { Form, Input } from "antd";
-import DetailGroup from "../../component-editor/detailgroup";
+import DetailGroup from "../detailgroup";
 import { Component, AgentConfig } from "../../../datamodel";
+
+interface DetailGroupProps {
+  title: string;
+  children: React.ReactNode;
+}
 
 interface AgentFieldsProps {
   component: Component<AgentConfig>;
@@ -36,27 +41,27 @@ export const AgentFields = ({ component, onChange, onNavigate }: AgentFieldsProp
         />
       </Form.Item>
 
-      <DetailGroup title="Prompt" defaultOpen={true}>
+      <DetailGroup title="Prompt">
         <Form.Item label="System Prompt" name="system_prompt" className="mb-4">
           <Input.TextArea
             placeholder="Instructions for the agent"
-            defaultValue={component.config?.system_prompt || ""}
+            defaultValue={component.config?.system_message || ""}
             rows={4}
             onChange={(e) => onChange({
-              config: { ...component.config, system_prompt: e.target.value },
+              config: { ...component.config, system_message: e.target.value },
             })}
           />
         </Form.Item>
       </DetailGroup>
 
-      <DetailGroup title="Advanced" defaultOpen={false}>
+      <DetailGroup title="Advanced">
         <Form.Item label="Temperature" name="temperature" className="mb-4">
           <Input
             type="number"
             min={0}
             max={1}
             step={0.1}
-            defaultValue={component.config?.temperature || 0.7}
+            defaultValue={0.7}
             onChange={(e) => onChange({
               config: { ...component.config, temperature: parseFloat(e.target.value) },
             })}
