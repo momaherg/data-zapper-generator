@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef } from "react";
 import { Button, Breadcrumb } from "antd";
 import { ChevronLeft, Code, FormInput } from "lucide-react";
@@ -10,7 +11,7 @@ import {
   isTerminationComponent,
 } from "../../guards";
 import { AgentFields } from "./fields/agent-fields";
-import { ModelFields } from "./fields/model-fields";
+import ModelFields from "./fields/model-fields";
 import { TeamFields } from "./fields/team-fields";
 import { ToolFields } from "./fields/tool-fields";
 import { TerminationFields } from "./fields/termination-fields";
