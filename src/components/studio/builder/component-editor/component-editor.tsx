@@ -10,7 +10,7 @@ import {
   isTerminationComponent,
 } from "../../guards";
 import { AgentFields } from "./fields/agent-fields";
-import { ModelFields } from "./fields/model-fields";
+import ModelFields from "./fields/model-fields";
 import { TeamFields } from "./fields/team-fields";
 import { ToolFields } from "./fields/tool-fields";
 import { TerminationFields } from "./fields/termination-fields";
@@ -44,7 +44,6 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
 
   const editorRef = useRef(null);
 
-  // Reset working copy when component changes
   React.useEffect(() => {
     setWorkingCopy(component);
     setEditPath([]);
@@ -149,7 +148,6 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
       );
 
       setWorkingCopy(updatedComponent);
-      //   onChange(updatedComponent);
     },
     [workingCopy, editPath, updateComponentAtPath]
   );
