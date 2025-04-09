@@ -1,8 +1,14 @@
+
 import React from "react";
 import { Form, Input, Select } from "antd";
-import { Textarea } from "@/components/ui/textarea";
 import { NodeEditorFieldsProps } from "../../node-editor";
-import { Component, ModelConfig } from "../../../datamodel";
+import {
+  ModelConfig,
+  OpenAIClientConfig,
+  AzureOpenAIClientConfig,
+  AnthropicClientConfig,
+} from "../../../datamodel";
+import { Component } from "../../../datamodel";
 import { isOpenAIModel, isAzureOpenAIModel, isAnthropicModel } from "../../../guards";
 
 const { Option } = Select;
@@ -107,6 +113,7 @@ const AnthropicModelFields: React.FC<ModelFieldsProps> = ({ component, onChange 
 };
 
 export const ModelFields: React.FC<ModelFieldsProps> = (props) => {
+  // Determine which model type we're dealing with and render the appropriate fields
   if (isOpenAIModel(props.component)) {
     return <OpenAIModelFields {...props} />;
   } else if (isAzureOpenAIModel(props.component)) {
@@ -115,6 +122,7 @@ export const ModelFields: React.FC<ModelFieldsProps> = (props) => {
     return <AnthropicModelFields {...props} />;
   }
   
+  // Default case
   return <CommonModelFields {...props} />;
 };
 

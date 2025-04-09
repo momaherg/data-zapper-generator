@@ -11,7 +11,8 @@ import {
 } from "../../../datamodel";
 import { isSelectorTeam, isRoundRobinTeam } from "../../../guards";
 import { NestedComponentButton } from "../NestedComponentButton";
-import { Textarea } from "@/components/ui/textarea";
+
+const { TextArea } = Input;
 
 type TeamFieldsProps = NodeEditorFieldsProps & {
   component: Component<TeamConfig>;
@@ -75,7 +76,7 @@ export const TeamFields: React.FC<TeamFieldsProps> = ({
 
       <label className="block">
         <span className="text-sm font-medium text-primary">Description</span>
-        <Textarea
+        <TextArea
           value={component.description || ""}
           onChange={(e) =>
             handleComponentUpdate({ description: e.target.value })
@@ -92,7 +93,7 @@ export const TeamFields: React.FC<TeamFieldsProps> = ({
             <span className="text-sm font-medium text-primary">
               Selector Prompt
             </span>
-            <Textarea
+            <TextArea
               value={component.config.selector_prompt || ""}
               onChange={(e) =>
                 handleConfigUpdate("selector_prompt", e.target.value)

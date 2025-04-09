@@ -47,14 +47,24 @@ const StudioPage = () => {
       setIsLoading(true);
       const data = await teamAPI.getTeam();
       
-      // Create a proper Team object
-      setTeam(data);
+      // Create a proper Team object with the expected structure
+      setTeam({
+        ...data,
+        component: {
+          provider: data.provider || "roundrobin",
+          component_type: "team",
+          config: data.config || {
+            participants: [],
+            termination_condition: null
+          }
+        }
+      });
     } catch (error) {
       console.error("Error fetching team:", error);
       toast.error("Failed to load team, using default configuration");
       
-      // Create a default empty team
-      const defaultTeam: Team = {
+      // Create a default empty team with initial components
+      setTeam({
         component: {
           provider: "roundrobin",
           component_type: "team",
@@ -86,9 +96,7 @@ const StudioPage = () => {
             }
           }
         }
-      };
-      
-      setTeam(defaultTeam);
+      });
     } finally {
       setIsLoading(false);
     }
