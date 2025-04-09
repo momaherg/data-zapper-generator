@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import TestSpecModal from '@/components/TestSpecModal';
 import { api, DataSource, TestCase } from '@/utils/api';
-import { DetailGroup } from '@/components/studio/builder/node-editor/detailgroup';
+import DetailGroup from '@/components/studio/builder/node-editor/detailgroup';
 import { truncateText } from '@/components/studio/gallery/utils';
 
 interface TestSpecificationsProps {}

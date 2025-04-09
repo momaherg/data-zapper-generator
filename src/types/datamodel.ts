@@ -5,7 +5,6 @@ export type {
   Component, 
   ComponentConfig,
   Gallery,
-  GalleryConfig,
   GalleryMetadata,
   Team,
   TeamConfig,
@@ -35,8 +34,8 @@ export type {
   UnboundedChatCompletionContextConfig
 } from "../components/studio/datamodel";
 
-// Define a Gallery type compatible with both implementations
-export interface GalleryConfig {
+// Define a specialized GalleryConfig interface that's separate from the re-export
+export interface GalleryDetail {
   id?: number | string;
   name: string;
   description?: string;
@@ -49,4 +48,3 @@ export interface GalleryConfig {
     teams?: any[];
   };
 }
-
