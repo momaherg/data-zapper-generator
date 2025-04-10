@@ -1,4 +1,3 @@
-
 import React, { useCallback, useEffect, useState, useContext } from "react";
 import { message, Modal } from "antd";
 import { ChevronRight } from "lucide-react";
@@ -163,7 +162,7 @@ export const TeamManager: React.FC = () => {
 
   const handleDeleteTeam = async (teamId: number) => {
     try {
-      await teamAPI.deleteTeam(teamId);
+      await teamAPI.deleteTeam();
       setTeams(teams.filter((t) => t.id !== teamId));
       if (currentTeam?.id === teamId) {
         setCurrentTeam(null);

@@ -35,10 +35,11 @@ export function isTerminationComponent(component: Component<ComponentConfig>): c
 }
 
 // Re-export guards from studio guards
+// Updated to match the exported names from the studio guards module
 export {
-  isRoundRobinTeam as isRoundRobinGroupChat,
-  isSelectorTeam as isSelectorGroupChat,
-  isWebSurferAgent as isMultimodalWebSurfer,
+  isRoundRobinTeam,
+  isSelectorTeam,
+  isWebSurferAgent,
   isAssistantAgent,
   isUserProxyAgent,
   isOpenAIModel,
