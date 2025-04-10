@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef } from "react";
 import { Button, Breadcrumb } from "antd";
 import { ChevronLeft, Code, FormInput } from "lucide-react";
@@ -106,10 +107,11 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
       const updateField = (fieldValue: any): any => {
         if (Array.isArray(fieldValue)) {
           return fieldValue.map((item) => {
-            if (!("component_type" in item)) return item;
+            if (!item || typeof item !== 'object' || !("component_type" in item)) return item;
+            
             if (
               item.label === currentPath.id ||
-              ("name" in item.config && item.config.name === currentPath.id)
+              (item.config && "name" in item.config && item.config.name === currentPath.id)
             ) {
               return updateComponentAtPath(item, remainingPath, updates);
             }
@@ -117,7 +119,7 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
           });
         }
 
-        if (fieldValue && "component_type" in fieldValue) {
+        if (fieldValue && typeof fieldValue === 'object' && "component_type" in fieldValue) {
           return updateComponentAtPath(
             fieldValue as Component<ComponentConfig>,
             remainingPath,
@@ -155,6 +157,7 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
   const handleNavigate = useCallback(
     (componentType: string, id: string, parentField: string) => {
       if (!navigationDepth) return;
+      console.log("Navigating to:", componentType, id, parentField);
       setEditPath((prev) => [...prev, { componentType, id, parentField }]);
     },
     [navigationDepth]
@@ -218,6 +221,7 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
         <TerminationFields
           component={currentComponent}
           onChange={handleComponentUpdate}
+          onNavigate={handleNavigate}
         />
       );
     }
@@ -236,7 +240,7 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
   );
 
   const handleSave = useCallback(() => {
-    console.log("working copy", workingCopy.config);
+    console.log("Saving working copy:", workingCopy);
     onChange(workingCopy);
     onClose?.();
   }, [workingCopy, onChange, onClose]);

@@ -44,6 +44,17 @@ export const TerminationFields: React.FC<TerminationFieldsProps> = ({
     [component, onChange]
   );
 
+  const handleEditCondition = (condition: any, index: number) => {
+    if (onNavigate) {
+      console.log("Navigating to condition:", condition);
+      onNavigate(
+        condition.component_type,
+        condition.label || `Condition ${index + 1}`,
+        "conditions"
+      );
+    }
+  };
+
   if (isOrTermination(component)) {
     return (
       <div className="space-y-4">
@@ -57,7 +68,7 @@ export const TerminationFields: React.FC<TerminationFieldsProps> = ({
               key={index}
               label={condition.label || `Condition ${index + 1}`}
               description="Click to edit condition"
-              onClick={() => onNavigate && onNavigate(condition.component_type, condition.label || "", "conditions")}
+              onClick={() => handleEditCondition(condition, index)}
             />
           ))}
         </div>

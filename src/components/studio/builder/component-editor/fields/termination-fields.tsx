@@ -1,3 +1,4 @@
+
 import React, { useCallback, useState } from "react";
 import { Input, InputNumber, Button, Select, Tooltip } from "antd";
 import { PlusCircle, MinusCircle, Edit, HelpCircle } from "lucide-react";
@@ -121,6 +122,16 @@ export const TerminationFields: React.FC<TerminationFieldsProps> = ({
     });
   };
 
+  const handleEditCondition = (condition: any, index: number) => {
+    if (onNavigate) {
+      onNavigate(
+        condition.component_type,
+        condition.label || `Condition ${index + 1}`,
+        "conditions"
+      );
+    }
+  };
+
   if (isOrTermination(component)) {
     return (
       <DetailGroup title="Termination Conditions">
@@ -168,13 +179,7 @@ export const TerminationFields: React.FC<TerminationFieldsProps> = ({
             {component.config.conditions?.map((condition, index) => (
               <div key={index} className="flex items-center gap-2">
                 <Button
-                  onClick={() =>
-                    onNavigate?.(
-                      condition.component_type,
-                      condition.label || "",
-                      "conditions"
-                    )
-                  }
+                  onClick={() => handleEditCondition(condition, index)}
                   className="w-full flex justify-between items-center"
                 >
                   <span>{condition.label || `Condition ${index + 1}`}</span>
