@@ -1,6 +1,7 @@
 
 import React, { useCallback } from "react";
 import { Input, InputNumber, Button, Select } from "antd";
+import { Edit } from "lucide-react";
 import { NodeEditorFieldsProps } from "../index";
 import {
   Component,
@@ -64,12 +65,14 @@ export const TerminationFields: React.FC<TerminationFieldsProps> = ({
         </p>
         <div className="space-y-2">
           {component.config.conditions?.map((condition, index) => (
-            <NestedComponentButton
-              key={index}
-              label={condition.label || `Condition ${index + 1}`}
-              description="Click to edit condition"
-              onClick={() => handleEditCondition(condition, index)}
-            />
+            <div key={index} className="flex items-center gap-2">
+              <NestedComponentButton
+                key={index}
+                label={condition.label || `Condition ${index + 1}`}
+                description="Click to edit condition"
+                onClick={() => handleEditCondition(condition, index)}
+              />
+            </div>
           ))}
         </div>
         <Button 

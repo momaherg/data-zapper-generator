@@ -36,16 +36,10 @@ export function isTerminationComponent(component: Component<ComponentConfig>): c
 
 // Re-export guards from studio guards
 export {
-  isSelectorGroupChat,
-  isRoundRobinGroupChat,
-  isMultimodalWebSurfer,
-  isAssistantAgent,
-  isUserProxyAgent,
-  isOpenAIModel,
-  isAzureOpenAIModel,
-  isAnthropicModel,
-  isFunctionTool,
   isOrTermination,
   isMaxMessageTermination,
   isTextMentionTermination
 } from "../components/studio/guards";
+
+// Export PROVIDERS constant to ensure it's available
+export { PROVIDERS } from "../components/studio/guards";

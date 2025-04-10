@@ -124,6 +124,7 @@ export const TerminationFields: React.FC<TerminationFieldsProps> = ({
 
   const handleEditCondition = (condition: any, index: number) => {
     if (onNavigate) {
+      console.log("Navigating to condition:", condition);
       onNavigate(
         condition.component_type,
         condition.label || `Condition ${index + 1}`,
@@ -181,6 +182,7 @@ export const TerminationFields: React.FC<TerminationFieldsProps> = ({
                 <Button
                   onClick={() => handleEditCondition(condition, index)}
                   className="w-full flex justify-between items-center"
+                  style={{ display: 'flex', justifyContent: 'space-between' }}
                 >
                   <span>{condition.label || `Condition ${index + 1}`}</span>
                   <Edit className="w-4 h-4" />
