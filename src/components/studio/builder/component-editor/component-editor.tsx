@@ -1,3 +1,4 @@
+
 import React, { useState, useCallback, useRef } from "react";
 import { Button, Breadcrumb } from "antd";
 import { ChevronLeft, Code, FormInput } from "lucide-react";
@@ -44,6 +45,7 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
 
   const editorRef = useRef(null);
 
+  // Reset working copy when component changes
   React.useEffect(() => {
     setWorkingCopy(component);
     setEditPath([]);
@@ -148,6 +150,7 @@ export const ComponentEditor: React.FC<ComponentEditorProps> = ({
       );
 
       setWorkingCopy(updatedComponent);
+      //   onChange(updatedComponent);
     },
     [workingCopy, editPath, updateComponentAtPath]
   );

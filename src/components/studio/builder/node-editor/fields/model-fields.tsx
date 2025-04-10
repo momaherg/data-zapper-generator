@@ -10,7 +10,6 @@ import {
 } from "../../../datamodel";
 import { Component } from "../../../datamodel";
 import { isOpenAIModel, isAzureOpenAIModel, isAnthropicModel } from "../../../guards";
-import { Textarea } from "@/components/ui/textarea";
 
 const { Option } = Select;
 
