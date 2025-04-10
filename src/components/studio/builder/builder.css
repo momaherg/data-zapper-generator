@@ -1,4 +1,5 @@
 
+
 .drop-target-valid {
   outline: 2px solid #4caf50;
   outline-offset: 4px;
@@ -30,20 +31,20 @@
   @apply bg-accent w-1 h-3 rounded-l-sm -mr-1 border-0 !important;
 }
 
-/* Fix component library overflow */
+/* Override the hidden overflow from the aside to auto */
 .ant-layout-sider {
-  overflow: hidden !important;
+  overflow: auto !important;
   display: flex !important;
   flex-direction: column !important;
   height: 100% !important;
 }
 
-/* Component library body scrolling */
+/* Component library body modifications */
 .component-library-body {
-  overflow: auto !important;
+  /* overflow: auto !important; */
   flex-grow: 1 !important;
-  padding: 0 16px 16px 16px !important;
-  height: calc(100vh - 200px) !important;
+  /* padding: 0 16px 16px 16px !important; */
+  /* height: calc(100vh - 200px) !important; */
 }
 
 /* Component library header (non-scrolling) */
@@ -99,3 +100,4 @@
 .ant-collapse {
   overflow: visible !important;
 }
+
