@@ -133,12 +133,13 @@ export const GalleryDetail: React.FC<GalleryDetailProps> = ({
       </Card>
 
       {isEditing ? (
+        // Properly cast gallery to match what ComponentEditor expects
         <ComponentEditor
-          component={gallery}
+          component={gallery as any}
           onChange={(updatedConfig) => {
             handleUpdate({
               ...gallery,
-              ...updatedConfig
+              ...updatedConfig as any
             });
           }}
           onClose={() => setIsEditing(false)}

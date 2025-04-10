@@ -1,4 +1,3 @@
-
 // Base URL for API requests
 const API_BASE_URL = 'http://localhost:5000';
 const WS_BASE_URL = 'ws://localhost:5000';
@@ -42,6 +41,7 @@ export interface ChatMessage {
   type: string;
   source: string;
   timestamp?: string;
+  metadata?: any;
 }
 
 export interface TestCaseGenerationRequest {

@@ -11,7 +11,7 @@ interface DetailGroupProps {
   contentClassName?: string;
 }
 
-export const DetailGroup: React.FC<DetailGroupProps> = ({
+const DetailGroup: React.FC<DetailGroupProps> = ({
   title,
   children,
   defaultOpen = true,
@@ -33,3 +33,5 @@ export const DetailGroup: React.FC<DetailGroupProps> = ({
 };
 
 export default DetailGroup;
+// Also export as named export to ensure compatibility
+export { DetailGroup };

@@ -1,3 +1,4 @@
+
 import React, { useCallback, useEffect, useState, useContext } from "react";
 import { message, Modal } from "antd";
 import { ChevronRight } from "lucide-react";
@@ -46,9 +47,9 @@ export const TeamManager: React.FC = () => {
       setCurrentTeam({
         ...data,
         component: {
-          provider: data.provider || "roundrobin",
+          provider: data.component?.provider || "roundrobin",
           component_type: "team",
-          config: data.config || {
+          config: data.component?.config || {
             participants: [],
             termination_condition: null
           }
@@ -142,9 +143,9 @@ export const TeamManager: React.FC = () => {
       setCurrentTeam({
         ...data,
         component: {
-          provider: data.provider || "roundrobin",
+          provider: data.component?.provider || "roundrobin",
           component_type: "team",
-          config: data.config || {
+          config: data.component?.config || {
             participants: [],
             termination_condition: null
           }
