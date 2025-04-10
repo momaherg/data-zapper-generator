@@ -51,9 +51,9 @@ const StudioPage = () => {
       setTeam({
         ...data,
         component: {
-          provider: data.component?.provider || "roundrobin",
+          provider: data.provider || "roundrobin",
           component_type: "team",
-          config: data.component?.config || {
+          config: data.config || {
             participants: [],
             termination_condition: null
           }

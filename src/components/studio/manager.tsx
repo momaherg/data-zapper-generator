@@ -46,9 +46,9 @@ export const TeamManager: React.FC = () => {
       setCurrentTeam({
         ...data,
         component: {
-          provider: data.component?.provider || "roundrobin",
+          provider: data.provider || "roundrobin",
           component_type: "team",
-          config: data.component?.config || {
+          config: data.config || {
             participants: [],
             termination_condition: null
           }
@@ -142,9 +142,9 @@ export const TeamManager: React.FC = () => {
       setCurrentTeam({
         ...data,
         component: {
-          provider: data.component?.provider || "roundrobin",
+          provider: data.provider || "roundrobin",
           component_type: "team",
-          config: data.component?.config || {
+          config: data.config || {
             participants: [],
             termination_condition: null
           }
@@ -162,7 +162,7 @@ export const TeamManager: React.FC = () => {
 
   const handleDeleteTeam = async (teamId: number) => {
     try {
-      await teamAPI.deleteTeam();
+      await teamAPI.deleteTeam(teamId);
       setTeams(teams.filter((t) => t.id !== teamId));
       if (currentTeam?.id === teamId) {
         setCurrentTeam(null);
