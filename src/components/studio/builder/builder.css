@@ -32,18 +32,10 @@
 
 /* Fix component library overflow */
 .ant-layout-sider {
-  overflow: hidden !important;
+  overflow: auto !important;
   display: flex !important;
   flex-direction: column !important;
   height: 100% !important;
-}
-
-/* Component library body scrolling */
-.component-library-body {
-  overflow: auto !important;
-  flex-grow: 1 !important;
-  padding: 0 16px 16px 16px !important;
-  height: calc(100vh - 200px) !important;
 }
 
 /* Component library header (non-scrolling) */
