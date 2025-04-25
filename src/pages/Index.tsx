@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
@@ -33,25 +32,18 @@ const Index = () => {
     try {
       localStorage.setItem('tcg_session_id', sessionId);
       
-      try {
-        // Try to generate a test case, but don't block navigation if it fails
-        await api.generateTestCase(sessionId, {
-          requirement: '',
-          format: '',
-          notes: '',
-          dataSourceIds: []
-        });
-      } catch (error) {
-        console.error('Failed to create initial test case:', error);
-        // Show error but continue with navigation
-        toast.error('Failed to create initial test case, but you can continue');
-      }
+      await api.generateTestCase(sessionId, {
+        requirement: '',
+        format: '',
+        notes: '',
+        dataSourceIds: []
+      });
       
-      // Navigate regardless of API success or failure
       navigate(`/dashboard/upload?session_id=${sessionId}`);
     } catch (error) {
-      console.error('Unexpected error:', error);
-      toast.error('An unexpected error occurred');
+      console.error('Failed to create initial test case:', error);
+      toast.error('Failed to create initial test case');
+    } finally {
       setIsLoading(false);
     }
   };
