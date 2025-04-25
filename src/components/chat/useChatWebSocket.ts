@@ -1,4 +1,3 @@
-
 import { useState, useRef, useEffect } from 'react';
 import { toast } from 'sonner';
 import { ChatWebSocket } from '@/utils/api';
@@ -71,7 +70,7 @@ export const useChatWebSocket = ({
         isUser: message.source === 'user',
         type: message.type,
         source: message.source,
-        metadata: message.metadata,
+        metadata: message.metadata || {},
         timestamp: new Date(),
       };
       

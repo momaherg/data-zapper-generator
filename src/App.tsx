@@ -1,8 +1,9 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import Dashboard from "./pages/Dashboard";
@@ -12,6 +13,15 @@ import TestSpecifications from "./pages/TestSpecifications";
 import TestCaseDetail from "./pages/TestCaseDetail";
 import StudioPage from "./pages/Studio";
 import MainChat from "./components/MainChat";
+
+// Wrapper component to extract session ID from URL
+const ChatRoute = () => {
+  const location = useLocation();
+  const searchParams = new URLSearchParams(location.search);
+  const sessionId = searchParams.get('session_id') || '';
+  
+  return <MainChat sessionId={sessionId} />;
+};
 
 const queryClient = new QueryClient();
 
@@ -30,7 +40,7 @@ const App = () => (
             <Route path="tools" element={<Tools />} />
             <Route path="specs" element={<TestSpecifications />} />
             <Route path="studio" element={<StudioPage />} />
-            <Route path="chat" element={<MainChat />} />
+            <Route path="chat" element={<ChatRoute />} />
             <Route path="test-case/:id" element={<TestCaseDetail />} />
           </Route>
           
