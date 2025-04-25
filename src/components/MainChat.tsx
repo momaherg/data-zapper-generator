@@ -8,7 +8,7 @@ interface MainChatProps {
 
 const MainChat: React.FC<MainChatProps> = ({ sessionId }) => {
   return (
-    <div className="h-[calc(100vh-12rem)] w-full">
+    <div className="h-[calc(100vh-4rem)] w-full">
       <ChatInterface 
         events={[]} 
         sessionId={sessionId} 

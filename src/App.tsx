@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,7 +10,8 @@ import UploadData from "./pages/UploadData";
 import Tools from "./pages/Tools";
 import TestSpecifications from "./pages/TestSpecifications";
 import TestCaseDetail from "./pages/TestCaseDetail";
-import StudioPage from "./pages/Studio"
+import StudioPage from "./pages/Studio";
+import MainChat from "./components/MainChat";
 
 const queryClient = new QueryClient();
 
@@ -30,6 +30,7 @@ const App = () => (
             <Route path="tools" element={<Tools />} />
             <Route path="specs" element={<TestSpecifications />} />
             <Route path="studio" element={<StudioPage />} />
+            <Route path="chat" element={<MainChat />} />
             <Route path="test-case/:id" element={<TestCaseDetail />} />
           </Route>
           
