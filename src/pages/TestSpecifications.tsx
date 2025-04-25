@@ -29,7 +29,9 @@ const TestSpecifications: React.FC<TestSpecificationsProps> = () => {
     const fetchData = async () => {
       try {
         const testCases = await api.getTestCases(sessionId)
-        setTestCases(testCases.testCases);
+        // Filter out the test case with id "main_chat"
+        const filteredTestCases = testCases.testCases.filter(testCase => testCase.id !== "main_chat");
+        setTestCases(filteredTestCases);
       } catch (error) {
         console.error('Failed to fetch data:', error);
         toast.error('Failed to load data');
@@ -251,3 +253,4 @@ const TestSpecifications: React.FC<TestSpecificationsProps> = () => {
 };
 
 export default TestSpecifications;
+
