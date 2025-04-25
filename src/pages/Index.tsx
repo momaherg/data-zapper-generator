@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
@@ -6,13 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
+import { api } from '@/utils/api';
 
 const Index = () => {
   const [sessionId, setSessionId] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  // Check if a session ID is already stored
   useEffect(() => {
     const storedSessionId = localStorage.getItem('tcg_session_id');
     if (storedSessionId) {
@@ -20,7 +19,7 @@ const Index = () => {
     }
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!sessionId.trim()) {
@@ -30,14 +29,23 @@ const Index = () => {
     
     setIsLoading(true);
     
-    // Store the session ID
-    localStorage.setItem('tcg_session_id', sessionId);
-    
-    // Navigate to the dashboard
-    setTimeout(() => {
+    try {
+      localStorage.setItem('tcg_session_id', sessionId);
+      
+      await api.generateTestCase(sessionId, {
+        requirement: '',
+        format: '',
+        notes: '',
+        dataSourceIds: []
+      });
+      
       navigate(`/dashboard/upload?session_id=${sessionId}`);
+    } catch (error) {
+      console.error('Failed to create initial test case:', error);
+      toast.error('Failed to create initial test case');
+    } finally {
       setIsLoading(false);
-    }, 800);
+    }
   };
 
   const generateRandomId = () => {
