@@ -1,15 +1,16 @@
-
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useOutletContext } from 'react-router-dom';
-import { Plus, AlertTriangle, FileText, Clock, Calendar, ArrowRight, Maximize2, Copy, BookText, ScrollText } from 'lucide-react';
+import { Plus, AlertTriangle, FileText, Clock, Calendar, ArrowRight, Maximize2, Copy, BookText, ScrollText, MessageSquare } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import TestSpecModal from '@/components/TestSpecModal';
+import MainChat from '@/components/MainChat';
 import { api, DataSource, TestCase } from '@/utils/api';
 import { DetailGroup } from '@/components/studio/builder/node-editor/detailgroup';
 import { truncateText } from '@/components/studio/gallery/utils';
@@ -29,7 +30,6 @@ const TestSpecifications: React.FC<TestSpecificationsProps> = () => {
     const fetchData = async () => {
       try {
         const testCases = await api.getTestCases(sessionId)
-        // Filter out the test case with id "main_chat"
         const filteredTestCases = testCases.testCases.filter(testCase => testCase.id !== "main_chat");
         setTestCases(filteredTestCases);
       } catch (error) {
@@ -57,7 +57,7 @@ const TestSpecifications: React.FC<TestSpecificationsProps> = () => {
         requirement: data.requirement,
         format: data.format,
         notes: data.notes,
-        dataSourceIds: [], // Keep this empty array as we need it for the API
+        dataSourceIds: [],
       });
       
       toast.success('Test case generated successfully');
@@ -168,79 +168,98 @@ const TestSpecifications: React.FC<TestSpecificationsProps> = () => {
         Create and manage your test case specifications
       </p>
       
-      {isLoadingData ? (
-        <div className="flex justify-center py-10">
-          <div className="animate-pulse">Loading test specifications...</div>
-        </div>
-      ) : testCases.length === 0 ? (
-        <div className="text-center py-12 space-y-4">
-          <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
-            <FileText className="h-8 w-8 text-primary" />
-          </div>
-          <h2 className="text-xl font-medium">No test specifications yet</h2>
-          <p className="text-muted-foreground max-w-md mx-auto">
-            Create your first test specification by clicking the "New Test Spec" button.
-          </p>
-          <Button onClick={() => setIsModalOpen(true)} className="mt-2">
-            <Plus className="h-4 w-4 mr-2" />
-            Create Test Specification
-          </Button>
-        </div>
-      ) : (
-        <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
-          {testCases.map(testCase => {
-            const isExpanded = !!expandedCards[testCase.id];
-            
-            return (
-              <Card 
-                key={testCase.id} 
-                className={cn(
-                  "overflow-hidden transition-all duration-200 hover:shadow-md",
-                  isExpanded ? "col-span-full xl:col-span-2" : ""
-                )}
-              >
-                <CardContent className={cn("p-4", isExpanded ? "pb-0" : "")}>
-                  {renderCardContent(testCase, isExpanded)}
-                </CardContent>
+      <Tabs defaultValue="specs" className="w-full">
+        <TabsList className="mb-4">
+          <TabsTrigger value="specs" className="flex items-center gap-2">
+            <FileText className="h-4 w-4" />
+            Test Specifications
+          </TabsTrigger>
+          <TabsTrigger value="chat" className="flex items-center gap-2">
+            <MessageSquare className="h-4 w-4" />
+            Chat
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="specs">
+          {isLoadingData ? (
+            <div className="flex justify-center py-10">
+              <div className="animate-pulse">Loading test specifications...</div>
+            </div>
+          ) : testCases.length === 0 ? (
+            <div className="text-center py-12 space-y-4">
+              <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                <FileText className="h-8 w-8 text-primary" />
+              </div>
+              <h2 className="text-xl font-medium">No test specifications yet</h2>
+              <p className="text-muted-foreground max-w-md mx-auto">
+                Create your first test specification by clicking the "New Test Spec" button.
+              </p>
+              <Button onClick={() => setIsModalOpen(true)} className="mt-2">
+                <Plus className="h-4 w-4 mr-2" />
+                Create Test Specification
+              </Button>
+            </div>
+          ) : (
+            <div className="grid gap-6 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3">
+              {testCases.map(testCase => {
+                const isExpanded = !!expandedCards[testCase.id];
                 
-                <CardFooter className={cn("p-4 pt-2 flex justify-between")}>
-                  <div className="flex items-center gap-2">
-                    <Button 
-                      size="sm" 
-                      variant="ghost"
-                      className="h-8 gap-1 text-muted-foreground"
-                      onClick={() => toggleCardExpansion(testCase.id)}
-                    >
-                      {isExpanded ? "Collapse" : "Expand"}
-                      <Maximize2 className="h-3.5 w-3.5" />
-                    </Button>
-                    
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      className="h-8 gap-1 text-muted-foreground"
-                      onClick={() => copyToClipboard(testCase.test_case_text, "Test case")}
-                    >
-                      Copy
-                      <Copy className="h-3.5 w-3.5" />
-                    </Button>
-                  </div>
-                  
-                  <Button 
-                    size="sm" 
-                    variant="ghost"
-                    className="h-8 gap-1 text-primary hover:text-primary/90"
-                    onClick={() => navigate(`/dashboard/test-case/${testCase.id}?session_id=${sessionId}`)}
+                return (
+                  <Card 
+                    key={testCase.id} 
+                    className={cn(
+                      "overflow-hidden transition-all duration-200 hover:shadow-md",
+                      isExpanded ? "col-span-full xl:col-span-2" : ""
+                    )}
                   >
-                    View Details
-                    <ArrowRight className="h-3.5 w-3.5" />
-                  </Button>
-                </CardFooter>
-              </Card>
-            );
-          })}
-        </div>
-      )}
+                    <CardContent className={cn("p-4", isExpanded ? "pb-0" : "")}>
+                      {renderCardContent(testCase, isExpanded)}
+                    </CardContent>
+                    
+                    <CardFooter className={cn("p-4 pt-2 flex justify-between")}>
+                      <div className="flex items-center gap-2">
+                        <Button 
+                          size="sm" 
+                          variant="ghost"
+                          className="h-8 gap-1 text-muted-foreground"
+                          onClick={() => toggleCardExpansion(testCase.id)}
+                        >
+                          {isExpanded ? "Collapse" : "Expand"}
+                          <Maximize2 className="h-3.5 w-3.5" />
+                        </Button>
+                        
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8 gap-1 text-muted-foreground"
+                          onClick={() => copyToClipboard(testCase.test_case_text, "Test case")}
+                        >
+                          Copy
+                          <Copy className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                      
+                      <Button 
+                        size="sm" 
+                        variant="ghost"
+                        className="h-8 gap-1 text-primary hover:text-primary/90"
+                        onClick={() => navigate(`/dashboard/test-case/${testCase.id}?session_id=${sessionId}`)}
+                      >
+                        View Details
+                        <ArrowRight className="h-3.5 w-3.5" />
+                      </Button>
+                    </CardFooter>
+                  </Card>
+                );
+              })}
+            </div>
+          )}
+        </TabsContent>
+        
+        <TabsContent value="chat" className="mt-0">
+          <MainChat sessionId={sessionId} />
+        </TabsContent>
+      </Tabs>
       
       <TestSpecModal
         isOpen={isModalOpen}
@@ -253,4 +272,3 @@ const TestSpecifications: React.FC<TestSpecificationsProps> = () => {
 };
 
 export default TestSpecifications;
-
