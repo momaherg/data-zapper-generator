@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Upload, Settings, FileText, LogOut, ChevronLeft, ChevronRight, Users, MessageSquare } from 'lucide-react';
+import { Upload, Settings, FileText, Users, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -36,14 +36,14 @@ const Navigation: React.FC<NavigationProps> = ({
       icon: FileText
     },
     {
-      name: 'Agents Studio',
-      path: '/studio',
-      icon: Users
-    },
-    {
       name: 'Chat',
       path: '/chat',
       icon: MessageSquare
+    },
+    {
+      name: 'Agents Studio',
+      path: '/studio',
+      icon: Users
     }
   ], []);
 
