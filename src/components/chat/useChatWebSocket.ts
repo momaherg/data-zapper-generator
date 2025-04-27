@@ -119,7 +119,7 @@ export const useChatWebSocket = ({
     if (initialMessages.length > 0) {
       setMessages(initialMessages);
     }
-  }, [initialMessages]);
+  }, [initialMessages, setMessages]);
 
   const sendMessage = (inputValue: string) => {
     if (!inputValue.trim()) return;

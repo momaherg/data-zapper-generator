@@ -42,13 +42,10 @@ const MainChat: React.FC<MainChatProps> = ({ sessionId }) => {
         method: 'PATCH'
       });
       
-      // Reset events to empty array to clear the UI immediately
-      setEvents([]);
-      
-      // Refetch chat history after clearing
-      await fetchChatHistory();
-      
       toast.success('Chat history cleared');
+      
+      // Refresh the page to ensure a complete reset
+      window.location.reload();
     } catch (error) {
       console.error('Error clearing chat:', error);
       toast.error('Failed to clear chat history');
