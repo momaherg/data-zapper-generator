@@ -12,21 +12,23 @@ interface MainChatProps {
 
 const MainChat: React.FC<MainChatProps> = ({ sessionId }) => {
   const [events, setEvents] = useState<any[]>([]);
-  const testCaseId = "main_chat"; // This is the fixed test case ID for the main chat
+  const testCaseId = "main_chat";
+
+  const fetchChatHistory = async () => {
+    if (sessionId) {
+      try {
+        const response = await api.getTestCase(sessionId, testCaseId);
+        if (response && response.events) {
+          setEvents(response.events);
+        }
+      } catch (error) {
+        console.error("Error fetching chat history:", error);
+      }
+    }
+  };
 
   useEffect(() => {
-    // Fetch the main_chat test case to get the events history
-    if (sessionId) {
-      api.getTestCase(sessionId, testCaseId)
-        .then(response => {
-          if (response && response.events) {
-            setEvents(response.events);
-          }
-        })
-        .catch(error => {
-          console.error("Error fetching chat history:", error);
-        });
-    }
+    fetchChatHistory();
   }, [sessionId]);
 
   const handleClearChat = async () => {
@@ -34,7 +36,7 @@ const MainChat: React.FC<MainChatProps> = ({ sessionId }) => {
       await fetch(`http://localhost:5000/api/test-cases/reset/${testCaseId}?session_id=${sessionId}`, {
         method: 'PATCH'
       });
-      setEvents([]);
+      await fetchChatHistory(); // Refetch chat history after clearing
       toast.success('Chat history cleared');
     } catch (error) {
       console.error('Error clearing chat:', error);
