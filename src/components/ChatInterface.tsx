@@ -1,3 +1,4 @@
+
 import React, { useState, useRef, useEffect } from 'react';
 import { Message, ChatInterfaceProps } from './chat/types';
 import ChatHeader from './chat/ChatHeader';
@@ -24,7 +25,14 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   
   // Process initial events
   useEffect(() => {
-    if (!events || events.length === 0) return;
+    if (!events || events.length === 0) {
+      // Reset messages if events array is empty
+      if (resetMessages && initialMessages.length > 0) {
+        resetMessages();
+        setInitialMessages([]);
+      }
+      return;
+    }
     
     console.log('Processing initial events:', events);
     
@@ -112,7 +120,8 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
     isLoading,
     sendMessage,
     handleReconnect,
-    setMessages
+    setMessages,
+    resetMessages
   } = useChatWebSocket({
     sessionId,
     testCaseId,

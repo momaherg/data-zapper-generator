@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import ChatInterface from './ChatInterface';
 import { api } from '@/utils/api';
 import { Button } from '@/components/ui/button';
@@ -20,9 +20,14 @@ const MainChat: React.FC<MainChatProps> = ({ sessionId }) => {
         const response = await api.getTestCase(sessionId, testCaseId);
         if (response && response.events) {
           setEvents(response.events);
+        } else {
+          // If no events, set to empty array
+          setEvents([]);
         }
       } catch (error) {
         console.error("Error fetching chat history:", error);
+        // Set empty array on error to clear UI
+        setEvents([]);
       }
     }
   };
@@ -36,7 +41,13 @@ const MainChat: React.FC<MainChatProps> = ({ sessionId }) => {
       await fetch(`http://localhost:5000/api/test-cases/reset/${testCaseId}?session_id=${sessionId}`, {
         method: 'PATCH'
       });
-      await fetchChatHistory(); // Refetch chat history after clearing
+      
+      // Reset events to empty array to clear the UI immediately
+      setEvents([]);
+      
+      // Refetch chat history after clearing
+      await fetchChatHistory();
+      
       toast.success('Chat history cleared');
     } catch (error) {
       console.error('Error clearing chat:', error);

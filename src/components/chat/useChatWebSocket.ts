@@ -114,6 +114,13 @@ export const useChatWebSocket = ({
     };
   }, [sessionId, testCaseId, reconnectCount, isConnected]);
 
+  // Update messages when initialMessages change
+  useEffect(() => {
+    if (initialMessages.length > 0) {
+      setMessages(initialMessages);
+    }
+  }, [initialMessages]);
+
   const sendMessage = (inputValue: string) => {
     if (!inputValue.trim()) return;
     
@@ -146,6 +153,11 @@ export const useChatWebSocket = ({
     }
   };
 
+  const resetMessages = () => {
+    setMessages([]);
+    lastMessageRef.current = null;
+  };
+
   const handleReconnect = () => {
     setReconnectCount(prev => prev + 1);
     toast.info('Attempting to reconnect...');
@@ -157,6 +169,7 @@ export const useChatWebSocket = ({
     isLoading,
     sendMessage,
     handleReconnect,
-    setMessages
+    setMessages,
+    resetMessages
   };
 };
