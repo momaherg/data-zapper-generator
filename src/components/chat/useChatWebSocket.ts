@@ -69,7 +69,7 @@ export const useChatWebSocket = ({
         id: `msg-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         content: message.content,
         isUser: message.source === 'user',
-        type: message.type,
+        type: message.type || 'text',
         source: message.source || '',
         metadata: message.metadata || {},
         timestamp: new Date(),
