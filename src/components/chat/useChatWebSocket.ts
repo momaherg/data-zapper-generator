@@ -69,8 +69,8 @@ export const useChatWebSocket = ({
         content: message.content,
         isUser: message.source === 'user',
         type: message.type,
-        source: message.source,
-        metadata: message.metadata || {},
+        source: message.source || '',
+        metadata: {},
         timestamp: new Date(),
       };
       
