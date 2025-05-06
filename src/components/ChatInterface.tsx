@@ -23,6 +23,9 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
   // Track which message ID contains the currently selected test spec
   const [selectedTestSpecMessageId, setSelectedTestSpecMessageId] = useState<string | undefined>(undefined);
   
+  // Determine if this is the main chat tab
+  const isMainChatTab = testCaseId === "main_chat";
+  
   // Process initial events
   useEffect(() => {
     if (!events || events.length === 0) {
@@ -199,6 +202,7 @@ const ChatInterface: React.FC<ChatInterfaceProps> = ({
         onTestSpecFound={handleTestSpecFound}
         onTestSpecClick={handleTestSpecClick}
         selectedTestSpecMessageId={selectedTestSpecMessageId}
+        isMainChatTab={isMainChatTab}
       />
       
       <ConnectionAlert isConnected={isConnected} />

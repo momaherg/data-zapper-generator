@@ -1,4 +1,3 @@
-
 import React, { useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -14,6 +13,7 @@ interface ChatMessageListProps {
   onTestSpecFound?: (testSpec: string, options?: { isAutomatic?: boolean, messageId?: string }) => void;
   onTestSpecClick?: (testSpec: string, options?: { isUserSelected?: boolean, messageId?: string }) => void;
   selectedTestSpecMessageId?: string;
+  isMainChatTab?: boolean;
 }
 
 const ChatMessageList: React.FC<ChatMessageListProps> = ({
@@ -24,11 +24,12 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
   scrollAreaRef,
   onTestSpecFound,
   onTestSpecClick,
-  selectedTestSpecMessageId
+  selectedTestSpecMessageId,
+  isMainChatTab = false
 }) => {
   // Extract test spec from messages when they change
   useEffect(() => {
-    if (!onTestSpecFound || messages.length === 0) return;
+    if (!onTestSpecFound || messages.length === 0 || isMainChatTab) return;
     
     // Process all messages to find test specifications
     const testSpecMarkers = {
@@ -52,7 +53,6 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
           ).trim();
           
           // Notify parent component about the latest test spec
-          // Note: We're passing an additional parameter indicating this is an automatic update
           onTestSpecFound(testSpecContent, { 
             isAutomatic: true,
             messageId: message.id
@@ -61,11 +61,11 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
         }
       }
     }
-  }, [messages, onTestSpecFound]);
+  }, [messages, onTestSpecFound, isMainChatTab]);
 
   // Handle clicks on test specs in messages
   const handleMessageTestSpecClick = (messageContent: string, messageId: string) => {
-    if (!onTestSpecClick) return;
+    if (!onTestSpecClick || isMainChatTab) return;
     
     const testSpecMarkers = {
       start: '<test_spec_start>',
@@ -120,7 +120,7 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
     
     if (!isDuplicate) {
       // Process message for hasTestSpec flag, but keep the original content intact
-      if (typeof message.content === 'string') {
+      if (typeof message.content === 'string' && !isMainChatTab) {
         const testSpecMarkers = {
           start: '<test_spec_start>',
           end: '<test_spec_end>'
@@ -160,6 +160,7 @@ const ChatMessageList: React.FC<ChatMessageListProps> = ({
                 handleMessageTestSpecClick(message.content, message.id);
               }
             }}
+            isMainChatTab={isMainChatTab}
           />
         ))}
         
