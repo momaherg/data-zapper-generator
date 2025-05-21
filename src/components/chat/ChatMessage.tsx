@@ -255,11 +255,10 @@ const formatMessage = (
     return (
       <Collapsible
         open={!isCollapsed}
-        onOpenChange={() => onToggleCollapse(message.id)} // Correctly toggle based on messageId
         className="w-full border border-yellow-300 dark:border-yellow-700 rounded-md overflow-hidden"
       >
         <CollapsibleTrigger
-          onClick={() => onToggleCollapse(message.id)} // Ensure trigger also calls onToggleCollapse
+          onClick={() => onToggleCollapse(message.id)} // onClick added here
           className="w-full flex items-center justify-between p-2 bg-yellow-50 dark:bg-yellow-900/30 hover:bg-yellow-100 dark:hover:bg-yellow-800/40 cursor-pointer"
         >
           <div className="flex items-center gap-2 text-sm font-medium text-yellow-700 dark:text-yellow-300">
