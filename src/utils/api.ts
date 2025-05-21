@@ -1,7 +1,21 @@
+// Environment-aware configuration
+const getApiConfig = () => {
+  // In production, use relative paths that will be correctly routed by the ingress
+  if (process.env.NODE_ENV === 'production') {
+    return {
+      API_BASE_URL: '/api',
+      WS_BASE_URL: window.location.protocol === 'https:' ? 'wss://' + window.location.host : 'ws://' + window.location.host
+    };
+  }
+  
+  // In development, use localhost with specific ports
+  return {
+    API_BASE_URL: 'http://localhost:5000/api',
+    WS_BASE_URL: 'ws://localhost:5000/ws'
+  };
+};
 
-// Base URL for API requests
-const API_BASE_URL = 'http://localhost:5000';
-const WS_BASE_URL = 'ws://localhost:5000';
+const { API_BASE_URL, WS_BASE_URL } = getApiConfig();
 
 // Interface definitions
 export interface DataSource {
@@ -137,8 +151,8 @@ export class ChatWebSocket {
       this.reconnectTimeout = null;
     }
     
-    // Build URL with query parameters
-    const url = new URL(`${WS_BASE_URL}/ws/chat`);
+    // Build URL with query parameters - note the updated path
+    const url = new URL(`${WS_BASE_URL}/chat`);
     url.searchParams.append('session_id', this.sessionId);
     url.searchParams.append('test_case_id', this.testCaseId);
     
@@ -307,7 +321,8 @@ export const api = {
     const formData = new FormData();
     formData.append('file', file);
     
-    const response = await fetch(withSession(`${API_BASE_URL}/api/upload`, sessionId), {
+    // Note how we don't need /api/ in the path anymore since API_BASE_URL already includes it
+    const response = await fetch(withSession(`${API_BASE_URL}/upload`, sessionId), {
       method: 'POST',
       body: formData,
     });
@@ -321,7 +336,8 @@ export const api = {
   
   // Get all data sources for a session
   async getDataSources(sessionId: string): Promise<{ dataSources: DataSource[] }> {
-    const response = await fetch(withSession(`${API_BASE_URL}/api/data-sources`, sessionId));
+    // Updated to use the environment-aware API_BASE_URL
+    const response = await fetch(withSession(`${API_BASE_URL}/data-sources`, sessionId));
     
     if (!response.ok) {
       throw new Error(`Failed to fetch data sources: ${response.statusText}`);
@@ -332,7 +348,7 @@ export const api = {
   
   // Update a data source
   async updateDataSource(sessionId: string, id: string, updates: Partial<DataSource>): Promise<DataSource> {
-    const response = await fetch(withSession(`${API_BASE_URL}/api/data-sources/${id}`, sessionId), {
+    const response = await fetch(withSession(`${API_BASE_URL}/data-sources/${id}`, sessionId), {
       method: 'PATCH',
       headers: {
         'Content-Type': 'application/json',
@@ -347,9 +363,9 @@ export const api = {
     return response.json();
   },
 
-  // get all test cases for a  session
+  // get all test cases for a session
   async getTestCases(sessionId: string): Promise<{ testCases: TestCase[] }> {
-    const response = await fetch(withSession(`${API_BASE_URL}/api/test-cases`, sessionId));
+    const response = await fetch(withSession(`${API_BASE_URL}/test-cases`, sessionId));
 
     if (!response.ok) {
       throw new Error(`Failed to fetch test cases: ${response.statusText}`);
@@ -360,7 +376,7 @@ export const api = {
 
   // Generate a test case
   async generateTestCase(sessionId: string, request: TestCaseGenerationRequest): Promise<{ id: string; events: TestCaseEvent[] }> {
-    const response = await fetch(withSession(`${API_BASE_URL}/api/test-cases/generate`, sessionId), {
+    const response = await fetch(withSession(`${API_BASE_URL}/test-cases/generate`, sessionId), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -377,7 +393,7 @@ export const api = {
   
   // Get a test case by ID
   async getTestCase(sessionId: string, id: string): Promise<TestCase> {
-    const response = await fetch(withSession(`${API_BASE_URL}/api/test-cases/${id}`, sessionId));
+    const response = await fetch(withSession(`${API_BASE_URL}/test-cases/${id}`, sessionId));
     
     if (!response.ok) {
       throw new Error(`Failed to fetch test case: ${response.statusText}`);
@@ -395,7 +411,7 @@ export const api = {
   
   // Delete all session data
   async deleteSession(sessionId: string): Promise<{ success: boolean; message: string }> {
-    const response = await fetch(`${API_BASE_URL}/api/session/${sessionId}`, {
+    const response = await fetch(`${API_BASE_URL}/session/${sessionId}`, {
       method: 'DELETE',
     });
     

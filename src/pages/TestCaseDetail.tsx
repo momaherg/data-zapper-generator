@@ -241,7 +241,7 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
         </div>
       </div>
       
-      <div className="w-80 border-l border-border flex flex-col animate-slide-in-right">
+      <div className="w-1/3 border-l border-border flex flex-col animate-slide-in-right">
         <ChatInterface 
           events={testCase.events} 
           sessionId={sessionId} 
