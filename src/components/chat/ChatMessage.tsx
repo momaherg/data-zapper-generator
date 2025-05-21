@@ -11,6 +11,7 @@ interface ChatMessageProps {
   onToggleCollapse: (messageId: string) => void;
   onTestSpecClick?: (testSpec: string) => void;
   isSelected?: boolean;
+  isMainChatTab?: boolean; // Added to distinguish between chat tabs
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({
@@ -18,7 +19,8 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   collapsedState,
   onToggleCollapse,
   onTestSpecClick,
-  isSelected = false
+  isSelected = false,
+  isMainChatTab = false // Default to false
 }) => {
   return (
     <div
@@ -39,7 +41,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             {message.type}
           </div>
         )}
-        <div>{formatMessage(message, collapsedState, onToggleCollapse, onTestSpecClick, isSelected)}</div>
+        <div>{formatMessage(message, collapsedState, onToggleCollapse, onTestSpecClick, isSelected, isMainChatTab)}</div>
         <div className="text-[10px] opacity-70 mt-1 flex justify-between items-center">
           {message.source && (
             <span className="font-medium">{message.source}</span>
@@ -71,7 +73,7 @@ const getToolNames = (content: any): string[] => {
     .map(item => item.name);
 };
 
-const processTestSpecContent = (content: string): { modifiedContent: string, testSpecs: string[] } => {
+const processTestSpecContent = (content: string, isMainChatTab: boolean): { modifiedContent: string, testSpecs: string[] } => {
   const testSpecMarkers = {
     start: '<test_spec_start>',
     end: '<test_spec_end>'
@@ -150,11 +152,15 @@ const formatMessage = (
   isCollapsed: boolean,
   onToggleCollapse: (messageId: string) => void,
   onTestSpecClick?: (testSpec: string) => void,
-  isSelected: boolean = false
+  isSelected: boolean = false,
+  isMainChatTab: boolean = false
 ) => {
   if (typeof message.content === 'string') {
     if (message.type === 'ThoughtEvent') {
-      const toolCalls = hasToolCalls(message.content) ? getToolNames(message.content) : [];
+      // Check for tool calls in metadata if content is a string (summary)
+      const toolCallsInThought = message.metadata?.tool_calls && Array.isArray(message.metadata.tool_calls)
+        ? getToolNames(message.metadata.tool_calls)
+        : [];
       
       return (
         <Collapsible 
@@ -169,10 +175,10 @@ const formatMessage = (
               <AlertCircle className="h-4 w-4" />
               <span>Thought Process</span>
               
-              {toolCalls.length > 0 && (
+              {toolCallsInThought.length > 0 && (
                 <div className="flex items-center ml-2 text-yellow-600 dark:text-yellow-400 text-xs">
                   <Wrench className="h-3 w-3 mr-1" />
-                  <span>Tools: {toolCalls.join(', ')}</span>
+                  <span>Tools: {toolCallsInThought.join(', ')}</span>
                 </div>
               )}
             </div>
@@ -191,7 +197,7 @@ const formatMessage = (
       );
     }
     
-    const { modifiedContent, testSpecs } = processTestSpecContent(message.content);
+    const { modifiedContent, testSpecs } = processTestSpecContent(message.content, isMainChatTab);
     
     if (testSpecs.length > 0) {
       const parts = modifiedContent.split(/\{\{TEST_SPEC_PLACEHOLDER_(\d+)\}\}/);
@@ -215,7 +221,7 @@ const formatMessage = (
     }
   }
   
-  if (message.hasTestSpec) {
+  if (message.hasTestSpec && !isMainChatTab) {
     const testSpecMarkers = {
       start: '<test_spec_start>',
       end: '<test_spec_end>'
@@ -244,18 +250,34 @@ const formatMessage = (
   
   if (message.type === 'ToolCallRequestEvent') {
     const toolCalls = hasToolCalls(message.content) ? getToolNames(message.content) : [];
-    
+    const contentToDisplay = message.content;
+
     return (
-      <div className="flex items-center text-yellow-700 dark:text-yellow-300 text-sm">
-        <Wrench className="h-4 w-4 mr-2" />
-        <span>
-          Requesting tools: {toolCalls.length > 0 
-            ? toolCalls.join(', ')
-            : typeof message.content === 'string'
-              ? message.content
-              : JSON.stringify(message.content)}
-        </span>
-      </div>
+      <Collapsible
+        open={!isCollapsed}
+        onOpenChange={() => onToggleCollapse(message.id)} // Correctly toggle based on messageId
+        className="w-full border border-yellow-300 dark:border-yellow-700 rounded-md overflow-hidden"
+      >
+        <CollapsibleTrigger
+          onClick={() => onToggleCollapse(message.id)} // Ensure trigger also calls onToggleCollapse
+          className="w-full flex items-center justify-between p-2 bg-yellow-50 dark:bg-yellow-900/30 hover:bg-yellow-100 dark:hover:bg-yellow-800/40 cursor-pointer"
+        >
+          <div className="flex items-center gap-2 text-sm font-medium text-yellow-700 dark:text-yellow-300">
+            <Wrench className="h-4 w-4" />
+            <span>
+              Tool Call Request: {toolCalls.length > 0 ? toolCalls.join(', ') : 'Details'}
+            </span>
+          </div>
+          <div>
+            {isCollapsed ? <ChevronDown className="h-4 w-4 text-yellow-700 dark:text-yellow-300" /> : <ChevronUp className="h-4 w-4 text-yellow-700 dark:text-yellow-300" />}
+          </div>
+        </CollapsibleTrigger>
+        <CollapsibleContent className="p-3 bg-yellow-50/50 dark:bg-yellow-900/20 text-sm text-yellow-800 dark:text-yellow-200">
+          <pre className="text-xs overflow-auto whitespace-pre-wrap">
+            {JSON.stringify(contentToDisplay, null, 2)}
+          </pre>
+        </CollapsibleContent>
+      </Collapsible>
     );
   }
   
