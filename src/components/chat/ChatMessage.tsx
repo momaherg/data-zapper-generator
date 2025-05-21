@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { AlertCircle, ChevronDown, ChevronUp, Wrench, Terminal, Code } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -12,7 +11,6 @@ interface ChatMessageProps {
   onToggleCollapse: (messageId: string) => void;
   onTestSpecClick?: (testSpec: string) => void;
   isSelected?: boolean;
-  isMainChatTab?: boolean;
 }
 
 const ChatMessage: React.FC<ChatMessageProps> = ({
@@ -20,8 +18,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
   collapsedState,
   onToggleCollapse,
   onTestSpecClick,
-  isSelected = false,
-  isMainChatTab = false
+  isSelected = false
 }) => {
   return (
     <div
@@ -42,7 +39,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
             {message.type}
           </div>
         )}
-        <div>{formatMessage(message, collapsedState, onToggleCollapse, onTestSpecClick, isSelected, isMainChatTab)}</div>
+        <div>{formatMessage(message, collapsedState, onToggleCollapse, onTestSpecClick, isSelected)}</div>
         <div className="text-[10px] opacity-70 mt-1 flex justify-between items-center">
           {message.source && (
             <span className="font-medium">{message.source}</span>
@@ -74,7 +71,7 @@ const getToolNames = (content: any): string[] => {
     .map(item => item.name);
 };
 
-const processTestSpecContent = (content: string, isMainChatTab: boolean): { modifiedContent: string, testSpecs: string[] } => {
+const processTestSpecContent = (content: string): { modifiedContent: string, testSpecs: string[] } => {
   const testSpecMarkers = {
     start: '<test_spec_start>',
     end: '<test_spec_end>'
@@ -82,11 +79,6 @@ const processTestSpecContent = (content: string, isMainChatTab: boolean): { modi
   
   let modifiedContent = content;
   const testSpecs: string[] = [];
-  
-  // If we're in the main chat tab, don't process test specs
-  if (isMainChatTab) {
-    return { modifiedContent, testSpecs };
-  }
   
   let startIdx = content.indexOf(testSpecMarkers.start);
   let endIdx = content.indexOf(testSpecMarkers.end, startIdx);
@@ -158,8 +150,7 @@ const formatMessage = (
   isCollapsed: boolean,
   onToggleCollapse: (messageId: string) => void,
   onTestSpecClick?: (testSpec: string) => void,
-  isSelected: boolean = false,
-  isMainChatTab: boolean = false
+  isSelected: boolean = false
 ) => {
   if (typeof message.content === 'string') {
     if (message.type === 'ThoughtEvent') {
@@ -200,12 +191,7 @@ const formatMessage = (
       );
     }
     
-    // Skip test spec processing for main chat tab
-    if (isMainChatTab) {
-      return <ReactMarkdown>{message.content}</ReactMarkdown>;
-    }
-    
-    const { modifiedContent, testSpecs } = processTestSpecContent(message.content, isMainChatTab);
+    const { modifiedContent, testSpecs } = processTestSpecContent(message.content);
     
     if (testSpecs.length > 0) {
       const parts = modifiedContent.split(/\{\{TEST_SPEC_PLACEHOLDER_(\d+)\}\}/);
@@ -229,7 +215,7 @@ const formatMessage = (
     }
   }
   
-  if (message.hasTestSpec && !isMainChatTab) {
+  if (message.hasTestSpec) {
     const testSpecMarkers = {
       start: '<test_spec_start>',
       end: '<test_spec_end>'
