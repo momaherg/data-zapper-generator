@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { AlertCircle, ChevronDown, ChevronUp, Wrench, Terminal, Code } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -32,14 +33,12 @@ const ChatMessage: React.FC<ChatMessageProps> = ({
       <div
         className={cn(
           "max-w-[90%]",
-          getMessageStyle(message), // Existing style function
-          !message.isUser && message.type !== 'error' && message.type !== 'ToolCallRequestEvent' && message.type !== 'ThoughtEvent' ? "bg-muted/50 dark:bg-muted/20 py-2 px-3 rounded-lg" : "",
-          (message.type === 'ToolCallRequestEvent' || message.type === 'ThoughtEvent') && !message.isUser ? "" : "py-2 px-3 rounded-lg"
+          getMessageStyle(message)
         )}
       >
-        {message.type && message.type !== 'text' && !message.isUser && message.type !== 'ThoughtEvent' && message.type !== 'ToolCallRequestEvent' && (
+        {message.type && message.type !== 'text' && !message.isUser && message.type !== 'ThoughtEvent' && (
           <div className="text-[10px] font-medium uppercase tracking-wider mb-1 flex items-center gap-1">
-            {getMessageIcon(message)} {/* Existing icon function */}
+            {getMessageIcon(message)}
             {message.type}
           </div>
         )}
@@ -214,14 +213,14 @@ const formatMessage = (
       if (parts.length > 1) {
         return (
           <div>
-            {parts.map((part, outerIndex) => {
-              if (outerIndex % 2 === 0) {
-                return <React.Fragment key={`text-${outerIndex}`}>{part ? <ReactMarkdown>{part}</ReactMarkdown> : null}</React.Fragment>;
+            {parts.map((part, index) => {
+              if (index % 2 === 0) {
+                return part ? <ReactMarkdown key={index}>{part}</ReactMarkdown> : null;
               } 
               else {
-                const specIndex = parseInt(part, 10);
+                const specIndex = parseInt(parts[index + 1], 10);
                 const testSpec = testSpecs[specIndex] || '';
-                return <span key={`spec-${outerIndex}`}>{renderTestSpecPlaceholder(testSpec, onTestSpecClick, isSelected)}</span>;
+                return <span key={index}>{renderTestSpecPlaceholder(testSpec, onTestSpecClick, isSelected)}</span>;
               }
             })}
           </div>
@@ -230,7 +229,7 @@ const formatMessage = (
     }
   }
   
-  if (message.hasTestSpec && !isMainChatTab && typeof message.content === 'string') {
+  if (message.hasTestSpec && !isMainChatTab) {
     const testSpecMarkers = {
       start: '<test_spec_start>',
       end: '<test_spec_end>'
@@ -258,39 +257,19 @@ const formatMessage = (
   }
   
   if (message.type === 'ToolCallRequestEvent') {
-    const toolCallDetails = message.content;
-    let toolNamesList = 'Details';
-
-    if (Array.isArray(toolCallDetails)) {
-        toolNamesList = toolCallDetails.map(tc => tc.name || 'Unknown Tool').join(', ') || 'Multiple Tools';
-    } else if (typeof toolCallDetails === 'object' && toolCallDetails !== null && 'name' in toolCallDetails) {
-        toolNamesList = (toolCallDetails as any).name || 'Unnamed Tool';
-    }
-
+    const toolCalls = hasToolCalls(message.content) ? getToolNames(message.content) : [];
+    
     return (
-      <Collapsible
-        open={!isCollapsed}
-        // onOpenChange={() => onToggleCollapse(message.id)} // onClick on Trigger is preferred
-        className="w-full border border-yellow-300 dark:border-yellow-700 rounded-md overflow-hidden"
-      >
-        <CollapsibleTrigger
-          onClick={() => onToggleCollapse(message.id)}
-          className="w-full flex items-center justify-between p-2 bg-yellow-50 dark:bg-yellow-900/50 hover:bg-yellow-100 dark:hover:bg-yellow-800/50 transition-colors"
-        >
-          <div className="flex items-center gap-2 text-sm font-medium text-yellow-700 dark:text-yellow-300">
-            <Wrench className="h-4 w-4" />
-            <span>Tool Call Request: {toolNamesList}</span>
-          </div>
-          <div>
-            {isCollapsed ? <ChevronDown className="h-4 w-4 text-yellow-700 dark:text-yellow-300" /> : <ChevronUp className="h-4 w-4 text-yellow-700 dark:text-yellow-300" />}
-          </div>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="p-3 bg-yellow-50/30 dark:bg-yellow-950/30 text-xs border-t border-yellow-200 dark:border-yellow-800">
-          <pre className="whitespace-pre-wrap text-yellow-800 dark:text-yellow-200">
-            {JSON.stringify(toolCallDetails, null, 2)}
-          </pre>
-        </CollapsibleContent>
-      </Collapsible>
+      <div className="flex items-center text-yellow-700 dark:text-yellow-300 text-sm">
+        <Wrench className="h-4 w-4 mr-2" />
+        <span>
+          Requesting tools: {toolCalls.length > 0 
+            ? toolCalls.join(', ')
+            : typeof message.content === 'string'
+              ? message.content
+              : JSON.stringify(message.content)}
+        </span>
+      </div>
     );
   }
   
@@ -317,21 +296,21 @@ const formatMessage = (
     case 'yoda':
       return (
         <div className="font-serif italic text-sm">
-          <ReactMarkdown>{message.content as string}</ReactMarkdown>
+          <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
       );
     case 'system':
       return (
         <div className="text-amber-600 dark:text-amber-400 text-sm">
-          <ReactMarkdown>{message.content as string}</ReactMarkdown>
+          <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
       );
-    case 'error': // This case might be redundant if getMessageStyle handles error styling primarily
+    case 'error':
     case 'assistant':
     default:
       return (
         <div className="text-sm">
-          <ReactMarkdown>{message.content as string}</ReactMarkdown>
+          <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
       );
   }

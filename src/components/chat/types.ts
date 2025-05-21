@@ -1,12 +1,24 @@
+
 export interface Message {
   id: string;
-  timestamp: Date;
+  content: string | any;
   isUser: boolean;
-  content: string | any | any[]; // Can be string, JSON object, or array of JSON objects
-  source?: string; // e.g., 'yoda', 'system', 'assistant'
-  type?: 'text' | 'error' | 'ToolCallRequestEvent' | 'ToolCallResultEvent' | 'ThoughtEvent' | 'ToolInputEvent' | 'ToolOutputEvent';
-  isLoading?: boolean;
+  source?: string;
+  type?: string;
+  metadata?: any;
+  timestamp: Date;
   hasTestSpec?: boolean;
-  testSpecContent?: string;
-  metadata?: Record<string, any>; // Added metadata property
+}
+
+export interface ChatInterfaceProps {
+  events: any[];
+  sessionId: string;
+  testCaseId: string;
+  onTestSpecUpdated?: (testSpec: string) => void;
+}
+
+export interface TestSpecUpdateOptions {
+  isAutomatic?: boolean;
+  isUserSelected?: boolean;
+  messageId?: string;
 }

@@ -1,10 +1,11 @@
+
 import { useState, useCallback, useEffect, useRef } from "react";
 import { useNodesState, useEdgesState, Connection, addEdge } from "@xyflow/react";
 import { ValidationResponse, validationAPI } from "../../api";
 import { useTeamBuilderStore } from "../store";
 import { CustomNode, CustomEdge } from "../types";
 import { Component, Team } from "../../datamodel";
-import debounce from 'lodash/debounce';
+import debounce from "lodash.debounce";
 import { message } from "antd";
 
 // Create a cache to store team changes
@@ -149,12 +150,7 @@ export function useTeamBuilderState(
   const handleValidate = useCallback(async () => {
     const component = syncToJson();
     if (!component) {
-      // It's possible syncToJson returns null if no team node, handle this gracefully
-      // or ensure it always returns a valid structure or throws earlier.
-      // For now, let's prevent calling validationAPI if component is null.
-      // message.warn("No valid team configuration to validate."); 
-      setValidationResults(null); // Clear previous results
-      return;
+      throw new Error("Unable to generate valid configuration");
     }
 
     try {
@@ -164,7 +160,6 @@ export function useTeamBuilderState(
     } catch (error) {
       console.error("Validation error:", error);
       message.error("Validation failed");
-      setValidationResults(null); // Clear results on error
     } finally {
       setValidationLoading(false);
     }
@@ -182,14 +177,14 @@ export function useTeamBuilderState(
           ? {
               ...team,
               component,
-              created_at: undefined, // Ensure these are not sent if not intended
-              updated_at: undefined, // Ensure these are not sent if not intended
+              created_at: undefined,
+              updated_at: undefined,
             }
-          : { component }; // If team is null/undefined, create a new one with component
+          : { component };
         await onChange(teamData);
-        resetHistory(); // Reset history after successful save
+        resetHistory();
         
-        // Clear cache for this team after successful save
+        // Save to cache after successful save
         if (currentTeamId.current) {
           teamChangeCache.delete(currentTeamId.current);
         }
@@ -204,12 +199,7 @@ export function useTeamBuilderState(
   }, [syncToJson, onChange, resetHistory, team]);
 
   const handleExport = useCallback(() => {
-    const componentToExport = syncToJson();
-    if (!componentToExport) {
-      message.error("No configuration to export.");
-      return;
-    }
-    const json = JSON.stringify(componentToExport, null, 2);
+    const json = JSON.stringify(syncToJson(), null, 2);
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
