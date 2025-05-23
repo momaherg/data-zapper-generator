@@ -1,10 +1,8 @@
 import React from 'react';
 import { AlertCircle, ChevronDown, ChevronUp, Wrench, Terminal, Code } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Table, TableHeader, TableBody, TableRow, TableHead, TableCell } from "@/components/ui/table";
 import { cn } from '@/lib/utils';
 import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 import { Message } from './types';
 
 interface ChatMessageProps {
@@ -149,25 +147,6 @@ const renderTestSpecPlaceholder = (testSpec: string, onTestSpecClick?: (testSpec
   );
 };
 
-const markdownComponents = {
-  table: ({node, ...props}: any) => <Table className="my-2 w-auto max-w-full text-xs border" {...props} />,
-  thead: ({node, ...props}: any) => <TableHeader className="bg-muted/50" {...props} />,
-  tbody: ({node, ...props}: any) => <TableBody {...props} />,
-  tr: ({node, ...props}: any) => <TableRow {...props} />,
-  th: ({node, ...props}: any) => <TableHead className="font-semibold px-3 py-1.5" {...props} />,
-  td: ({node, ...props}: any) => <TableCell className="px-3 py-1.5" {...props} />,
-  // Remove default p margins inside table cells for tighter layout
-  p: ({node, ...props}: any) => {
-    // A simple check, might need refinement if p tags are legitimately nested deeper in table cells.
-    // This heuristic checks if the paragraph is a direct child of a table cell.
-    const isDirectlyInTableCell = node?.parent?.type === 'tableCell';
-    if (isDirectlyInTableCell) {
-      return <span {...props} />;
-    }
-    return <p {...props} />;
-  }
-};
-
 const formatMessage = (
   message: Message, 
   isCollapsed: boolean,
@@ -211,7 +190,7 @@ const formatMessage = (
           
           <CollapsibleContent className="p-3 bg-blue-50/50 dark:bg-blue-950/50 text-sm">
             <div className="whitespace-pre-wrap">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{message.content}</ReactMarkdown>
+              <ReactMarkdown>{message.content}</ReactMarkdown>
             </div>
           </CollapsibleContent>
         </Collapsible>
@@ -228,20 +207,11 @@ const formatMessage = (
           <div>
             {parts.map((part, index) => {
               if (index % 2 === 0) {
-                // Check if the part is a placeholder index, if so, it's handled by the `else` block.
-                // This can happen if a placeholder is at the very start/end or adjacent.
-                // The original logic for placeholder indices was `parts[index+1]`.
-                // We only render markdown if `part` is not an empty string resulting from split.
-                return part ? <ReactMarkdown key={index} remarkPlugins={[remarkGfm]} components={markdownComponents}>{part}</ReactMarkdown> : null;
+                return part ? <ReactMarkdown key={index}>{part}</ReactMarkdown> : null;
               } 
               else {
-                // `part` here is the placeholder index captured by the regex, e.g., "0", "1"
-                const specIndex = parseInt(part, 10); 
+                const specIndex = parseInt(parts[index + 1], 10);
                 const testSpec = testSpecs[specIndex] || '';
-                // The original code had `parts[index + 1]` to get specIndex, which seems incorrect
-                // if `part` itself is the index. Correcting this.
-                // The original split regex `\{\{TEST_SPEC_PLACEHOLDER_(\d+)\}\}` captures the digit.
-                // `part` when index % 2 !== 0 will be the captured digit string.
                 return <span key={index}>{renderTestSpecPlaceholder(testSpec, onTestSpecClick, isSelected)}</span>;
               }
             })}
@@ -249,8 +219,6 @@ const formatMessage = (
         );
       }
     }
-    // Fallback for general string content if not a ThoughtEvent and no test specs were processed with placeholders
-     return <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{message.content}</ReactMarkdown>;
   }
   
   if (message.hasTestSpec && !isMainChatTab) {
@@ -274,7 +242,7 @@ const formatMessage = (
     
     return (
       <div>
-        {typeof message.content === 'string' ? <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{message.content.substring(0, message.content.indexOf('<test_spec_start>'))}</ReactMarkdown> : null}
+        {typeof message.content === 'string' ? <ReactMarkdown>{message.content}</ReactMarkdown> : null}
         {renderTestSpecPlaceholder(testSpec, onTestSpecClick, isSelected)}
       </div>
     );
@@ -335,13 +303,13 @@ const formatMessage = (
     case 'yoda':
       return (
         <div className="font-serif italic text-sm">
-          <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{message.content as string}</ReactMarkdown>
+          <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
       );
     case 'system':
       return (
         <div className="text-amber-600 dark:text-amber-400 text-sm">
-          <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{message.content as string}</ReactMarkdown>
+          <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
       );
     case 'error':
@@ -349,7 +317,7 @@ const formatMessage = (
     default:
       return (
         <div className="text-sm">
-          <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>{message.content as string}</ReactMarkdown>
+          <ReactMarkdown>{message.content}</ReactMarkdown>
         </div>
       );
   }
