@@ -226,23 +226,9 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
             </CardContent>
           </Card>
           
-          {testCase.coverage && (
-            <>
-              <h3 className="text-lg font-medium mb-4">Coverage Analysis</h3>
-              
-              <Card className="mb-6">
-                <CardContent className="p-6">
-                  <div className="prose prose-sm max-w-none">
-                    <ReactMarkdown>{testCase.coverage}</ReactMarkdown>
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          )}
-          
           <h3 className="text-lg font-medium mb-4">Generated Test Case</h3>
           
-          <Card>
+          <Card className="mb-6">
             <CardContent className="p-0">
               <ScrollArea className="h-[calc(100vh-380px)] w-full">
                 <div className="p-6">
@@ -253,6 +239,20 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
               </ScrollArea>
             </CardContent>
           </Card>
+
+          {testCase.coverage && (
+            <>
+              <h3 className="text-lg font-medium mb-4">Coverage Analysis</h3>
+              
+              <Card>
+                <CardContent className="p-6">
+                  <div className="prose prose-sm max-w-none">
+                    <ReactMarkdown>{testCase.coverage}</ReactMarkdown>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
         </div>
       </div>
       
