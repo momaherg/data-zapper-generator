@@ -6,12 +6,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { toast } from 'sonner';
 import ChatInterface from '@/components/ChatInterface';
 import { cn } from '@/lib/utils';
 import { api, TestCase } from '@/utils/api';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
 
 interface TestCaseDetailProps {}
 
@@ -241,15 +240,44 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
             </CardContent>
           </Card>
 
-          {testCase.coverage && (
+          {testCase.coverage && testCase.coverage.covered_requirements && testCase.coverage.covered_requirements.length > 0 && (
             <>
               <h3 className="text-lg font-medium mb-4">Coverage Analysis</h3>
               
+              {testCase.coverage_summary && (
+                <Card className="mb-4">
+                  <CardContent className="p-6">
+                    <p className="text-sm text-muted-foreground">{testCase.coverage_summary}</p>
+                  </CardContent>
+                </Card>
+              )}
+              
               <Card>
                 <CardContent className="p-6">
-                  <div className="prose prose-sm max-w-none prose-table:border-collapse prose-th:border prose-th:border-border prose-th:px-4 prose-th:py-2 prose-th:text-left prose-th:font-medium prose-th:bg-muted/50 prose-td:border prose-td:border-border prose-td:px-4 prose-td:py-2">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{testCase.coverage}</ReactMarkdown>
-                  </div>
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-32">Requirement ID</TableHead>
+                        <TableHead>Requirement Text</TableHead>
+                        <TableHead>Coverage Rationale</TableHead>
+                        <TableHead className="w-24 text-right">Coverage</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {testCase.coverage.covered_requirements.map((req, index) => (
+                        <TableRow key={index}>
+                          <TableCell className="font-mono text-sm">{req.requirement_id}</TableCell>
+                          <TableCell className="text-sm">{req.requirement_text}</TableCell>
+                          <TableCell className="text-sm text-muted-foreground">{req.coverage_rationale}</TableCell>
+                          <TableCell className="text-right">
+                            <Badge variant={req.coverage_percentage === 100 ? "default" : "secondary"}>
+                              {req.coverage_percentage}%
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
                 </CardContent>
               </Card>
             </>

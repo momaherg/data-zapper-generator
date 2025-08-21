@@ -30,13 +30,23 @@ export interface DataSource {
   updated_at: string;
 }
 
+export interface CoveredRequirement {
+  coverage_rationale: string;
+  requirement_id: string;
+  requirement_text: string;
+  coverage_percentage: number;
+}
+
 export interface TestCase {
   id: string;
   requirement: string;
   format: string;
   notes: string;
   test_case_text: string;
-  coverage: string;
+  coverage_summary: string;
+  coverage: {
+    covered_requirements: CoveredRequirement[];
+  };
   events: TestCaseEvent[];
   created_at: string;
 }
