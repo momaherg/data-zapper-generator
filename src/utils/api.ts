@@ -36,6 +36,7 @@ export interface TestCase {
   format: string;
   notes: string;
   test_case_text: string;
+  coverage: string;
   events: TestCaseEvent[];
   created_at: string;
 }

@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import ChatInterface from '@/components/ChatInterface';
 import { cn } from '@/lib/utils';
 import { api, TestCase } from '@/utils/api';
+import ReactMarkdown from 'react-markdown';
 
 interface TestCaseDetailProps {}
 
@@ -224,6 +225,20 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
               </div>
             </CardContent>
           </Card>
+          
+          {testCase.coverage && (
+            <>
+              <h3 className="text-lg font-medium mb-4">Coverage Analysis</h3>
+              
+              <Card className="mb-6">
+                <CardContent className="p-6">
+                  <div className="prose prose-sm max-w-none">
+                    <ReactMarkdown>{testCase.coverage}</ReactMarkdown>
+                  </div>
+                </CardContent>
+              </Card>
+            </>
+          )}
           
           <h3 className="text-lg font-medium mb-4">Generated Test Case</h3>
           
