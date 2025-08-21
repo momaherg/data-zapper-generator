@@ -142,11 +142,11 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
   };
 
   const getCoverageColor = (percentage: number) => {
-    if (percentage >= 90) return 'bg-gradient-to-r from-green-500 to-green-600 text-white';
-    if (percentage >= 75) return 'bg-gradient-to-r from-green-400 to-green-500 text-white';
-    if (percentage >= 50) return 'bg-gradient-to-r from-green-300 to-green-400 text-gray-800';
-    if (percentage >= 25) return 'bg-gradient-to-r from-gray-300 to-gray-400 text-gray-800';
-    return 'bg-gradient-to-r from-gray-400 to-gray-500 text-white';
+    if (percentage >= 90) return 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white';
+    if (percentage >= 75) return 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white';
+    if (percentage >= 50) return 'bg-gradient-to-r from-emerald-400 to-emerald-500 text-slate-800';
+    if (percentage >= 25) return 'bg-gradient-to-r from-slate-300 to-slate-400 text-slate-800';
+    return 'bg-gradient-to-r from-slate-400 to-slate-500 text-white';
   };
 
   if (isLoading) {
