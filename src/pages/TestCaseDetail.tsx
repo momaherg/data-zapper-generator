@@ -11,6 +11,7 @@ import ChatInterface from '@/components/ChatInterface';
 import { cn } from '@/lib/utils';
 import { api, TestCase } from '@/utils/api';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface TestCaseDetailProps {}
 
@@ -246,8 +247,8 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
               
               <Card>
                 <CardContent className="p-6">
-                  <div className="prose prose-sm max-w-none">
-                    <ReactMarkdown>{testCase.coverage}</ReactMarkdown>
+                  <div className="prose prose-sm max-w-none prose-table:border-collapse prose-th:border prose-th:border-border prose-th:px-4 prose-th:py-2 prose-th:text-left prose-th:font-medium prose-th:bg-muted/50 prose-td:border prose-td:border-border prose-td:px-4 prose-td:py-2">
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{testCase.coverage}</ReactMarkdown>
                   </div>
                 </CardContent>
               </Card>
