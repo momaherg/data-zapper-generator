@@ -11,6 +11,8 @@ import { toast } from 'sonner';
 import ChatInterface from '@/components/ChatInterface';
 import { cn } from '@/lib/utils';
 import { api, TestCase } from '@/utils/api';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 interface TestCaseDetailProps {}
 
@@ -139,6 +141,13 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
     }).format(date);
   };
 
+  const getCoverageColor = (percentage: number) => {
+    if (percentage >= 90) return 'bg-gradient-to-r from-green-500 to-green-600 text-white';
+    if (percentage >= 75) return 'bg-gradient-to-r from-blue-500 to-blue-600 text-white';
+    if (percentage >= 50) return 'bg-gradient-to-r from-yellow-500 to-yellow-600 text-white';
+    return 'bg-gradient-to-r from-red-500 to-red-600 text-white';
+  };
+
   if (isLoading) {
     return <div className="flex justify-center items-center h-screen">
         <div className="animate-pulse">Loading test case...</div>
@@ -257,20 +266,34 @@ const TestCaseDetail: React.FC<TestCaseDetailProps> = () => {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead className="w-32">Requirement ID</TableHead>
-                        <TableHead>Requirement Text</TableHead>
-                        <TableHead>Coverage Rationale</TableHead>
-                        <TableHead className="w-24 text-right">Coverage</TableHead>
+                        <TableHead className="w-32 text-left align-top">Requirement ID</TableHead>
+                        <TableHead className="text-left align-top">Requirement Text</TableHead>
+                        <TableHead className="text-left align-top">Coverage Rationale</TableHead>
+                        <TableHead className="w-24 text-left align-top">Coverage</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {testCase.coverage.covered_requirements.map((req, index) => (
                         <TableRow key={index}>
-                          <TableCell className="font-mono text-sm">{req.requirement_id}</TableCell>
-                          <TableCell className="text-sm">{req.requirement_text}</TableCell>
-                          <TableCell className="text-sm text-muted-foreground">{req.coverage_rationale}</TableCell>
-                          <TableCell className="text-right">
-                            <Badge variant={req.coverage_percentage === 100 ? "default" : "secondary"}>
+                          <TableCell className="font-mono text-sm align-top">
+                            {req.requirement_id}
+                          </TableCell>
+                          <TableCell className="text-sm align-top">
+                            <div className="prose prose-sm max-w-none">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {req.requirement_text}
+                              </ReactMarkdown>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground align-top">
+                            <div className="prose prose-sm max-w-none prose-p:text-muted-foreground">
+                              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {req.coverage_rationale}
+                              </ReactMarkdown>
+                            </div>
+                          </TableCell>
+                          <TableCell className="align-top">
+                            <Badge className={cn("text-xs font-medium px-2 py-1", getCoverageColor(req.coverage_percentage))}>
                               {req.coverage_percentage}%
                             </Badge>
                           </TableCell>
