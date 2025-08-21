@@ -25,6 +25,7 @@ export interface DataSource {
   tool: string | null;
   description: string;
   usage: string;
+  is_requirements: boolean;
   created_at: string;
   updated_at: string;
 }

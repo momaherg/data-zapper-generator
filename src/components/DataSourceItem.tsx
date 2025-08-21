@@ -5,6 +5,8 @@ import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { cn } from '@/lib/utils';
 import { DataSource } from '@/utils/api';
 
@@ -25,6 +27,7 @@ const DataSourceItem: React.FC<DataSourceItemProps> = ({
 }) => {
   const [description, setDescription] = useState(dataSource.description);
   const [usage, setUsage] = useState(dataSource.usage);
+  const [isRequirements, setIsRequirements] = useState(dataSource.is_requirements);
 
   const getIcon = () => {
     switch (dataSource.type.toLowerCase()) {
@@ -54,7 +57,7 @@ const DataSourceItem: React.FC<DataSourceItemProps> = ({
   };
 
   const handleSave = async () => {
-    await onUpdate(dataSource.id, { description, usage });
+    await onUpdate(dataSource.id, { description, usage, is_requirements: isRequirements });
     onEditToggle('');
   };
 
@@ -76,13 +79,31 @@ const DataSourceItem: React.FC<DataSourceItemProps> = ({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-2">
               <h3 className="font-medium truncate">{dataSource.path}</h3>
-              <Badge className={cn("ml-auto", getTypeColor())}>
-                {dataSource.type.toUpperCase()}
-              </Badge>
+              <div className="flex items-center gap-2 ml-auto">
+                {dataSource.is_requirements && (
+                  <Badge variant="secondary" className="text-xs">
+                    REQUIREMENTS
+                  </Badge>
+                )}
+                <Badge className={cn(getTypeColor())}>
+                  {dataSource.type.toUpperCase()}
+                </Badge>
+              </div>
             </div>
             
             {isEditing ? (
               <div className="space-y-3">
+                <div className="flex items-center space-x-2">
+                  <Switch 
+                    id="is-requirements"
+                    checked={isRequirements}
+                    onCheckedChange={setIsRequirements}
+                  />
+                  <Label htmlFor="is-requirements" className="text-sm font-medium">
+                    This is a requirements document
+                  </Label>
+                </div>
+                
                 <div>
                   <label className="text-sm font-medium mb-1.5 block">
                     Description
